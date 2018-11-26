@@ -1,0 +1,457 @@
+---
+title: hexo+next主题
+date: 2018-11-26 10:49:59
+tags:
+---
+
+这篇内容详细记述了我在使用hexo搭载博客的过程中走过的路和跌过的坑。
+另外，我搭建了一个新的博客作为自己的技术博客，地址是xuquan.site，欢迎来逛逛~
+
+从印象笔记到简书到Hexo
+我一直有收集资料的习惯，最开始把资料都放在印象笔记里，然后自己平时处理消化之后会添加一个Learning Card作为资料开头，方便自己复习和记忆。但是时间一久，资料就特别多，加上处理过和没处理过的都积攒在一起就显得特别臃肿，于是我就考虑将消化过的内容发布到简书上，给自己做一个记录，也算是自己的技术博客。
+
+但使用了简书3个月之后，我就发现了一些问题：
+
+首先，我是用Typora来写内容的，简书虽然支持Markdown，但是自带的编辑器功能不是特别完善，有些时候还得反复切换Markdown和富文本模式，很麻烦；
+
+其次，直接复制Typora的内容到简书是无法同步图片的，因为Typora的图片是放在文件夹内的asset文件夹内的，复制到简书需要图片挨个重新上传，图片多的时候简直想放弃这一篇内容；
+
+另外，简书无法添加标签，只能分笔记本来写不同的内容，而且也不能添加置顶，功能比较单一；
+
+在综合考虑之后，我决定搭建一个自己的博客。正好看到有人推荐hexo搭建，而且大家搭建的博客都挺赏心悦目的，我就开始动手搭建自己的了。
+
+Hexo部署
+hexo有中文的文档，这一点非常方便，但是在安装过程中还是很容易有疏忽的地方，导致安装失败。
+
+安装前提
+安装Hexo之前，必须保证自己的电脑中已经安装好了Node.js和Git。因为这两个软件我之前都安装过，这里就不重复安装过程了，检验方式如下：
+
+image-20180809141924679
+安装Hexo
+安装好node.js和git后，可以通过npm来安装Hexo。
+
+npm install -g hexo-cli
+建站
+之后就可以在电脑里新建一个文件夹来作为存放博客全部内容的大本营了。我们直接用hexo命令来初始化博客文件夹：
+
+hexo init <folder>
+cd <folder>
+npm install
+<folder>就是文件夹的名字，我们可以自己随意取这个名字，我的经验是，现在初始化应该不需要后面npm install这个步骤了，在创建的时候 ，文件夹初始化已经把需要的内容都下载进去了。
+
+文件夹开始初始化了
+站内内容
+新建好的文件夹目录如下：
+
+.
+├── _config.yml
+├── package.json
+├── scaffolds
+├── source
+|   ├── _drafts
+|   └── _posts
+└── themes
+这里解释一下各个文件夹的作用：
+
+config.yml
+博客的配置文件，博客的名称、关键词、作者、语言、博客主题...设置都在里面。
+
+package.json
+应用程序信息，新添加的插件内容也会出现在这里面，我们可以不修改这里的内容。
+
+scaffolds
+scaffolds就是脚手架的意思，这里放了三个模板文件，分别是新添加博客文章（posts）、新添加博客页（page）和新添加草稿（draft）的目标样式。
+
+这部分可以修改的内容是，我们可以在模板上添加比如categories等自定义内容
+
+source
+source是放置我们博客内容的地方，里面初始只有两个文件夹，一个是drafts（草稿），一个posts（文章），但之后我们通过命令新建tags（标签）还有categories（分类）页后，这里会相应地增加文件夹。
+
+themes
+放置主题文件包的地方。Hexo会根据这个文件来生成静态页面。
+
+初始状态下只有landscape一个文件夹，后续我们可以添加自己喜欢的。
+
+Hexo命令
+init
+新建一个网站。
+
+hexo init <folder>
+new
+新建文章或页面。
+
+hexo new <layout> "title"
+这里的<layout>对应我们要添加的内容，如果是posts就是添加新的文章，如果是page就是添加新的页面。
+
+默认是添加posts。
+
+然后我们就可以在对应的posts或drafts文件夹里找到我们新建的文件，然后在文件里用Markdown的格式来写作了。
+
+generate
+生成静态页面
+
+hexo generate
+也可以简写成
+
+hexo g
+deploy
+将内容部署到网站
+
+hexo deploy
+也可以简写成
+
+hexo -d
+publish
+发布内容，实际上是将内容从drafts（草稿）文件夹移到posts（文章）文件夹。
+
+hexo publish <layout> <filename>
+server
+启动服务器，默认情况下，访问网站为http://localhost:4000/
+
+hexo server
+也可以简写成
+
+hexo s
+根据我的经验，除了第一次部署的时候，我们会重点用到hexo init这个命令外，在平时写博客和发布过程中最常用的就是：
+
+hexo n <filename> 新建文章
+hexo s 启动服务器，在本地查看内容
+hexo g 生成静态页面
+hexo deploy 部署到网站
+以上四个步骤。
+
+其实以上命令我觉得就足够了，文档里还有很多功能，但我在实际使用的过程中都还没有遇到。
+
+搭建好后我们在localhost:4000就可以看到这样的博客内容：
+
+image-20180809152743968
+实际操作
+我在新建博客之后，做了以下改动：
+
+1. 创建“分类”页面
+新建分类页面
+
+hexo new page categories
+给分类页面添加类型
+
+我们在source文件夹中的categories文件夹下找到index.md文件，并在它的头部加上type属性。
+
+---
+title: 文章分类
+date: 2017-05-27 13:47:40
+type: "categories"   #这部分是新添加的
+---
+给模板添加分类属性
+
+现在我们打开scarffolds文件夹里的post.md文件，给它的头部加上categories:，这样我们创建的所有新的文章都会自带这个属性，我们只需要往里填分类，就可以自动在网站上形成分类了。
+
+title: {{ title }}
+date: {{ date }}
+categories:
+tags:
+给文章添加分类
+
+现在我们可以找到一篇文章，然后尝试给它添加分类
+
+layout: posts
+title: 写给小白的express学习笔记1： express-static文件静态管理
+date: 2018-06-07 00:38:36
+categories: 学习笔记
+tags: [node.js, express]
+2. 创建“标签”页面
+创建"标签"页的方式和创建“分类”一样。
+
+新建“标签”页面
+
+hexo new page tags
+给标签页面添加类型
+
+我们在source文件夹中的tags文件夹下找到index.md文件，并在它的头部加上type属性。
+
+title: tags
+date: 2018-08-06 22:48:29
+type: "tags" #新添加的内容
+给文章添加标签
+
+有两种写法都可以，第一种是类似数组的写法，把标签放在中括号[]里，用英文逗号隔开
+
+layout: posts
+title: 写给小白的express学习笔记1： express-static文件静态管理
+date: 2018-06-07 00:38:36
+categories: 学习笔记
+tags: [node.js, express]
+第二种写法是用-短划线列出来
+
+layout: posts
+title: 写给小白的express学习笔记1： express-static文件静态管理
+date: 2018-06-07 00:38:36
+categories: 学习笔记
+tags: 
+- node.js
+- express
+部署域名
+紧接着我们就可以把这些内容添加到Github页面上，然后生成我们自己的博客了。
+
+部署Github
+首先你必须有一个github账号
+
+然后新建一个仓库，这一有第一个坑，我之前用了hexoblog来作为项目名称，一直没能搭建成功，后来看到其他大牛的经验，才发现项目名一定要是用户名.github.io的形式(README.md可选可不选)
+
+image-20180809153134467
+然后在setting里添加生成页面的选项
+
+image-20180809153304980
+image-20180809153343362
+这个时候github页面其实就生成好了，但是我们的内容还需要同步到github上，所以打开hexo文件夹里的配置文件config.yml，添加部署路径
+
+image-20180809153610047
+这里注意两小点：
+
+属性和内容之间一定要有一个空格，配置文件有自己的格式规范
+如果你之前没有用git关联过自己的github库，需要配置SSH等参数，否则无法成功，这部分搜git就有很多相关教程
+我们再用hexo g && hexo deploy就能将内容推送到github上了，在github页面上也能看到自己的内容了
+
+image-20180809153933270
+部署自己的域名
+首先我们需要获取一个域名，我是在阿里云上购买了，上面可以根据自己想要的内容搜，比如我用了自己的名字，推荐给你的域名根据后缀不同会有价格上的区别，我选了一个不太贵的；
+
+购买域名之后需要实名认证，这是另一个坑，我之前不知道实名认证审核完成前域名无法用，一直以为自己搭建失败了；
+
+认证成功后需要解析域名
+
+image-20180809154942783
+image-20180809155013659
+记录类型选CNAME，记录值是自己github生成页面的地址。
+
+在博客的页面添加CNAME文件，并在里面记录自己域名的地址，将这个文件放在public文件夹下
+
+这里还有一个小坑，CNAME文件经常被覆盖，导致我们重新部署博客后，链接就不可用了，这里可以下载一个叫hexo-generator-cname的插件，这样它会自动搞定CNAME的问题，只需要第一次手动将域名添加到文件里即可
+
+npm i hexo-generator-cname --save
+最后hexo g && hexo deploy就可以了
+
+NexT主题
+hexo有很多开源的主题，我选了NexT，开始只是觉得很简洁清爽，后来发现它的功能挺齐全的，提前解决了很多搭建过程中会遇到的问题。这里强烈推荐一下。
+
+首先，NexT也有中文文档，然后我们就可以开始了。
+
+安装
+我是用的git clone的方法，文档中还有其他方法
+
+$ git clone https://github.com/iissnan/hexo-theme-next themes/next
+设置主题
+在hexo根目录下的配置文件config.yml里设置主题
+
+theme: next
+配置主题
+接下来我们就可以来按需配置主题内容了，所有内容都在themes/next文件夹下的config.yml文件里修改。
+
+官方文档里写的是有些配置需要将一部分代码添加到配置文件中，但其实不用，我们逐行看配置文件就会发现，有很多功能都已经放在配置文件里了，只是注释掉了，我们只需要取消注释，把需要的相关信息补全即可使用
+
+菜单栏 menu
+原生菜单栏有主页、关于、分类、标签等数个选项，但是在配置文件中是注释掉的状态，这里我们自行修改注释就行
+
+menu:
+  home: / || home
+  # about: /about/ || user
+  tags: /tags/ || tags
+  categories: /categories/ || th
+  archives: /archives/ || archive
+  # schedule: /schedule/ || calendar
+  # sitemap: /sitemap.xml || sitemap
+  # commonweal: /404/ || heartbeat
+注意点：
+
+如果事先没有通过hexo new page <pageName>来创建页面的话，即使在配置文件中取消注释，页面也没法显示
+我们也可以添加自己想要添加的页面，不用局限在配置文件里提供的选择里
+||后面是fontAwesome里的文件对应的名称
+menu_icons记得选enable: true（默认应该是true）
+我在这部分添加了两个自定义的页面，后面在第三方插件部分我会再提到。
+
+menu:
+  home: / || home
+  # about: /about/ || user
+  tags: /tags/ || tags
+  categories: /categories/ || th
+  读书: /books || book
+  电影: /movies || film
+  archives: /archives/ || archive
+  # schedule: /schedule/ || calendar
+  # sitemap: /sitemap.xml || sitemap
+  # commonweal: /404/ || heartbeat
+主题风格 schemes
+主题提供了4个，我们把想要选择的取消注释，其他三个保持注释掉的状态即可。
+
+Muse
+
+image-20180809164700600
+Mist
+
+image-20180809164749052
+Pisces
+
+image-20180809164925685
+Gemini
+
+image-20180809165023401
+选择主题后也可以自定义，不过我还没摸清楚有哪些地方可以自定义，等弄清楚了我再来更新。
+
+底部建站时间和图标修改
+修改主题的配置文件：
+
+footer:
+  # Specify the date when the site was setup.
+  # If not defined, current year will be used.
+  since: 2018
+
+  # Icon between year and copyright info.
+  icon: snowflake-o
+
+  # If not defined, will be used `author` from Hexo main config.
+  copyright:
+  # -------------------------------------------------------------
+  # Hexo link (Powered by Hexo).
+  powered: false
+
+  theme:
+    # Theme & scheme info link (Theme - NexT.scheme).
+    enable: false
+    # Version info of NexT after scheme info (vX.X.X).
+    # version: false
+我在这部分做了这样几件事：
+
+把用户的图标从小人user改成了雪花snowflake-o
+copyright留空，显示成页面author即我的名字
+powered: false把hexo的授权图片取消了
+theme: enable:false 把主题的内容也取消了
+这样底部信息比较简单。
+
+image-20180809172835606
+个人社交信息 social
+在social里我们可以自定义自己想要在个人信息部分展现的账号，同时给他们加上图标。
+
+social:
+  GitHub: https://github.com/XuQuan-nikkkki || github
+  E-Mail: mailto:xuquan1225@hotmail.com || envelope
+  #Google: https://plus.google.com/yourname || google
+  #Twitter: https://twitter.com/yourname || twitter
+  #FB Page: https://www.facebook.com/yourname || facebook
+注意点：
+
+||后面对应的名称是fontAwesome里图标的名称，如果我们选择的账号没有对应的图标（如豆瓣、知乎），我们可以在fontAwesome库里去选择自己喜欢的图标
+建议不要找太新的fontAwesome图标，主题关联的库版本没有那么新，很可能显示不了或者显示一个地球
+网站动画效果
+为了网站响应速度我们可以把网站的动画关掉
+
+motion:
+  enable: false
+但我觉得页面比较素，所以开了动画，选择了canvas-nest这一个，主题自带四种效果，可以选自己喜欢的。
+
+motion:
+  enable: true
+  async: true
+  
+# Canvas-nest
+canvas_nest: true
+
+# three_waves
+three_waves: false
+
+# canvas_lines
+canvas_lines: false
+
+# canvas_sphere
+canvas_sphere: false
+评论系统
+NexT原生支持多说、Disqus、hypercomments等多种评论系统。我选择了Disqus。
+
+方法也非常简单。直接去Disqus注册，注册完了在配置的时候会给你一个名为shortname的ID，将这个ID填在配置文件里即可。
+
+# Disqus
+disqus:
+  enable: true
+  shortname: xuquan
+  count: true
+统计文章字数和阅读时间
+post_wordcount:
+  item_text: true
+  wordcount: true  # 文章字数
+  min2read: true   # 阅读时间
+  totalcount: true  # 总共字数
+  separated_meta: true
+统计阅读次数
+这里我用的是leancloud的服务，具体方法参考NexT上的教程,添加完之后效果如下：
+
+image-20180809175133462
+第三方插件
+Hexo-admin
+Hexo-admin插件允许我们直接在本地页面上修改文章内容。
+
+下载
+
+npm i hexo-admin --save
+登录http://localhost:4000/admin即可看到我们所有的文章内容，并且在可视化界面中操作文章内容
+
+Hexo-douban
+hexo-douban插件可以在博客中添加豆瓣电影、读书和游戏页面，关联我们自己的账号。
+
+下载
+
+npm install hexo-douban --save
+配置
+
+在hexo根目录下的config.yml文件中添加如下内容
+
+douban:
+  user: 
+  builtin: false
+  book:
+    title: 'This is my book title'
+    quote: 'This is my book quote'
+  movie:
+    title: 'This is my movie title'
+    quote: 'This is my movie quote'
+  game:
+    title: 'This is my game title'
+    quote: 'This is my game quote'
+  timeout: 10000 
+title和quote后面的内容会分别作为电影/读书/游戏页面的标题和副标题（引言）呈现在博客里。
+
+user就写我们豆瓣的id，可以在“我的豆瓣”页面中找到，builtin指是否将生成页面功能嵌入hexo s和hexo g中，建议选false，因为true会导致页面每次启动本地服务器都需要很长时间生成豆瓣页面，长到怀疑人生。
+
+生成页面
+
+hexo douban   #生成读书、电影、游戏三个页面
+hexo douban -b  #生成读书页面
+hexo douban -m  #生成电影页面
+hexo douban -g  #生成游戏页面
+在博客中生成页面
+
+这里就需要用到我们前面提过的hexo new命令了。
+
+hexo new page books
+hexo new page movies
+hexo new page games
+在博客中添加页面
+
+在menu部分添加我们需要添加的页面名称和相对路径
+
+menu:
+  Home: /
+  Archives: /archives
+  Books: /books     #This is your books page
+  Movies: /movies   #This is your movies page
+  Games: /games   #This is your games page
+部署到博客
+
+hexo g && hexo deploy
+我踩过的坑
+iPic图片上传
+hexo博客发布Typora写好的内容也会出现图片无法同步的问题，网上有大佬给出的解决方案是使用hexo-asset-image插件，这样在创建博客时会有一个与.md文件同名的文件夹，将图片同步到文件夹内即可。
+
+但时间下来还是比较麻烦，因为Typora并没有自定义图片路径的功能，它会放在与文件相关的asset文件夹内。
+
+我找到的最终方案是使用Typora自带的一个功能：图片上传iPic图床。这样在添加图片的时候，图片链接就自动更换成了图床的地址，这时同步到博客就没有问题了。
+
+评论系统
+因为多说已经停止服务了，最开始看到有人说Disqus得翻墙，就选了一个韩国的评论服务，叫来必力，但事实证明墙外就没有稳定的服务，在我挂VPN的情况下也要加载好半天，后来就还是换成了Disqus，具体配置方法看前文。
