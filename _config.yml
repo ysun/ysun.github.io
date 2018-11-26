@@ -8,12 +8,18 @@ subtitle: 虚拟化相关技术
 description: 这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员
 keywords: KVM Linux Kernel Qemu
 author: Yi颗烂樱桃
-language:
-timezone:
+language: zh-Hans
+timezone: Asia/Shanghai
+
+sitemap: 
+  path: sitemap.xml
+baidusitemap:
+  path: baidusitemap.xml
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://yoursite.com
+#url: http://ysun.github.io
+url: http://www.owalle.com
 root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:
