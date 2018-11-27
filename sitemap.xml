@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://www.owalle.com/about/index.html</loc>
+    
+    <lastmod>2018-11-27T16:26:22.589Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://www.owalle.com/tags/index.html</loc>
     
     <lastmod>2018-11-27T09:39:42.526Z</lastmod>
@@ -12,13 +19,6 @@
     <loc>http://www.owalle.com/categories/index.html</loc>
     
     <lastmod>2018-11-27T09:39:16.150Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://www.owalle.com/about/index.html</loc>
-    
-    <lastmod>2018-11-27T09:38:25.494Z</lastmod>
     
   </url>
   
