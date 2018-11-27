@@ -2,6 +2,27 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://www.owalle.com/tags/index.html</loc>
+    
+    <lastmod>2018-11-27T09:39:42.526Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.owalle.com/categories/index.html</loc>
+    
+    <lastmod>2018-11-27T09:39:16.150Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.owalle.com/about/index.html</loc>
+    
+    <lastmod>2018-11-27T09:38:25.494Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://www.owalle.com/2018/11/26/hello-world/</loc>
     
     <lastmod>2018-11-26T13:13:16.228Z</lastmod>
@@ -12,27 +33,6 @@
     <loc>http://www.owalle.com/baidu_verify_OuZFAwg7U8.html</loc>
     
     <lastmod>2018-11-26T07:30:20.332Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://www.owalle.com/tags/index.html</loc>
-    
-    <lastmod>2018-11-26T03:23:49.528Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://www.owalle.com/categories/index.html</loc>
-    
-    <lastmod>2018-11-26T03:21:32.496Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://www.owalle.com/about/index.html</loc>
-    
-    <lastmod>2018-11-26T02:54:13.432Z</lastmod>
     
   </url>
   
