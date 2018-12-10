@@ -76,7 +76,7 @@
 
 
 
-  <meta name="keywords" content="QEMU,QMP,">
+  <meta name="keywords" content="Hexo, NexT">
 
 
 
@@ -87,18 +87,22 @@
 
 
 
-<meta name="description" content="什么是QMP协议QMP，即QEMU Machine Protocol，就是qemu虚拟机中的一种协议，是qemu的一部分。qmp是基于json格式的一整套协议，通过这套协议我们可以控制qemu虚拟机实例的整个生命周期，包括挂起、暂停、快照、查询、外设的热插拔等，以及最简单的查询，都可以通过qmp实现。 有多种方法使用qmp，这里简要介绍通过tcp和unix socket使用qmp。 QMP协议有哪">
-<meta name="keywords" content="QEMU,QMP">
+<meta name="description" content="CPU 虚拟化简介上一篇文章笼统的介绍了一个虚拟机的诞生过程，从demo中也可以看到，运行一个虚拟机再也不需要像以前想象的那样，需要用软件来模拟硬件指令集了。虚拟机的指令集直接运行在宿主机物理CPU上，当虚拟机中的指令设计到IO操作或者一些特殊指令的时候，控制权转让给了宿主机（这里其实是转让给了vm monitor，下面检查VMM），也就是一个demo进程，他在宿主机上的表现形式也就是一个用户级进">
+<meta name="keywords" content="KVM Linux Kernel Qemu">
 <meta property="og:type" content="article">
-<meta property="og:title" content="QMP 简介">
-<meta property="og:url" content="http://www.owalle.com/2018/12/10/qmp-introduction/index.html">
+<meta property="og:title" content="KVM 虚拟化原理3--CPU">
+<meta property="og:url" content="http://www.owalle.com/2018/12/10/kvm-cpu/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="什么是QMP协议QMP，即QEMU Machine Protocol，就是qemu虚拟机中的一种协议，是qemu的一部分。qmp是基于json格式的一整套协议，通过这套协议我们可以控制qemu虚拟机实例的整个生命周期，包括挂起、暂停、快照、查询、外设的热插拔等，以及最简单的查询，都可以通过qmp实现。 有多种方法使用qmp，这里简要介绍通过tcp和unix socket使用qmp。 QMP协议有哪">
+<meta property="og:description" content="CPU 虚拟化简介上一篇文章笼统的介绍了一个虚拟机的诞生过程，从demo中也可以看到，运行一个虚拟机再也不需要像以前想象的那样，需要用软件来模拟硬件指令集了。虚拟机的指令集直接运行在宿主机物理CPU上，当虚拟机中的指令设计到IO操作或者一些特殊指令的时候，控制权转让给了宿主机（这里其实是转让给了vm monitor，下面检查VMM），也就是一个demo进程，他在宿主机上的表现形式也就是一个用户级进">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-12-10T14:15:44.125Z">
+<meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-cpu/vcpu-follow.png">
+<meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-cpu/vcpu-ring.png">
+<meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-cpu/vmm_guest_switch.png">
+<meta property="og:updated_time" content="2018-12-10T15:26:15.033Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="QMP 简介">
-<meta name="twitter:description" content="什么是QMP协议QMP，即QEMU Machine Protocol，就是qemu虚拟机中的一种协议，是qemu的一部分。qmp是基于json格式的一整套协议，通过这套协议我们可以控制qemu虚拟机实例的整个生命周期，包括挂起、暂停、快照、查询、外设的热插拔等，以及最简单的查询，都可以通过qmp实现。 有多种方法使用qmp，这里简要介绍通过tcp和unix socket使用qmp。 QMP协议有哪">
+<meta name="twitter:title" content="KVM 虚拟化原理3--CPU">
+<meta name="twitter:description" content="CPU 虚拟化简介上一篇文章笼统的介绍了一个虚拟机的诞生过程，从demo中也可以看到，运行一个虚拟机再也不需要像以前想象的那样，需要用软件来模拟硬件指令集了。虚拟机的指令集直接运行在宿主机物理CPU上，当虚拟机中的指令设计到IO操作或者一些特殊指令的时候，控制权转让给了宿主机（这里其实是转让给了vm monitor，下面检查VMM），也就是一个demo进程，他在宿主机上的表现形式也就是一个用户级进">
+<meta name="twitter:image" content="http://www.owalle.com/2018/12/10/kvm-cpu/vcpu-follow.png">
 
 
 
@@ -128,13 +132,13 @@
 
 
 
-  <link rel="canonical" href="http://www.owalle.com/2018/12/10/qmp-introduction/">
+  <link rel="canonical" href="http://www.owalle.com/2018/12/10/kvm-cpu/">
 
 
 
 
 
-  <title>QMP 简介 | Yi颗烂樱桃</title>
+  <title>KVM 虚拟化原理3--CPU | Yi颗烂樱桃</title>
   
 
 
@@ -313,7 +317,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2018/12/10/qmp-introduction/">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2018/12/10/kvm-cpu/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Yi颗烂樱桃">
@@ -330,7 +334,7 @@
 
         
         
-          <h2 class="post-title" itemprop="name headline">QMP 简介</h2>
+          <h2 class="post-title" itemprop="name headline">KVM 虚拟化原理3--CPU</h2>
         
 
         <div class="post-meta">
@@ -342,7 +346,7 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-12-10T21:42:39+08:00">
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-12-10T23:16:24+08:00">
                 2018-12-10
               </time>
             
@@ -353,28 +357,6 @@
           </span>
 
           
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/QEMU/" itemprop="url" rel="index">
-                    <span itemprop="name">QEMU</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
 
           
             
@@ -383,8 +365,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2018/12/10/qmp-introduction/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2018/12/10/qmp-introduction/" itemprop="commentCount"></span>
+                <a href="/2018/12/10/kvm-cpu/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2018/12/10/kvm-cpu/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -411,7 +393,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  1.3k
+                  1.9k
                 </span>
               
 
@@ -427,7 +409,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  6
+                  7
                 </span>
               
             </div>
@@ -448,26 +430,31 @@
       
 
       
-        <h2 id="什么是QMP协议"><a href="#什么是QMP协议" class="headerlink" title="什么是QMP协议"></a>什么是QMP协议</h2><p>QMP，即QEMU Machine Protocol，就是qemu虚拟机中的一种协议，是qemu的一部分。qmp是基于json格式的一整套协议，通过这套协议我们可以控制qemu虚拟机实例的整个生命周期，包括挂起、暂停、快照、查询、外设的热插拔等，以及最简单的查询，都可以通过qmp实现。 有多种方法使用qmp，这里简要介绍通过tcp和unix socket使用qmp。</p>
-<h2 id="QMP协议有哪些特征"><a href="#QMP协议有哪些特征" class="headerlink" title="QMP协议有哪些特征"></a>QMP协议有哪些特征</h2><p>1）轻量、基于文本、指令格式易于解析，因为它是json格式的；<br>2）支持异步消息，主要指通过qmp发送给虚拟机的指令支持异步；<br>3）Capabilities Negotiation，主要指我们初次建立qmp连接时，进入了capabilities negotiation模式,这时我们不能发送任何指令，除了qmp_capabilities指令，发送了qmp_capabilitie指令，我们就退出了capabilities negotiation模式，进入了指令模式（command mode），这时我们可以发送qmp指令，如{ “execute”: “query-status” }，这样就可以查询虚拟机的状态。</p>
-<h2 id="QMP协议有哪些模式"><a href="#QMP协议有哪些模式" class="headerlink" title="QMP协议有哪些模式"></a>QMP协议有哪些模式</h2><p> 有两种模式：Capabilities Negotiation模式和Command模式。</p>
-<h2 id="那么该如何建立qmp连接呢"><a href="#那么该如何建立qmp连接呢" class="headerlink" title="那么该如何建立qmp连接呢"></a>那么该如何建立qmp连接呢</h2><p>这里简要介绍通过tcp和unix socket使用qmp。</p>
-<h3 id="通过TCP使用QMP"><a href="#通过TCP使用QMP" class="headerlink" title="通过TCP使用QMP"></a>通过TCP使用QMP</h3><p>使用-qmp添加qmp相关参数：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./qemu-system-x86_64 -m 2048 -hda /root/centos6.img -<span class="built_in">enable</span>-kvm -qmp tcp:localhost:1234,server,nowait</span><br></pre></td></tr></table></figure>
-<p>新开一个终端使用telnet 链接localhost：1234</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">telnet localhost 1234</span><br></pre></td></tr></table></figure>
-<p>之后就可以使用qmp的命令和虚拟机交互了</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost ~]# telnet localhost 1234</span><br><span class="line">Trying ::1...</span><br><span class="line">Connected to localhost.</span><br><span class="line">Escape character is &apos;^]&apos;.</span><br><span class="line">&#123;&quot;QMP&quot;: &#123;&quot;version&quot;: &#123;&quot;qemu&quot;: &#123;&quot;micro&quot;: 0, &quot;minor&quot;: 6, &quot;major&quot;: 2&#125;, &quot;package&quot;: &quot;&quot;&#125;, &quot;capabilities&quot;: []&#125;&#125;</span><br><span class="line">&#123; &quot;execute&quot;: &quot;qmp_capabilities&quot; &#125;</span><br><span class="line">&#123;&quot;return&quot;: &#123;&#125;&#125;</span><br><span class="line">&#123; &quot;execute&quot;: &quot;query-status&quot; &#125;</span><br><span class="line">&#123;&quot;return&quot;: &#123;&quot;status&quot;: &quot;running&quot;, &quot;singlestep&quot;: false, &quot;running&quot;: true&#125;&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="通过unix-socket使用QMP"><a href="#通过unix-socket使用QMP" class="headerlink" title="通过unix socket使用QMP"></a>通过unix socket使用QMP</h3><p>使用unix socket创建qmp：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./qemu-system-x86_64 -m 2048 -hda /root/centos6.img -enable-kvm -qmp unix:/tmp/qmp-test,server,nowait</span><br></pre></td></tr></table></figure>
-<p>使用nc连接该socket:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -U /tmp/qmp-test</span><br></pre></td></tr></table></figure>
-<p>之后就一样了。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost qmp]# nc -U /tmp/qmp-test</span><br><span class="line">&#123;&quot;QMP&quot;: &#123;&quot;version&quot;: &#123;&quot;qemu&quot;: &#123;&quot;micro&quot;: 0, &quot;minor&quot;: 6, &quot;major&quot;: 2&#125;, &quot;package&quot;: &quot;&quot;&#125;, &quot;capabilities&quot;: []&#125;&#125;</span><br><span class="line">&#123; &quot;execute&quot;: &quot;qmp_capabilities&quot; &#125;</span><br><span class="line">&#123;&quot;return&quot;: &#123;&#125;&#125;</span><br><span class="line">&#123; &quot;execute&quot;: &quot;query-status&quot; &#125;</span><br><span class="line">&#123;&quot;return&quot;: &#123;&quot;status&quot;: &quot;running&quot;, &quot;singlestep&quot;: false, &quot;running&quot;: true&#125;&#125;</span><br></pre></td></tr></table></figure>
-<p>QMP的详细命令格式可以在qemu的代码树主目录下面的qmp-commands.hx中找到。</p>
-<h3 id="自动批量发送QMP命令"><a href="#自动批量发送QMP命令" class="headerlink" title="自动批量发送QMP命令"></a>自动批量发送QMP命令</h3><p>可以通过下面这个脚本给QEMU虚拟机发送命令。这对于测试虚拟机的一些功能是很有用的。试了一下，对于unix socket的方法能使用的，对于tcp连接的方法没有使用成功。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br></pre></td><td class="code"><pre><span class="line"># QEMU Monitor Protocol Python class</span><br><span class="line">#</span><br><span class="line"># Copyright (C) 2009 Red Hat Inc.</span><br><span class="line">#</span><br><span class="line"># This work is licensed under the terms of the GNU GPL, version 2.  See</span><br><span class="line"># the COPYING file in the top-level directory.</span><br><span class="line"></span><br><span class="line">import socket, json, time, commands</span><br><span class="line">from optparse import OptionParser</span><br><span class="line"></span><br><span class="line">class QMPError(Exception):</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">class QMPConnectError(QMPError):</span><br><span class="line">    pass</span><br><span class="line"></span><br><span class="line">class QEMUMonitorProtocol:</span><br><span class="line">    def connect(self):</span><br><span class="line">        print self.filename</span><br><span class="line">        self.sock.connect(self.filename)</span><br><span class="line">        data = self.__json_read()</span><br><span class="line">        if data == None:</span><br><span class="line">            raise QMPConnectError</span><br><span class="line">        if not data.has_key(&apos;QMP&apos;):</span><br><span class="line">            raise QMPConnectError</span><br><span class="line">        return data[&apos;QMP&apos;][&apos;capabilities&apos;]</span><br><span class="line"></span><br><span class="line">    def close(self):</span><br><span class="line">        self.sock.close()</span><br><span class="line"></span><br><span class="line">    def send_raw(self, line):</span><br><span class="line">        self.sock.send(str(line))</span><br><span class="line">        return self.__json_read()</span><br><span class="line"></span><br><span class="line">    def send(self, cmdline, timeout=30, convert=True):</span><br><span class="line">        end_time = time.time() + timeout</span><br><span class="line">        if convert:</span><br><span class="line">            cmd = self.__build_cmd(cmdline)</span><br><span class="line">        else:</span><br><span class="line">            cmd = cmdline</span><br><span class="line">	    print(&quot;*cmdline = %s&quot; % cmd)</span><br><span class="line">        print cmd</span><br><span class="line">        self.__json_send(cmd)</span><br><span class="line">        while time.time() &lt; end_time:</span><br><span class="line">            resp = self.__json_read()</span><br><span class="line">            if resp == None:</span><br><span class="line">                return (False, None)</span><br><span class="line">            elif resp.has_key(&apos;error&apos;):</span><br><span class="line">                return (False, resp[&apos;error&apos;])</span><br><span class="line">            elif resp.has_key(&apos;return&apos;):</span><br><span class="line">                return (True, resp[&apos;return&apos;])</span><br><span class="line"></span><br><span class="line">    def read(self, timeout=30):</span><br><span class="line">        o = &quot;&quot;</span><br><span class="line">        end_time = time.time() + timeout</span><br><span class="line">        while time.time() &lt; end_time:</span><br><span class="line">            try:</span><br><span class="line">                o += self.sock.recv(1024)</span><br><span class="line">                if len(o) &gt; 0:</span><br><span class="line">                    break</span><br><span class="line">            except:</span><br><span class="line">                time.sleep(0.01)</span><br><span class="line">        if len(o) &gt; 0:</span><br><span class="line">            return json.loads(o)</span><br><span class="line">        else:</span><br><span class="line">            return None</span><br><span class="line"></span><br><span class="line">    def __build_cmd(self, cmdline):</span><br><span class="line">        cmdargs = cmdline.split()</span><br><span class="line">        qmpcmd = &#123; &apos;execute&apos;: cmdargs[0], &apos;arguments&apos;: &#123;&#125; &#125;</span><br><span class="line">        for arg in cmdargs[1:]:</span><br><span class="line">            opt = arg.split(&apos;=&apos;)</span><br><span class="line">            try:</span><br><span class="line">                value = int(opt[1])</span><br><span class="line">            except ValueError:</span><br><span class="line">                value = opt[1]</span><br><span class="line">            qmpcmd[&apos;arguments&apos;][opt[0]] = value</span><br><span class="line">	print(&quot;*cmdline = %s&quot; % cmdline)</span><br><span class="line">        return qmpcmd</span><br><span class="line"></span><br><span class="line">    def __json_send(self, cmd):</span><br><span class="line">        # XXX: We have to send any additional char, otherwise</span><br><span class="line">        # the Server won&apos;t read our input</span><br><span class="line">        self.sock.send(json.dumps(cmd) + &apos; &apos;)</span><br><span class="line"></span><br><span class="line">    def __json_read(self):</span><br><span class="line">        try:</span><br><span class="line">            return json.loads(self.sock.recv(1024))</span><br><span class="line">        except ValueError:</span><br><span class="line">            return</span><br><span class="line"></span><br><span class="line">    def __init__(self, filename, protocol=&quot;tcp&quot;):</span><br><span class="line">        if protocol == &quot;tcp&quot;:</span><br><span class="line">            self.filename = (&quot;localhost&quot;, int(filename))</span><br><span class="line">            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)</span><br><span class="line">        elif protocol == &quot;unix&quot;:</span><br><span class="line">            self.filename = filename</span><br><span class="line">            print self.filename</span><br><span class="line">            self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)</span><br><span class="line">        #self.sock.setblocking(0)</span><br><span class="line">        self.sock.settimeout(5)</span><br><span class="line"></span><br><span class="line">if __name__ == &quot;__main__&quot;:</span><br><span class="line">    parser = OptionParser()</span><br><span class="line">    parser.add_option(&apos;-n&apos;, &apos;--num&apos;, dest=&apos;num&apos;, default=&apos;10&apos;, help=&apos;Times want to try&apos;)</span><br><span class="line">    parser.add_option(&apos;-f&apos;, &apos;--file&apos;, dest=&apos;port&apos;, default=&apos;4444&apos;, help=&apos;QMP port/filename&apos;)</span><br><span class="line">    parser.add_option(&apos;-p&apos;, &apos;--protocol&apos;, dest=&apos;protocol&apos;,default=&apos;tcp&apos;, help=&apos;QMP protocol&apos;)</span><br><span class="line">    def usage():</span><br><span class="line">        parser.print_help()</span><br><span class="line">        sys.exit(1)</span><br><span class="line"></span><br><span class="line">    options, args = parser.parse_args()</span><br><span class="line"></span><br><span class="line">    print options</span><br><span class="line">    if len(args) &gt; 0:</span><br><span class="line">        usage()</span><br><span class="line"></span><br><span class="line">    num = int(options.num)</span><br><span class="line">    qmp_filename = options.port</span><br><span class="line">    qmp_protocol = options.protocol</span><br><span class="line">    qmp_socket = QEMUMonitorProtocol(qmp_filename,qmp_protocol)</span><br><span class="line">    qmp_socket.connect()</span><br><span class="line">    qmp_socket.send(&quot;qmp_capabilities&quot;)</span><br><span class="line">    qmp_socket.close()</span><br><span class="line"></span><br><span class="line">##########################################################</span><br><span class="line">#Usage</span><br><span class="line">#Options:</span><br><span class="line">#  -h, --help            show this help message and exit</span><br><span class="line">#  -n NUM, --num=NUM     Times want to try</span><br><span class="line">#  -f PORT, --file=PORT  QMP port/filename</span><br><span class="line">#  -p PROTOCOL, --protocol=PROTOCOL</span><br><span class="line">#                        QMP protocol</span><br><span class="line"># e.g: # python xxxxx.py -n $NUM -f $PORT</span><br><span class="line">##########################################################</span><br></pre></td></tr></table></figure>
-<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><p>关于QMP更详细的文档，可以参考其官方文档：<br><a href="https://wiki.qemu.org/Documentation/QMP" target="_blank" rel="noopener">https://wiki.qemu.org/Documentation/QMP</a></p>
+        <h2 id="CPU-虚拟化简介"><a href="#CPU-虚拟化简介" class="headerlink" title="CPU 虚拟化简介"></a>CPU 虚拟化简介</h2><p>上一篇文章笼统的介绍了一个虚拟机的诞生过程，从demo中也可以看到，运行一个虚拟机再也不需要像以前想象的那样，需要用软件来模拟硬件指令集了。虚拟机的指令集直接运行在宿主机物理CPU上，当虚拟机中的指令设计到IO操作或者一些特殊指令的时候，控制权转让给了宿主机（这里其实是转让给了vm monitor，下面检查VMM），也就是一个demo进程，他在宿主机上的表现形式也就是一个用户级进程。</p>
+<p>用一张图来解释更为贴切。</p>
+<p><img src="/2018/12/10/kvm-cpu/vcpu-follow.png" alt=""></p>
+<p>VMM完成vCPU，内存的初始化后，通过ioctl调用KVM的接口，完成虚拟机的创建，并创建一个线程来运行VM，由于VM在前期初始化的时候会设置各种寄存器来帮助KVM查找到需要加载的指令的入口（main函数）。所以线程在调用了KVM接口后，物理CPU的控制权就交给了VM。VM运行在VMX non-root模式，这是Intel-V或者AMD-V提供的一种特殊的CPU执行模式。然后当VM执行了特殊指令的时候，CPU将当前VM的上下文保存到VMCS寄存器（这个寄存器是一个指针，保存了实际的上下文地址），然后执行权切换到VMM。VMM 获取 VM 返回原因，并做处理。如果是IO请求，VMM 可以直接读取VM的内存并将IO操作模拟出来，然后再调用VMRESUME指令，VM继续执行，此时在VM看来，IO操作的指令被CPU执行了。</p>
+<h2 id="Intel-V-技术"><a href="#Intel-V-技术" class="headerlink" title="Intel-V 技术"></a>Intel-V 技术</h2><p>Intel-V 技术是Intel为了支持虚拟化而提供的一套CPU特殊运行模式。</p>
+<h3 id="Intel-V虚拟化技术结构"><a href="#Intel-V虚拟化技术结构" class="headerlink" title="Intel-V虚拟化技术结构"></a>Intel-V虚拟化技术结构</h3><p>Intel-V 在IA-32处理器上扩展了处理器等级，原来的CPU支持ring0~ring3 4个等级，但是Linux只使用了其中的两个ring0,ring3。当CPU寄存器标示了当前CPU处于ring0级别的时候，表示此时CPU正在运行的是内核的代码。而当CPU处于ring3级别的时候，表示此时CPU正在运行的是用户级别的代码。当发生系统调用或者进程切换的时候，CPU会从ring3级别转到ring0级别。ring3级别是不允许执行硬件操作的，所有硬件操作都需要系统提供的API来完成。<br>比如说一个IO操作：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">int nread = read(fd, buffer, 1024);</span><br></pre></td></tr></table></figure>
+<p>当执行到此段代码的时候，然后查找到系统调用号，保存到寄存器eax，然后会将对应的参数压栈后产生一个系统调用中断，对应的是 int $0x80。产生了系统调用中断后，此时CPU将切换到ring0模式，内核通过寄存器读取到参数，并完成最后的IO后续操作，操作完成后返回ring3模式。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">movel　　$3,%eax</span><br><span class="line">movel　　fd,%ebx</span><br><span class="line">movel　　buffer,%ecx</span><br><span class="line">movel　　1024,%edx　　　　　　</span><br><span class="line">int　　  $0x80</span><br></pre></td></tr></table></figure>
+<p>Intel-V 在 ring0~ring3 的基础上，增加了VMX模式，VMX分为root和non-root。这里的VMX root模式是给VMM（前面有提到VM monitor)，在KVM体系中，就是qemu-kvm进程所运行的模式。VMX non-root模式就是运行的Guest，Guest也分ring0~ring3，不过他并不感知自己处于VMX non-root模式下。</p>
+<p><img src="/2018/12/10/kvm-cpu/vcpu-ring.png" alt=""></p>
+<p>Intel的虚拟架构基本上分两个部分:</p>
+<ul>
+<li>虚拟机监视器</li>
+<li>客户机（Guest VM)</li>
+</ul>
+<h4 id="虚拟机监视器（Virtual-machine-monitors-VMM"><a href="#虚拟机监视器（Virtual-machine-monitors-VMM" class="headerlink" title="虚拟机监视器（Virtual-machine monitors - VMM)"></a>虚拟机监视器（Virtual-machine monitors - VMM)</h4><p>虚拟机监视器在宿主机上表现为一个提供虚拟机CPU，内存以及一系列硬件虚拟的实体，这个实体在KVM体系中就是一个进程，如qemu-kvm。VMM负责管理虚拟机的资源，并拥有所有虚拟机资源的控制权，包括切换虚拟机的CPU上下文等。</p>
+<h4 id="Guest"><a href="#Guest" class="headerlink" title="Guest"></a>Guest</h4><p>这个Guest在前面的Demo里面也提到，可能是一个操作系统（OS），也可能就是一个二进制程序，whatever，对于VMM来说，他就是一堆指令集，只需要知道入口（rip寄存器值）就可以加载。<br>Guest运行需要虚拟CPU，当Guest代码运行的时候，处于VMX non-root模式，此模式下，该用什么指令还是用什么指令，该用寄存器该用cache还是用cache，但是在执行到特殊指令的时候（比如Demo中的out指令），把CPU控制权交给VMM，由VMM来处理特殊指令，完成硬件操作。</p>
+<h4 id="VMM-与-Guest-的切换"><a href="#VMM-与-Guest-的切换" class="headerlink" title="VMM 与 Guest 的切换"></a>VMM 与 Guest 的切换</h4><p><img src="/2018/12/10/kvm-cpu/vmm_guest_switch.png" alt=""></p>
+<p>Guest与VMM之间的切换分两个部分：VM entry 和 VM exit。有几种情况会导致VM exit，比如说Guest执行了硬件访问操作，或者Guest调用了VMCALL指令或者调用了退出指令或者产生了一个page fault，或者访问了特殊设备的寄存器等。当Guest处于VMX模式的时候，没有提供获取是否处于此模式下的指令或者寄存器，也就是说，Guest不能判断当前CPU是否处于VMX模式。当产生VM exit的时候，CPU会将exit reason保存到MSRs（VMX模式的特殊寄存器组），对应到KVM就是vCPU-&gt;kvm_run-&gt;exit_reason。VMM根据exit_reason做相应的处理。</p>
+<h4 id="VMM-的生命周期"><a href="#VMM-的生命周期" class="headerlink" title="VMM 的生命周期"></a>VMM 的生命周期</h4><p>如上图所示，VMM 开始于VMXON 指令，结束与VMXOFF指令。<br>第一次启动Guest，通过VMLAUNCH指令加载Guest，这时候一切都是新的，比如说起始的rip寄存器等。后续Guest exit后再entry，是通过VMRESUME指令，此指令会将VMCS(后面会介绍到）所指向的内容加载到当前Guest的上下文，以便Guest继续执行。</p>
+<h4 id="VMCS-（Virtual-Machine-control-structure"><a href="#VMCS-（Virtual-Machine-control-structure" class="headerlink" title="VMCS （Virtual-Machine control structure)"></a>VMCS （Virtual-Machine control structure)</h4><p>顾名思义，VMCS就是虚拟机控制结构，前面提到过很多次，Guest Exit的时候，会将当前Guest的上下文保存到VMCS中，Guest entry的时候把VMCS上下文恢复到VMM。VMCS是一个64位的指针，指向一个真实的内存地址，VMCS是以vCPU为单位的，就是说当前有多少个vCPU，就有多少个VMCS指针。VMCS的操作包括VMREAD，VMWRITE，VMCLEAR。</p>
+<h4 id="Guest-exit-Reason"><a href="#Guest-exit-Reason" class="headerlink" title="Guest exit Reason"></a>Guest exit Reason</h4><p>下面是qemu-kvm定义的exit reason。可以看到有很多可能会导致Guest转让控制权。选取几个解释一下。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">static int (*const kvm_vmx_exit_handlers[])(struct kvm_vcpu *vcpu) = &#123;</span><br><span class="line">    [EXIT_REASON_EXCEPTION_NMI]           = handle_exception, </span><br><span class="line">    [EXIT_REASON_EXTERNAL_INTERRUPT]      = handle_external_interrupt, </span><br><span class="line">    [EXIT_REASON_TRIPLE_FAULT]            = handle_triple_fault,</span><br><span class="line">    [EXIT_REASON_NMI_WINDOW]              = handle_nmi_window,</span><br><span class="line">     // 访问了IO设备</span><br><span class="line">    [EXIT_REASON_IO_INSTRUCTION]          = handle_io,</span><br><span class="line">     // 访问了CR寄存器，地址寄存器，和DR寄存器（debug register)一样，用于调试</span><br><span class="line">    [EXIT_REASON_CR_ACCESS]               = handle_cr,</span><br><span class="line">    [EXIT_REASON_DR_ACCESS]               = handle_dr, </span><br><span class="line">    [EXIT_REASON_CPUID]                   = handle_cpuid,</span><br><span class="line">    // 访问了MSR寄存器</span><br><span class="line">    [EXIT_REASON_MSR_READ]                = handle_rdmsr,</span><br><span class="line">    [EXIT_REASON_MSR_WRITE]               = handle_wrmsr,</span><br><span class="line">    [EXIT_REASON_PENDING_INTERRUPT]       = handle_interrupt_window,</span><br><span class="line">    // Guest执行了HLT指令，Demo开胃菜就是这个指令</span><br><span class="line">    [EXIT_REASON_HLT]                     = handle_halt,</span><br><span class="line">    [EXIT_REASON_INVD]                    = handle_invd,</span><br><span class="line">    [EXIT_REASON_INVLPG]                  = handle_invlpg,</span><br><span class="line">    [EXIT_REASON_RDPMC]                   = handle_rdpmc,</span><br><span class="line">    // 不太清楚以下VM系列的指令有什么用，猜测是递归VM（虚拟机里面运行虚拟机）</span><br><span class="line">    [EXIT_REASON_VMCALL]                  = handle_vmcall, </span><br><span class="line">    [EXIT_REASON_VMCLEAR]                 = handle_vmclear,</span><br><span class="line">    [EXIT_REASON_VMLAUNCH]                = handle_vmlaunch,</span><br><span class="line">    [EXIT_REASON_VMPTRLD]                 = handle_vmptrld,</span><br><span class="line">    [EXIT_REASON_VMPTRST]                 = handle_vmptrst,</span><br><span class="line">    [EXIT_REASON_VMREAD]                  = handle_vmread,</span><br><span class="line">    [EXIT_REASON_VMRESUME]                = handle_vmresume,</span><br><span class="line">    [EXIT_REASON_VMWRITE]                 = handle_vmwrite,</span><br><span class="line">    [EXIT_REASON_VMOFF]                   = handle_vmoff,</span><br><span class="line">    [EXIT_REASON_VMON]                    = handle_vmon,</span><br><span class="line"></span><br><span class="line">    [EXIT_REASON_TPR_BELOW_THRESHOLD]     = handle_tpr_below_threshold,</span><br><span class="line">    // 访问了高级PCI设备</span><br><span class="line">    [EXIT_REASON_APIC_ACCESS]             = handle_apic_access,</span><br><span class="line">    [EXIT_REASON_APIC_WRITE]              = handle_apic_write,</span><br><span class="line">    [EXIT_REASON_EOI_INDUCED]             = handle_apic_eoi_induced,</span><br><span class="line">    [EXIT_REASON_WBINVD]                  = handle_wbinvd,</span><br><span class="line">    [EXIT_REASON_XSETBV]                  = handle_xsetbv,</span><br><span class="line">    // 进程切换</span><br><span class="line">    [EXIT_REASON_TASK_SWITCH]             = handle_task_switch,</span><br><span class="line">    [EXIT_REASON_MCE_DURING_VMENTRY]      = handle_machine_check,</span><br><span class="line">    // ept 是Intel的一个硬件内存虚拟化技术</span><br><span class="line">    [EXIT_REASON_EPT_VIOLATION]           = handle_ept_violation,</span><br><span class="line">    [EXIT_REASON_EPT_MISCONFIG]           = handle_ept_misconfig,</span><br><span class="line">    // 执行了暂停指令</span><br><span class="line">    [EXIT_REASON_PAUSE_INSTRUCTION]       = handle_pause,</span><br><span class="line">    [EXIT_REASON_MWAIT_INSTRUCTION]       = handle_invalid_op,</span><br><span class="line">    [EXIT_REASON_MONITOR_INSTRUCTION]     = handle_invalid_op,</span><br><span class="line">    [EXIT_REASON_INVEPT]                  = handle_invept,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>KVM的CPU虚拟化依托于Intel-V提供的虚拟化技术，将Guest运行于VMX模式，当执行了特殊操作的时候，将控制权返回给VMM。VMM处理完特殊操作后再把结果返回给Guest。<br>CPU虚拟化可以说是KVM的最关键的核心，弄清楚了VM Exit和VM Entry。后续的IO虚拟化，内存虚拟化都是建立在此基础上。下一章介绍内存虚拟化。</p>
 
       
     </div>
@@ -517,7 +504,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://www.owalle.com/2018/12/10/qmp-introduction/" title="QMP 简介">http://www.owalle.com/2018/12/10/qmp-introduction/</a>
+    <a href="http://www.owalle.com/2018/12/10/kvm-cpu/" title="KVM 虚拟化原理3--CPU">http://www.owalle.com/2018/12/10/kvm-cpu/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>
@@ -530,14 +517,6 @@
 
     <footer class="post-footer">
       
-        <div class="post-tags">
-          
-            <a href="/tags/QEMU/" rel="tag"># QEMU</a>
-          
-            <a href="/tags/QMP/" rel="tag"># QMP</a>
-          
-        </div>
-      
 
       
       
@@ -547,8 +526,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/11/26/hello-world/" rel="next" title="Hello World">
-                <i class="fa fa-chevron-left"></i> Hello World
+              <a href="/2018/12/10/kvm-boot/" rel="next" title="KVM 虚拟化原理2— QEMU启动过程">
+                <i class="fa fa-chevron-left"></i> KVM 虚拟化原理2— QEMU启动过程
               </a>
             
           </div>
@@ -557,8 +536,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2018/12/10/kvm-overview/" rel="prev" title="KVM 虚拟化原理1 -- 概述">
-                KVM 虚拟化原理1 -- 概述 <i class="fa fa-chevron-right"></i>
+              <a href="/2018/12/10/kvm-memory/" rel="prev" title="KVM 虚拟化原理4--内存">
+                KVM 虚拟化原理4--内存 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -740,7 +719,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是QMP协议"><span class="nav-number">1.</span> <span class="nav-text">什么是QMP协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#QMP协议有哪些特征"><span class="nav-number">2.</span> <span class="nav-text">QMP协议有哪些特征</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#QMP协议有哪些模式"><span class="nav-number">3.</span> <span class="nav-text">QMP协议有哪些模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#那么该如何建立qmp连接呢"><span class="nav-number">4.</span> <span class="nav-text">那么该如何建立qmp连接呢</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#通过TCP使用QMP"><span class="nav-number">4.1.</span> <span class="nav-text">通过TCP使用QMP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通过unix-socket使用QMP"><span class="nav-number">4.2.</span> <span class="nav-text">通过unix socket使用QMP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#自动批量发送QMP命令"><span class="nav-number">4.3.</span> <span class="nav-text">自动批量发送QMP命令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文档"><span class="nav-number">5.</span> <span class="nav-text">参考文档</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU-虚拟化简介"><span class="nav-number">1.</span> <span class="nav-text">CPU 虚拟化简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Intel-V-技术"><span class="nav-number">2.</span> <span class="nav-text">Intel-V 技术</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Intel-V虚拟化技术结构"><span class="nav-number">2.1.</span> <span class="nav-text">Intel-V虚拟化技术结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#虚拟机监视器（Virtual-machine-monitors-VMM"><span class="nav-number">2.1.1.</span> <span class="nav-text">虚拟机监视器（Virtual-machine monitors - VMM)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Guest"><span class="nav-number">2.1.2.</span> <span class="nav-text">Guest</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#VMM-与-Guest-的切换"><span class="nav-number">2.1.3.</span> <span class="nav-text">VMM 与 Guest 的切换</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#VMM-的生命周期"><span class="nav-number">2.1.4.</span> <span class="nav-text">VMM 的生命周期</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#VMCS-（Virtual-Machine-control-structure"><span class="nav-number">2.1.5.</span> <span class="nav-text">VMCS （Virtual-Machine control structure)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Guest-exit-Reason"><span class="nav-number">2.1.6.</span> <span class="nav-text">Guest exit Reason</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
             
 
           </div>

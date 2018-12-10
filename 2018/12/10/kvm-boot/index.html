@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+<meta name="google-site-verification" content="MrnK1va2f2DY7TM-4onuV7g_G6yZyI3WkYbaykR0Ln0">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-minimal.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="虚拟机启动过程1234567891011121314第一步，获取到kvm句柄kvmfd = open(&amp;quot;/dev/kvm&amp;quot;, O_RDWR);第二步，创建虚拟机，获取到虚拟机句柄。vmfd = ioctl(kvmfd, KVM_CREATE_VM, 0);第三步，为虚拟机映射内存，还有其他的PCI，信号处理的初始化。ioctl(kvmfd, KVM_SET_USER_MEMOR">
+<meta name="keywords" content="KVM Linux Kernel Qemu">
+<meta property="og:type" content="article">
+<meta property="og:title" content="KVM 虚拟化原理2— QEMU启动过程">
+<meta property="og:url" content="http://www.owalle.com/2018/12/10/kvm-boot/index.html">
+<meta property="og:site_name" content="Yi颗烂樱桃">
+<meta property="og:description" content="虚拟机启动过程1234567891011121314第一步，获取到kvm句柄kvmfd = open(&amp;quot;/dev/kvm&amp;quot;, O_RDWR);第二步，创建虚拟机，获取到虚拟机句柄。vmfd = ioctl(kvmfd, KVM_CREATE_VM, 0);第三步，为虚拟机映射内存，还有其他的PCI，信号处理的初始化。ioctl(kvmfd, KVM_SET_USER_MEMOR">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-12-10T15:15:23.349Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="KVM 虚拟化原理2— QEMU启动过程">
+<meta name="twitter:description" content="虚拟机启动过程1234567891011121314第一步，获取到kvm句柄kvmfd = open(&amp;quot;/dev/kvm&amp;quot;, O_RDWR);第二步，创建虚拟机，获取到虚拟机句柄。vmfd = ioctl(kvmfd, KVM_CREATE_VM, 0);第三步，为虚拟机映射内存，还有其他的PCI，信号处理的初始化。ioctl(kvmfd, KVM_SET_USER_MEMOR">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.owalle.com/2018/12/10/kvm-boot/">
+
+
+
+
+
+  <title>KVM 虚拟化原理2— QEMU启动过程 | Yi颗烂樱桃</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a rel="external nofollow" href="/" class="brand">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Yi颗烂樱桃</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">虚拟化相关技术</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a rel="external nofollow" href="/">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a rel="external nofollow" href="/archives/">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a rel="external nofollow" href="/categories/">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a rel="external nofollow" href="/tags/">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a rel="external nofollow" href="/about/">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-sitemap">
+          <a rel="external nofollow" href="/sitemap.xml">
+            
+              <i class="menu-item-icon fa fa-fw fa-sitemap"></i> <br>
+            
+            站点地图
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a rel="external nofollow" href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2018/12/10/kvm-boot/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">KVM 虚拟化原理2— QEMU启动过程</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-12-10T22:57:17+08:00">
+                2018-12-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/12/10/kvm-boot/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2018/12/10/kvm-boot/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  4k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  18
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="虚拟机启动过程"><a href="#虚拟机启动过程" class="headerlink" title="虚拟机启动过程"></a>虚拟机启动过程</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">第一步，获取到kvm句柄</span><br><span class="line">kvmfd = open(&quot;/dev/kvm&quot;, O_RDWR);</span><br><span class="line">第二步，创建虚拟机，获取到虚拟机句柄。</span><br><span class="line">vmfd = ioctl(kvmfd, KVM_CREATE_VM, 0);</span><br><span class="line">第三步，为虚拟机映射内存，还有其他的PCI，信号处理的初始化。</span><br><span class="line">ioctl(kvmfd, KVM_SET_USER_MEMORY_REGION, &amp;mem);</span><br><span class="line">第四步，将虚拟机镜像映射到内存，相当于物理机的boot过程，把镜像映射到内存。</span><br><span class="line">第五步，创建vCPU，并为vCPU分配内存空间。</span><br><span class="line">ioctl(kvmfd, KVM_CREATE_VCPU, vcpuid);</span><br><span class="line">vcpu-&gt;kvm_run_mmap_size = ioctl(kvm-&gt;dev_fd, KVM_GET_VCPU_MMAP_SIZE, 0);</span><br><span class="line">第五步，创建vCPU个数的线程并运行虚拟机。</span><br><span class="line">ioctl(kvm-&gt;vcpus-&gt;vcpu_fd, KVM_RUN, 0);</span><br><span class="line">第六步，线程进入循环，并捕获虚拟机退出原因，做相应的处理。</span><br><span class="line">这里的退出并不一定是虚拟机关机，虚拟机如果遇到IO操作，访问硬件设备，缺页中断等都会退出执行，退出执行可以理解为将CPU执行上下文返回到QEMU。</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">open(&quot;/dev/kvm&quot;)</span><br><span class="line">ioctl(KVM_CREATE_VM)</span><br><span class="line">ioctl(KVM_CREATE_VCPU)</span><br><span class="line">for (;;) &#123;</span><br><span class="line">     ioctl(KVM_RUN)</span><br><span class="line">     switch (exit_reason) &#123;</span><br><span class="line">     case KVM_EXIT_IO:  /* ... */</span><br><span class="line">     case KVM_EXIT_HLT: /* ... */</span><br><span class="line">     &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>关于KVM_CREATE_VM参数的描述，创建的VM是没有cpu和内存的，需要QEMU进程利用mmap系统调用映射一块内存给VM的描述符，其实也就是给VM创建内存的过程。</p>
+<p><a href="https://github.com/torvalds/linux/blob/master/Documentation/virtual/kvm/api.txt" target="_blank" rel="noopener">KVM ioctl接口文档</a></p>
+<h2 id="先来一个KVM-API开胃菜"><a href="#先来一个KVM-API开胃菜" class="headerlink" title="先来一个KVM API开胃菜"></a>先来一个KVM API开胃菜</h2><p>下面是一个KVM的简单demo，其目的在于加载 code 并使用KVM运行起来.<br>这是一个at&amp;t的8086汇编，.code16表示他是一个16位的，当然直接运行是运行不起来的，为了让他运行起来，我们可以用KVM提供的API，将这个程序看做一个最简单的操作系统，让其运行起来。<br>这个汇编的作用是输出al寄存器的值到0x3f8端口。对于x86架构来说，通过IN/OUT指令访问。PC架构一共有65536个8bit的I/O端口，组成64KI/O地址空间，编号从0~0xFFFF。连续两个8bit的端口可以组成一个16bit的端口，连续4个组成一个32bit的端口。I/O地址空间和CPU的物理地址空间是两个不同的概念，例如I/O地址空间为64K，一个32bit的CPU物理地址空间是4G。<br>最终程序理想的输出应该是，al，bl的值后面KVM初始化的时候有赋值。<br>4\n (并不直接输出\n，而是换了一行），hlt 指令表示虚拟机退出</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">.globl _start</span><br><span class="line">    .code16</span><br><span class="line">_start:</span><br><span class="line">    mov $0x3f8, %dx</span><br><span class="line">    add %bl, %al</span><br><span class="line">    add $&apos;0&apos;, %al</span><br><span class="line">    out %al, (%dx)</span><br><span class="line">    mov $&apos;\n&apos;, %al</span><br><span class="line">    out %al, (%dx)</span><br><span class="line">    hlt</span><br></pre></td></tr></table></figure>
+<p>我们编译一下这个汇编，得到一个 Bin.bin 的二进制文件</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">as -32 bin.S -o bin.o</span><br><span class="line">ld -m elf_i386 --oformat binary -N -e _start -Ttext 0x10000 -o Bin.bin bin.o</span><br></pre></td></tr></table></figure>
+<p>查看一下二进制格式</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">➜  demo1 hexdump -C bin.bin</span><br><span class="line">00000000  ba f8 03 00 d8 04 30 ee  b0 0a ee f4              |......0.....|</span><br><span class="line">0000000c</span><br><span class="line">对应了下面的code数组，这样直接加载字节码就不需要再从文件加载了</span><br><span class="line">    const uint8_t code[] = &#123;</span><br><span class="line">        0xba, 0xf8, 0x03, /* mov $0x3f8, %dx */</span><br><span class="line">        0x00, 0xd8,       /* add %bl, %al */</span><br><span class="line">        0x04, &apos;0&apos;,        /* add $&apos;0&apos;, %al */</span><br><span class="line">        0xee,             /* out %al, (%dx) */</span><br><span class="line">        0xb0, &apos;\n&apos;,       /* mov $&apos;\n&apos;, %al */</span><br><span class="line">        0xee,             /* out %al, (%dx) */</span><br><span class="line">        0xf4,             /* hlt */</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;err.h&gt;</span><br><span class="line">#include &lt;fcntl.h&gt;</span><br><span class="line">#include &lt;linux/kvm.h&gt;</span><br><span class="line">#include &lt;stdint.h&gt;</span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line">#include &lt;string.h&gt;</span><br><span class="line">#include &lt;sys/ioctl.h&gt;</span><br><span class="line">#include &lt;sys/mman.h&gt;</span><br><span class="line">#include &lt;sys/stat.h&gt;</span><br><span class="line">#include &lt;sys/types.h&gt;</span><br><span class="line"></span><br><span class="line">int main(void)</span><br><span class="line">&#123;</span><br><span class="line">    int kvm, vmfd, vcpufd, ret;</span><br><span class="line">    const uint8_t code[] = &#123;</span><br><span class="line">        0xba, 0xf8, 0x03, /* mov $0x3f8, %dx */</span><br><span class="line">        0x00, 0xd8,       /* add %bl, %al */</span><br><span class="line">        0x04, &apos;0&apos;,        /* add $&apos;0&apos;, %al */</span><br><span class="line">        0xee,             /* out %al, (%dx) */</span><br><span class="line">        0xb0, &apos;\n&apos;,       /* mov $&apos;\n&apos;, %al */</span><br><span class="line">        0xee,             /* out %al, (%dx) */</span><br><span class="line">        0xf4,             /* hlt */</span><br><span class="line">    &#125;;</span><br><span class="line">    uint8_t *mem;</span><br><span class="line">    struct kvm_sregs sregs;</span><br><span class="line">    size_t mmap_size;</span><br><span class="line">    struct kvm_run *run;</span><br><span class="line"></span><br><span class="line">    // 获取 kvm 句柄</span><br><span class="line">    kvm = open(&quot;/dev/kvm&quot;, O_RDWR | O_CLOEXEC);</span><br><span class="line">    if (kvm == -1)</span><br><span class="line">        err(1, &quot;/dev/kvm&quot;);</span><br><span class="line"></span><br><span class="line">    // 确保是正确的 API 版本</span><br><span class="line">    ret = ioctl(kvm, KVM_GET_API_VERSION, NULL);</span><br><span class="line">    if (ret == -1)</span><br><span class="line">        err(1, &quot;KVM_GET_API_VERSION&quot;);</span><br><span class="line">    if (ret != 12)</span><br><span class="line">        errx(1, &quot;KVM_GET_API_VERSION %d, expected 12&quot;, ret);</span><br><span class="line"></span><br><span class="line">    // 创建一虚拟机</span><br><span class="line">    vmfd = ioctl(kvm, KVM_CREATE_VM, (unsigned long)0);</span><br><span class="line">    if (vmfd == -1)</span><br><span class="line">        err(1, &quot;KVM_CREATE_VM&quot;);</span><br><span class="line"></span><br><span class="line">    // 为这个虚拟机申请内存，并将代码（镜像）加载到虚拟机内存中</span><br><span class="line">    mem = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);</span><br><span class="line">    if (!mem)</span><br><span class="line">        err(1, &quot;allocating guest memory&quot;);</span><br><span class="line">    memcpy(mem, code, sizeof(code));</span><br><span class="line"></span><br><span class="line">    // 为什么从 0x1000 开始呢，因为页表空间的前4K是留给页表目录</span><br><span class="line">    struct kvm_userspace_memory_region region = &#123;</span><br><span class="line">        .slot = 0,</span><br><span class="line">        .guest_phys_addr = 0x1000,</span><br><span class="line">        .memory_size = 0x1000,</span><br><span class="line">        .userspace_addr = (uint64_t)mem,</span><br><span class="line">    &#125;;</span><br><span class="line">    // 设置 KVM 的内存区域</span><br><span class="line">    ret = ioctl(vmfd, KVM_SET_USER_MEMORY_REGION, &amp;region);</span><br><span class="line">    if (ret == -1)</span><br><span class="line">        err(1, &quot;KVM_SET_USER_MEMORY_REGION&quot;);</span><br><span class="line"></span><br><span class="line">    // 创建虚拟CPU</span><br><span class="line">    vcpufd = ioctl(vmfd, KVM_CREATE_VCPU, (unsigned long)0);</span><br><span class="line">    if (vcpufd == -1)</span><br><span class="line">        err(1, &quot;KVM_CREATE_VCPU&quot;);</span><br><span class="line"></span><br><span class="line">    // 获取 KVM 运行时结构的大小</span><br><span class="line">    ret = ioctl(kvm, KVM_GET_VCPU_MMAP_SIZE, NULL);</span><br><span class="line">    if (ret == -1)</span><br><span class="line">        err(1, &quot;KVM_GET_VCPU_MMAP_SIZE&quot;);</span><br><span class="line">    mmap_size = ret;</span><br><span class="line">    if (mmap_size &lt; sizeof(*run))</span><br><span class="line">        errx(1, &quot;KVM_GET_VCPU_MMAP_SIZE unexpectedly small&quot;);</span><br><span class="line">    // 将 kvm run 与 vcpu 做关联，这样能够获取到kvm的运行时信息</span><br><span class="line">    run = mmap(NULL, mmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, vcpufd, 0);</span><br><span class="line">    if (!run)</span><br><span class="line">        err(1, &quot;mmap vcpu&quot;);</span><br><span class="line"></span><br><span class="line">    // 获取特殊寄存器</span><br><span class="line">    ret = ioctl(vcpufd, KVM_GET_SREGS, &amp;sregs);</span><br><span class="line">    if (ret == -1)</span><br><span class="line">        err(1, &quot;KVM_GET_SREGS&quot;);</span><br><span class="line">    // 设置代码段为从地址0处开始，我们的代码被加载到了0x0000的起始位置</span><br><span class="line">    sregs.cs.base = 0;</span><br><span class="line">    sregs.cs.selector = 0;</span><br><span class="line">    // KVM_SET_SREGS 设置特殊寄存器</span><br><span class="line">    ret = ioctl(vcpufd, KVM_SET_SREGS, &amp;sregs);</span><br><span class="line">    if (ret == -1)</span><br><span class="line">        err(1, &quot;KVM_SET_SREGS&quot;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    // 设置代码的入口地址，相当于32位main函数的地址，这里16位汇编都是由0x1000处开始。</span><br><span class="line">    // 如果是正式的镜像，那么rip的值应该是类似引导扇区加载进来的指令</span><br><span class="line">    struct kvm_regs regs = &#123;</span><br><span class="line">        .rip = 0x1000,</span><br><span class="line">        .rax = 2,    // 设置 ax 寄存器初始值为 2</span><br><span class="line">        .rbx = 2,    // 同理</span><br><span class="line">        .rflags = 0x2,   // 初始化flags寄存器，x86架构下需要设置，否则会粗错</span><br><span class="line">    &#125;;</span><br><span class="line">    ret = ioctl(vcpufd, KVM_SET_REGS, &amp;regs);</span><br><span class="line">    if (ret == -1)</span><br><span class="line">        err(1, &quot;KVM_SET_REGS&quot;);</span><br><span class="line"></span><br><span class="line">    // 开始运行虚拟机，如果是qemu-kvm，会用一个线程来执行这个vCPU，并加载指令</span><br><span class="line">    while (1) &#123;</span><br><span class="line">        // 开始运行虚拟机</span><br><span class="line">        ret = ioctl(vcpufd, KVM_RUN, NULL);</span><br><span class="line">        if (ret == -1)</span><br><span class="line">            err(1, &quot;KVM_RUN&quot;);</span><br><span class="line">        // 获取虚拟机退出原因</span><br><span class="line">        switch (run-&gt;exit_reason) &#123;</span><br><span class="line">        case KVM_EXIT_HLT:</span><br><span class="line">            puts(&quot;KVM_EXIT_HLT&quot;);</span><br><span class="line">            return 0;</span><br><span class="line">        // 汇编调用了 out 指令，vmx 模式下不允许执行这个操作，所以</span><br><span class="line">        // 将操作权切换到了宿主机，切换的时候会将上下文保存到VMCS寄存器</span><br><span class="line">        // 后面CPU虚拟化会讲到这部分</span><br><span class="line">        // 因为虚拟机的内存宿主机能够直接读取到，所以直接在宿主机上获取到</span><br><span class="line">        // 虚拟机的输出（out指令），这也是后面PCI设备虚拟化的一个基础，DMA模式的PCI设备</span><br><span class="line">        case KVM_EXIT_IO:</span><br><span class="line">            if (run-&gt;io.direction == KVM_EXIT_IO_OUT &amp;&amp; run-&gt;io.size == 1 &amp;&amp; run-&gt;io.port == 0x3f8 &amp;&amp; run-&gt;io.count == 1)</span><br><span class="line">                putchar(*(((char *)run) + run-&gt;io.data_offset));</span><br><span class="line">            else</span><br><span class="line">                errx(1, &quot;unhandled KVM_EXIT_IO&quot;);</span><br><span class="line">            break;</span><br><span class="line">        case KVM_EXIT_FAIL_ENTRY:</span><br><span class="line">            errx(1, &quot;KVM_EXIT_FAIL_ENTRY: hardware_entry_failure_reason = 0x%llx&quot;,</span><br><span class="line">                 (unsigned long long)run-&gt;fail_entry.hardware_entry_failure_reason);</span><br><span class="line">        case KVM_EXIT_INTERNAL_ERROR:</span><br><span class="line">            errx(1, &quot;KVM_EXIT_INTERNAL_ERROR: suberror = 0x%x&quot;, run-&gt;internal.suberror);</span><br><span class="line">        default:</span><br><span class="line">            errx(1, &quot;exit_reason = 0x%x&quot;, run-&gt;exit_reason);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译并运行这个demo</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">gcc -g demo.c -o demo</span><br><span class="line">➜  demo1 ./demo</span><br><span class="line">4</span><br><span class="line">KVM_EXIT_HLT</span><br></pre></td></tr></table></figure>
+<h2 id="另外一个简单的QEMU-emulator-demo"><a href="#另外一个简单的QEMU-emulator-demo" class="headerlink" title="另外一个简单的QEMU emulator demo"></a>另外一个简单的QEMU emulator demo</h2><p><a href="http://soulxu.github.io/blog/2014/08/11/use-kvm-api-write-emulator/" target="_blank" rel="noopener">IBM的徐同学有做过介绍</a>，在此基础上我再详细介绍一下qemu-kvm的启动过程。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">.globl _start</span><br><span class="line">    .code16</span><br><span class="line">_start:</span><br><span class="line">    xorw %ax, %ax   # 将 ax 寄存器清零</span><br><span class="line"></span><br><span class="line">loop1:</span><br><span class="line">    out %ax, $0x10  # 像 0x10 的端口输出 ax 的内容，at&amp;t汇编的操作数和Intel的相反。</span><br><span class="line">    inc %ax         # ax 值加一</span><br><span class="line">    jmp loop1       # 继续循环</span><br></pre></td></tr></table></figure>
+<p>这个汇编的作用就是一直不停的向0x10端口输出一字节的值。</p>
+<p>从main函数开始说起</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">int main(int argc, char **argv) &#123;</span><br><span class="line">    int ret = 0;</span><br><span class="line">    // 初始化kvm结构体</span><br><span class="line">    struct kvm *kvm = kvm_init();</span><br><span class="line"></span><br><span class="line">    if (kvm == NULL) &#123;</span><br><span class="line">        fprintf(stderr, &quot;kvm init fauilt\n&quot;);</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 创建VM，并分配内存空间</span><br><span class="line">    if (kvm_create_vm(kvm, RAM_SIZE) &lt; 0) &#123;</span><br><span class="line">        fprintf(stderr, &quot;create vm fault\n&quot;);</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 加载镜像</span><br><span class="line">    load_binary(kvm);</span><br><span class="line"></span><br><span class="line">    // only support one vcpu now</span><br><span class="line">    kvm-&gt;vcpu_number = 1;</span><br><span class="line">    // 创建执行现场</span><br><span class="line">    kvm-&gt;vcpus = kvm_init_vcpu(kvm, 0, kvm_cpu_thread);</span><br><span class="line"></span><br><span class="line">    // 启动虚拟机</span><br><span class="line">    kvm_run_vm(kvm);</span><br><span class="line"></span><br><span class="line">    kvm_clean_vm(kvm);</span><br><span class="line">    kvm_clean_vcpu(kvm-&gt;vcpus);</span><br><span class="line">    kvm_clean(kvm);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第一步，调用kvm_init() 初始化了 kvm 结构体。先来看看怎么定义一个简单的kvm。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">struct kvm &#123;</span><br><span class="line">   int dev_fd;              // /dev/kvm 的句柄</span><br><span class="line">   int vm_fd;               // GUEST 的句柄</span><br><span class="line">   __u64 ram_size;          // GUEST 的内存大小</span><br><span class="line">   __u64 ram_start;         // GUEST 的内存起始地址，</span><br><span class="line">                            // 这个地址是qemu emulator通过mmap映射的地址</span><br><span class="line"></span><br><span class="line">   int kvm_version;         </span><br><span class="line">   struct kvm_userspace_memory_region mem; // slot 内存结构，由用户空间填充、</span><br><span class="line">                                           // 允许对guest的地址做分段。将多个slot组成线性地址</span><br><span class="line"></span><br><span class="line">   struct vcpu *vcpus;      // vcpu 数组</span><br><span class="line">   int vcpu_number;         // vcpu 个数</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>初始化 kvm 结构体。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">struct kvm *kvm_init(void) &#123;</span><br><span class="line">    struct kvm *kvm = malloc(sizeof(struct kvm));</span><br><span class="line">    kvm-&gt;dev_fd = open(KVM_DEVICE, O_RDWR);  // 打开 /dev/kvm 获取 kvm 句柄</span><br><span class="line"></span><br><span class="line">    if (kvm-&gt;dev_fd &lt; 0) &#123;</span><br><span class="line">        perror(&quot;open kvm device fault: &quot;);</span><br><span class="line">        return NULL;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    kvm-&gt;kvm_version = ioctl(kvm-&gt;dev_fd, KVM_GET_API_VERSION, 0);  // 获取 kvm API 版本</span><br><span class="line"></span><br><span class="line">    return kvm;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第二步+第三步，创建虚拟机，获取到虚拟机句柄，并为其分配内存。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">int kvm_create_vm(struct kvm *kvm, int ram_size) &#123;</span><br><span class="line">    int ret = 0;</span><br><span class="line">    // 调用 KVM_CREATE_KVM 接口获取 vm 句柄</span><br><span class="line">    kvm-&gt;vm_fd = ioctl(kvm-&gt;dev_fd, KVM_CREATE_VM, 0);</span><br><span class="line"></span><br><span class="line">    if (kvm-&gt;vm_fd &lt; 0) &#123;</span><br><span class="line">        perror(&quot;can not create vm&quot;);</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 为 kvm 分配内存。通过系统调用.</span><br><span class="line">    kvm-&gt;ram_size = ram_size;</span><br><span class="line">    kvm-&gt;ram_start =  (__u64)mmap(NULL, kvm-&gt;ram_size, </span><br><span class="line">                PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, </span><br><span class="line">                -1, 0);</span><br><span class="line"></span><br><span class="line">    if ((void *)kvm-&gt;ram_start == MAP_FAILED) &#123;</span><br><span class="line">        perror(&quot;can not mmap ram&quot;);</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // kvm-&gt;mem 结构需要初始化后传递给 KVM_SET_USER_MEMORY_REGION 接口</span><br><span class="line">    // 只有一个内存槽</span><br><span class="line">    kvm-&gt;mem.slot = 0;</span><br><span class="line">    // guest 物理内存起始地址</span><br><span class="line">    kvm-&gt;mem.guest_phys_addr = 0;</span><br><span class="line">    // 虚拟机内存大小</span><br><span class="line">    kvm-&gt;mem.memory_size = kvm-&gt;ram_size;</span><br><span class="line">    // 虚拟机内存在host上的用户空间地址，这里就是绑定内存给guest</span><br><span class="line">    kvm-&gt;mem.userspace_addr = kvm-&gt;ram_start;</span><br><span class="line"></span><br><span class="line">    // 调用 KVM_SET_USER_MEMORY_REGION 为虚拟机分配内存。</span><br><span class="line">    ret = ioctl(kvm-&gt;vm_fd, KVM_SET_USER_MEMORY_REGION, &amp;(kvm-&gt;mem));</span><br><span class="line"></span><br><span class="line">    if (ret &lt; 0) &#123;</span><br><span class="line">        perror(&quot;can not set user memory region&quot;);</span><br><span class="line">        return ret;</span><br><span class="line">    &#125;</span><br><span class="line">    return ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接下来就是load_binary把二进制文件load到虚拟机的内存中来，在第一个demo中我们是直接把字节码放到了内存中，这里模拟镜像加载步骤，把二进制文件加载到内存中。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">void load_binary(struct kvm *kvm) &#123;</span><br><span class="line">    int fd = open(BINARY_FILE, O_RDONLY);  // 打开这个二进制文件(镜像）</span><br><span class="line"></span><br><span class="line">    if (fd &lt; 0) &#123;</span><br><span class="line">        fprintf(stderr, &quot;can not open binary file\n&quot;);</span><br><span class="line">        exit(1);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    int ret = 0;</span><br><span class="line">    char *p = (char *)kvm-&gt;ram_start;</span><br><span class="line"></span><br><span class="line">    while(1) &#123;</span><br><span class="line">        ret = read(fd, p, 4096);           // 将镜像内容加载到虚拟机的内存中</span><br><span class="line">        if (ret &lt;= 0) &#123;</span><br><span class="line">            break;</span><br><span class="line">        &#125;</span><br><span class="line">        printf(&quot;read size: %d&quot;, ret);</span><br><span class="line">        p += ret;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>加载完镜像后，需要初始化vCPU，以便能够运行镜像内容</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">struct vcpu &#123;</span><br><span class="line">    int vcpu_id;                 // vCPU id，vCPU</span><br><span class="line">    int vcpu_fd;                 // vCPU 句柄</span><br><span class="line">    pthread_t vcpu_thread;       // vCPU 线程句柄</span><br><span class="line">    struct kvm_run *kvm_run;     // KVM 运行时结构，也可以看做是上下文</span><br><span class="line">    int kvm_run_mmap_size;       // 运行时结构大小</span><br><span class="line">    struct kvm_regs regs;        // vCPU的寄存器</span><br><span class="line">    struct kvm_sregs sregs;      // vCPU的特殊寄存器</span><br><span class="line">    void *(*vcpu_thread_func)(void *);  // 线程执行函数</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct vcpu *kvm_init_vcpu(struct kvm *kvm, int vcpu_id, void *(*fn)(void *)) &#123;</span><br><span class="line">    // 申请vcpu结构</span><br><span class="line">    struct vcpu *vcpu = malloc(sizeof(struct vcpu));</span><br><span class="line">    // 只有一个 vCPU，所以这里只初始化一个</span><br><span class="line">    vcpu-&gt;vcpu_id = 0;</span><br><span class="line">    // 调用 KVM_CREATE_VCPU 获取 vCPU 句柄，并关联到kvm-&gt;vm_fd（由KVM_CREATE_VM返回）</span><br><span class="line">    vcpu-&gt;vcpu_fd = ioctl(kvm-&gt;vm_fd, KVM_CREATE_VCPU, vcpu-&gt;vcpu_id);</span><br><span class="line"></span><br><span class="line">    if (vcpu-&gt;vcpu_fd &lt; 0) &#123;</span><br><span class="line">        perror(&quot;can not create vcpu&quot;);</span><br><span class="line">        return NULL;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 获取KVM运行时结构大小</span><br><span class="line">    vcpu-&gt;kvm_run_mmap_size = ioctl(kvm-&gt;dev_fd, KVM_GET_VCPU_MMAP_SIZE, 0);</span><br><span class="line"></span><br><span class="line">    if (vcpu-&gt;kvm_run_mmap_size &lt; 0) &#123;</span><br><span class="line">        perror(&quot;can not get vcpu mmsize&quot;);</span><br><span class="line">        return NULL;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    printf(&quot;%d\n&quot;, vcpu-&gt;kvm_run_mmap_size);</span><br><span class="line">    // 将 vcpu_fd 的内存映射给 vcpu-&gt;kvm_run结构。相当于一个关联操作</span><br><span class="line">    // 以便能够在虚拟机退出的时候获取到vCPU的返回值等信息</span><br><span class="line">    vcpu-&gt;kvm_run = mmap(NULL, vcpu-&gt;kvm_run_mmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, vcpu-&gt;vcpu_fd, 0);</span><br><span class="line"></span><br><span class="line">    if (vcpu-&gt;kvm_run == MAP_FAILED) &#123;</span><br><span class="line">        perror(&quot;can not mmap kvm_run&quot;);</span><br><span class="line">        return NULL;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 设置线程执行函数</span><br><span class="line">    vcpu-&gt;vcpu_thread_func = fn;</span><br><span class="line">    return vcpu;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后一步，以上工作就绪后，启动虚拟机。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">void kvm_run_vm(struct kvm *kvm) &#123;</span><br><span class="line">    int i = 0;</span><br><span class="line"></span><br><span class="line">    for (i = 0; i &lt; kvm-&gt;vcpu_number; i++) &#123;</span><br><span class="line">        // 启动线程执行 vcpu_thread_func 并将 kvm 结构作为参数传递给线程</span><br><span class="line">        if (pthread_create(&amp;(kvm-&gt;vcpus-&gt;vcpu_thread), (const pthread_attr_t *)NULL, kvm-&gt;vcpus[i].vcpu_thread_func, kvm) != 0) &#123;</span><br><span class="line">            perror(&quot;can not create kvm thread&quot;);</span><br><span class="line">            exit(1);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    pthread_join(kvm-&gt;vcpus-&gt;vcpu_thread, NULL);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>启动虚拟机其实就是创建线程，并执行相应的线程回调函数。<br>线程回调函数在kvm_init_vcpu的时候传入</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br></pre></td><td class="code"><pre><span class="line">void *kvm_cpu_thread(void *data) &#123;</span><br><span class="line">    // 获取参数</span><br><span class="line">    struct kvm *kvm = (struct kvm *)data;</span><br><span class="line">    int ret = 0;</span><br><span class="line">    // 设置KVM的参数</span><br><span class="line">    kvm_reset_vcpu(kvm-&gt;vcpus);</span><br><span class="line"></span><br><span class="line">    while (1) &#123;</span><br><span class="line">        printf(&quot;KVM start run\n&quot;);</span><br><span class="line">        // 启动虚拟机，此时的虚拟机已经有内存和CPU了，可以运行起来了。</span><br><span class="line">        ret = ioctl(kvm-&gt;vcpus-&gt;vcpu_fd, KVM_RUN, 0);</span><br><span class="line"></span><br><span class="line">        if (ret &lt; 0) &#123;</span><br><span class="line">            fprintf(stderr, &quot;KVM_RUN failed\n&quot;);</span><br><span class="line">            exit(1);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 前文 kvm_init_vcpu 函数中，将 kvm_run 关联了 vCPU 结构的内存</span><br><span class="line">        // 所以这里虚拟机退出的时候，可以获取到 exit_reason，虚拟机退出原因</span><br><span class="line">        switch (kvm-&gt;vcpus-&gt;kvm_run-&gt;exit_reason) &#123;</span><br><span class="line">        case KVM_EXIT_UNKNOWN:</span><br><span class="line">            printf(&quot;KVM_EXIT_UNKNOWN\n&quot;);</span><br><span class="line">            break;</span><br><span class="line">        case KVM_EXIT_DEBUG:</span><br><span class="line">            printf(&quot;KVM_EXIT_DEBUG\n&quot;);</span><br><span class="line">            break;</span><br><span class="line">        // 虚拟机执行了IO操作，虚拟机模式下的CPU会暂停虚拟机并</span><br><span class="line">        // 把执行权交给emulator</span><br><span class="line">        case KVM_EXIT_IO:</span><br><span class="line">            printf(&quot;KVM_EXIT_IO\n&quot;);</span><br><span class="line">            printf(&quot;out port: %d, data: %d\n&quot;, </span><br><span class="line">                kvm-&gt;vcpus-&gt;kvm_run-&gt;io.port,  </span><br><span class="line">                *(int *)((char *)(kvm-&gt;vcpus-&gt;kvm_run) + kvm-&gt;vcpus-&gt;kvm_run-&gt;io.data_offset)</span><br><span class="line">                );</span><br><span class="line">            sleep(1);</span><br><span class="line">            break;</span><br><span class="line">        // 虚拟机执行了memory map IO操作</span><br><span class="line">        case KVM_EXIT_MMIO:</span><br><span class="line">            printf(&quot;KVM_EXIT_MMIO\n&quot;);</span><br><span class="line">            break;</span><br><span class="line">        case KVM_EXIT_INTR:</span><br><span class="line">            printf(&quot;KVM_EXIT_INTR\n&quot;);</span><br><span class="line">            break;</span><br><span class="line">        case KVM_EXIT_SHUTDOWN:</span><br><span class="line">            printf(&quot;KVM_EXIT_SHUTDOWN\n&quot;);</span><br><span class="line">            goto exit_kvm;</span><br><span class="line">            break;</span><br><span class="line">        default:</span><br><span class="line">            printf(&quot;KVM PANIC\n&quot;);</span><br><span class="line">            goto exit_kvm;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">exit_kvm:</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void kvm_reset_vcpu (struct vcpu *vcpu) &#123;</span><br><span class="line">    if (ioctl(vcpu-&gt;vcpu_fd, KVM_GET_SREGS, &amp;(vcpu-&gt;sregs)) &lt; 0) &#123;</span><br><span class="line">        perror(&quot;can not get sregs\n&quot;);</span><br><span class="line">        exit(1);</span><br><span class="line">    &#125;</span><br><span class="line">    // #define CODE_START 0x1000</span><br><span class="line">    /* sregs 结构体</span><br><span class="line">        x86</span><br><span class="line">        struct kvm_sregs &#123;</span><br><span class="line">            struct kvm_segment cs, ds, es, fs, gs, ss;</span><br><span class="line">            struct kvm_segment tr, ldt;</span><br><span class="line">            struct kvm_dtable gdt, idt;</span><br><span class="line">            __u64 cr0, cr2, cr3, cr4, cr8;</span><br><span class="line">            __u64 efer;</span><br><span class="line">            __u64 apic_base;</span><br><span class="line">            __u64 interrupt_bitmap[(KVM_NR_INTERRUPTS + 63) / 64];</span><br><span class="line">        &#125;;</span><br><span class="line">    */</span><br><span class="line">    // cs 为code start寄存器，存放了程序的起始地址</span><br><span class="line">    vcpu-&gt;sregs.cs.selector = CODE_START;</span><br><span class="line">    vcpu-&gt;sregs.cs.base = CODE_START * 16;</span><br><span class="line">    // ss 为堆栈寄存器，存放了堆栈的起始位置</span><br><span class="line">    vcpu-&gt;sregs.ss.selector = CODE_START;</span><br><span class="line">    vcpu-&gt;sregs.ss.base = CODE_START * 16;</span><br><span class="line">    // ds 为数据段寄存器，存放了数据开始地址</span><br><span class="line">    vcpu-&gt;sregs.ds.selector = CODE_START;</span><br><span class="line">    vcpu-&gt;sregs.ds.base = CODE_START *16;</span><br><span class="line">    // es 为附加段寄存器</span><br><span class="line">    vcpu-&gt;sregs.es.selector = CODE_START;</span><br><span class="line">    vcpu-&gt;sregs.es.base = CODE_START * 16;</span><br><span class="line">    // fs, gs 同样为段寄存器</span><br><span class="line">    vcpu-&gt;sregs.fs.selector = CODE_START;</span><br><span class="line">    vcpu-&gt;sregs.fs.base = CODE_START * 16;</span><br><span class="line">    vcpu-&gt;sregs.gs.selector = CODE_START;</span><br><span class="line"></span><br><span class="line">    // 为vCPU设置以上寄存器的值</span><br><span class="line">    if (ioctl(vcpu-&gt;vcpu_fd, KVM_SET_SREGS, &amp;vcpu-&gt;sregs) &lt; 0) &#123;</span><br><span class="line">        perror(&quot;can not set sregs&quot;);</span><br><span class="line">        exit(1);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 设置寄存器标志位</span><br><span class="line">    vcpu-&gt;regs.rflags = 0x0000000000000002ULL;</span><br><span class="line">    // rip 表示了程序的起始指针，地址为 0x0000000</span><br><span class="line">    // 在加载镜像的时候，我们直接将binary读取到了虚拟机的内存起始位</span><br><span class="line">    // 所以虚拟机开始的时候会直接运行binary</span><br><span class="line">    vcpu-&gt;regs.rip = 0;</span><br><span class="line">    // rsp 为堆栈顶</span><br><span class="line">    vcpu-&gt;regs.rsp = 0xffffffff;</span><br><span class="line">    // rbp 为堆栈底部</span><br><span class="line">    vcpu-&gt;regs.rbp= 0;</span><br><span class="line"></span><br><span class="line">    if (ioctl(vcpu-&gt;vcpu_fd, KVM_SET_REGS, &amp;(vcpu-&gt;regs)) &lt; 0) &#123;</span><br><span class="line">        perror(&quot;KVM SET REGS\n&quot;);</span><br><span class="line">        exit(1);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行一下结果，可以看到当虚拟机执行了指令 <code>out %ax, $0x10</code> 的时候，会引起虚拟机的退出，这是CPU虚拟化里面将要介绍的特殊机制。<br>宿主机获取到虚拟机退出的原因后，获取相应的输出。这里的步骤就类似于IO虚拟化，直接读取IO模块的内存，并输出结果。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">➜  kvmsample git:(master) ✗ ./kvmsample</span><br><span class="line">read size: 712288</span><br><span class="line">KVM start run</span><br><span class="line">KVM_EXIT_IO</span><br><span class="line">out port: 16, data: 0</span><br><span class="line">KVM start run</span><br><span class="line">KVM_EXIT_IO</span><br><span class="line">out port: 16, data: 1</span><br><span class="line">KVM start run</span><br><span class="line">KVM_EXIT_IO</span><br><span class="line">out port: 16, data: 2</span><br><span class="line">KVM start run</span><br><span class="line">KVM_EXIT_IO</span><br><span class="line">out port: 16, data: 3</span><br><span class="line">KVM start run</span><br><span class="line">KVM_EXIT_IO</span><br><span class="line">out port: 16, data: 4</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>虚拟机的启动过程基本上可以这么总结：<br>创建kvm句柄-&gt;创建vm-&gt;分配内存-&gt;加载镜像到内存-&gt;启动线程执行KVM_RUN。从这个虚拟机的demo可以看出，虚拟机的内存是由宿主机通过mmap调用映射给虚拟机的，而vCPU是宿主机的一个线程，这个线程通过设置相应的vCPU的寄存器指定了虚拟机的程序加载地址后，开始运行虚拟机的指令，当虚拟机执行了IO操作后，CPU捕获到中断并把执行权又交回给宿主机。</p>
+<p>当然真实的qemu-kvm比这个复杂的多，包括设置很多IO设备的MMIO，设置信号处理等。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="Yi颗烂樱桃 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.png" alt="Yi颗烂樱桃 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者：</strong>
+    Yi颗烂樱桃
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://www.owalle.com/2018/12/10/kvm-boot/" title="KVM 虚拟化原理2— QEMU启动过程">http://www.owalle.com/2018/12/10/kvm-boot/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>
+    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="external nofollow" target="_blank">CC BY-NC-ND 3.0</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/12/10/kvm-overview/" rel="next" title="KVM 虚拟化原理1 -- 概述">
+                <i class="fa fa-chevron-left"></i> KVM 虚拟化原理1 -- 概述
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/12/10/kvm-cpu/" rel="prev" title="KVM 虚拟化原理3--CPU">
+                KVM 虚拟化原理3--CPU <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
+    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
+    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a class="bds_count" data-cmd="count"></a>
+  </div>
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "2",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "share": {
+        "bdSize": "16",
+        "bdStyle": "0"
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      }
+    }
+  </script>
+
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="Yi颗烂樱桃">
+            
+              <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+            <div class="cc-license motion-element" itemprop="license">
+              <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" class="cc-opacity" target="_blank">
+                <img src="/images/cc-by-nc-nd.svg" alt="Creative Commons">
+              </a>
+            </div>
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#虚拟机启动过程"><span class="nav-number">1.</span> <span class="nav-text">虚拟机启动过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#先来一个KVM-API开胃菜"><span class="nav-number">2.</span> <span class="nav-text">先来一个KVM API开胃菜</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#另外一个简单的QEMU-emulator-demo"><span class="nav-number">3.</span> <span class="nav-text">另外一个简单的QEMU emulator demo</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yi颗烂樱桃</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">14.4k</span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+  
+  <script type="text/javascript" color="129,216,208" opacity="0.5" zindex="-2" count="50" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three.min.js"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three-waves.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: true,
+        notify: false,
+        appId: 'sIDOr6ptvMjLBmxig1vHlYsG-gzGzoHsz',
+        appKey: 'c1R9jtqasnufksgJUCE3eWo5',
+        placeholder: '亲，你不想说点什么吗？？ :D',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+</body>
+</html>
