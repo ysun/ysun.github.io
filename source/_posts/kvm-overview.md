@@ -1,0 +1,42 @@
+---
+title: KVM 虚拟化原理1 -- 概述
+date: 2018-12-10 22:32:20
+categories: KVM
+tags: KVM
+donate: true
+
+---
+## KVM虚拟化简介 ##
+
+KVM 全称 kernel-based virtual machine，由Qumranet公司发起，2008年被RedHat收购。
+KVM实现主要基于Intel-V或者AMD-V提供的虚拟化平台，利用Linux进程模拟虚拟机CPU和内存等。KVM不提供硬件虚拟化操作，其IO操作等都借助QEMU来完成。
+
+Qemu  是纯软件实现的虚拟化模拟器，几乎可以模拟任何硬件设备，我们最熟悉的就是能够模拟一台能够独立运行操作系统的虚拟机，虚拟机认为自己和硬件打交道，但其实是和 Qemu 模拟出来的硬件打交道，Qemu 将这些指令转译给真正的硬件。
+
+正因为 Qemu 是纯软件实现的，所有的指令都要经 Qemu 过一手，性能非常低，所以，在生产环境中，大多数的做法都是配合 KVM 来完成虚拟化工作，因为 KVM 是硬件辅助的虚拟化技术，主要负责 比较繁琐的 CPU 和内存虚拟化，而 Qemu 则负责 I/O 虚拟化，两者合作各自发挥自身的优势，相得益彰。
+
+
+![](01_brief.png)
+
+KVM有如下特点：
+
+* guest作为一个普通进程运行于宿主机
+* guest的CPU(vCPU)作为进程的线程存在，并受到宿主机内核的调度
+
+## KVM整体架构##
+
+![](02_kvm_framework.png)
+
+### 虚拟CPU
+
+虚拟机所有用户级别(user)的指令集，都会直接由宿主机线程执行，此线程会调用KVM的ioctl方式提供的接口加载guest的指令并在特殊的CPU模式下运行，不需要经过CPU指令集的软件模拟转换，大大的减少了虚拟化成本，这也是KVM优于其他虚拟化方式的点之一。
+
+KVM向外提供了一个虚拟设备/dev/kvm，通过ioctl(IO设备带外管理接口）来对KVM进行操作，包括虚拟机的初始化，分配内存，指令加载等等。
+
+### 虚拟IO设备
+
+guest作为一个进程存在，当然他的内核的所有驱动等都存在，只是硬件被QEMU所模拟。guest的所有虚拟的硬件操作都会有QEMU来接管，那些由host passthrough给guest的设备除外，QEMU负责与真实的宿主机硬件打交道。
+
+### 虚拟内存
+
+guest的内存在host上由emulator提供，对emulator来说，guest访问的内存就是他的虚拟地址空间，guest上需要经过一次虚拟地址到物理地址的转换，转换到guest的物理地址其实也就是emulator的虚拟地址，emulator再次经过一次转换，转换为host的物理地址。
