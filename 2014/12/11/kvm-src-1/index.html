@@ -87,21 +87,22 @@
 
 
 
-<meta name="description" content="KVM虚拟化简介KVM 全称 kernel-based virtual machine，由Qumranet公司发起，2008年被RedHat收购。KVM实现主要基于Intel-V或者AMD-V提供的虚拟化平台，利用Linux进程模拟虚拟机CPU和内存等。KVM不提供硬件虚拟化操作，其IO操作等都借助QEMU来完成。 Qemu  是纯软件实现的虚拟化模拟器，几乎可以模拟任何硬件设备，我们最熟悉的就是">
+<meta name="description" content="原文出自：http://oenhan.com/kvm-src-1文章写作以及技术水平远远在我之上，感觉自己无力写出如此精炼的文章，膜拜并转发 1.KVM模型结构为什么有OS虚拟化？随着CPU计算能力的提高，单独的OS已不能充分利用CPU的计算能力，1.很多应用的执行需要单独占用一个OS环境，如安全测试等；2.而IAAS云计算厂商也是以OS为范围销售计算能力。那么在所有虚拟化方案中，都是由hyper">
 <meta name="keywords" content="KVM">
 <meta property="og:type" content="article">
-<meta property="og:title" content="KVM 虚拟化原理1 -- 概述">
-<meta property="og:url" content="http://www.owalle.com/2018/12/10/kvm-overview/index.html">
+<meta property="og:title" content="KVM源代码分析1:基本工作原理">
+<meta property="og:url" content="http://www.owalle.com/2014/12/11/kvm-src-1/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="KVM虚拟化简介KVM 全称 kernel-based virtual machine，由Qumranet公司发起，2008年被RedHat收购。KVM实现主要基于Intel-V或者AMD-V提供的虚拟化平台，利用Linux进程模拟虚拟机CPU和内存等。KVM不提供硬件虚拟化操作，其IO操作等都借助QEMU来完成。 Qemu  是纯软件实现的虚拟化模拟器，几乎可以模拟任何硬件设备，我们最熟悉的就是">
+<meta property="og:description" content="原文出自：http://oenhan.com/kvm-src-1文章写作以及技术水平远远在我之上，感觉自己无力写出如此精炼的文章，膜拜并转发 1.KVM模型结构为什么有OS虚拟化？随着CPU计算能力的提高，单独的OS已不能充分利用CPU的计算能力，1.很多应用的执行需要单独占用一个OS环境，如安全测试等；2.而IAAS云计算厂商也是以OS为范围销售计算能力。那么在所有虚拟化方案中，都是由hyper">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-overview/01_brief.png">
-<meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-overview/02_kvm_framework.png">
-<meta property="og:updated_time" content="2018-12-10T15:58:02.649Z">
+<meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-1/hypervisor-1.png">
+<meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-1/kvm_arch_map-1.png">
+<meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-1/kvm_process-1.png">
+<meta property="og:updated_time" content="2018-12-11T02:28:56.744Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="KVM 虚拟化原理1 -- 概述">
-<meta name="twitter:description" content="KVM虚拟化简介KVM 全称 kernel-based virtual machine，由Qumranet公司发起，2008年被RedHat收购。KVM实现主要基于Intel-V或者AMD-V提供的虚拟化平台，利用Linux进程模拟虚拟机CPU和内存等。KVM不提供硬件虚拟化操作，其IO操作等都借助QEMU来完成。 Qemu  是纯软件实现的虚拟化模拟器，几乎可以模拟任何硬件设备，我们最熟悉的就是">
-<meta name="twitter:image" content="http://www.owalle.com/2018/12/10/kvm-overview/01_brief.png">
+<meta name="twitter:title" content="KVM源代码分析1:基本工作原理">
+<meta name="twitter:description" content="原文出自：http://oenhan.com/kvm-src-1文章写作以及技术水平远远在我之上，感觉自己无力写出如此精炼的文章，膜拜并转发 1.KVM模型结构为什么有OS虚拟化？随着CPU计算能力的提高，单独的OS已不能充分利用CPU的计算能力，1.很多应用的执行需要单独占用一个OS环境，如安全测试等；2.而IAAS云计算厂商也是以OS为范围销售计算能力。那么在所有虚拟化方案中，都是由hyper">
+<meta name="twitter:image" content="http://www.owalle.com/2014/12/11/kvm-src-1/hypervisor-1.png">
 
 
 
@@ -131,13 +132,13 @@
 
 
 
-  <link rel="canonical" href="http://www.owalle.com/2018/12/10/kvm-overview/">
+  <link rel="canonical" href="http://www.owalle.com/2014/12/11/kvm-src-1/">
 
 
 
 
 
-  <title>KVM 虚拟化原理1 -- 概述 | Yi颗烂樱桃</title>
+  <title>KVM源代码分析1:基本工作原理 | Yi颗烂樱桃</title>
   
 
 
@@ -316,7 +317,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2018/12/10/kvm-overview/">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2014/12/11/kvm-src-1/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Yi颗烂樱桃">
@@ -333,7 +334,7 @@
 
         
         
-          <h2 class="post-title" itemprop="name headline">KVM 虚拟化原理1 -- 概述</h2>
+          <h2 class="post-title" itemprop="name headline">KVM源代码分析1:基本工作原理</h2>
         
 
         <div class="post-meta">
@@ -345,8 +346,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-12-10T22:32:20+08:00">
-                2018-12-10
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2014-12-11T09:28:48+08:00">
+                2014-12-11
               </time>
             
 
@@ -386,8 +387,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2018/12/10/kvm-overview/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2018/12/10/kvm-overview/" itemprop="commentCount"></span>
+                <a href="/2014/12/11/kvm-src-1/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2014/12/11/kvm-src-1/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -414,7 +415,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  661
+                  1.4k
                 </span>
               
 
@@ -430,7 +431,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  2
+                  5
                 </span>
               
             </div>
@@ -451,20 +452,22 @@
       
 
       
-        <h2 id="KVM虚拟化简介"><a href="#KVM虚拟化简介" class="headerlink" title="KVM虚拟化简介"></a>KVM虚拟化简介</h2><p>KVM 全称 kernel-based virtual machine，由Qumranet公司发起，2008年被RedHat收购。<br>KVM实现主要基于Intel-V或者AMD-V提供的虚拟化平台，利用Linux进程模拟虚拟机CPU和内存等。KVM不提供硬件虚拟化操作，其IO操作等都借助QEMU来完成。</p>
-<p>Qemu  是纯软件实现的虚拟化模拟器，几乎可以模拟任何硬件设备，我们最熟悉的就是能够模拟一台能够独立运行操作系统的虚拟机，虚拟机认为自己和硬件打交道，但其实是和 Qemu 模拟出来的硬件打交道，Qemu 将这些指令转译给真正的硬件。</p>
-<p>正因为 Qemu 是纯软件实现的，所有的指令都要经 Qemu 过一手，性能非常低，所以，在生产环境中，大多数的做法都是配合 KVM 来完成虚拟化工作，因为 KVM 是硬件辅助的虚拟化技术，主要负责 比较繁琐的 CPU 和内存虚拟化，而 Qemu 则负责 I/O 虚拟化，两者合作各自发挥自身的优势，相得益彰。</p>
-<p><img src="/2018/12/10/kvm-overview/01_brief.png" alt=""></p>
-<p>KVM有如下特点：</p>
-<ul>
-<li>guest作为一个普通进程运行于宿主机</li>
-<li>guest的CPU(vCPU)作为进程的线程存在，并受到宿主机内核的调度</li>
-</ul>
-<h2 id="KVM整体架构"><a href="#KVM整体架构" class="headerlink" title="KVM整体架构"></a>KVM整体架构</h2><p><img src="/2018/12/10/kvm-overview/02_kvm_framework.png" alt=""></p>
-<h3 id="虚拟CPU"><a href="#虚拟CPU" class="headerlink" title="虚拟CPU"></a>虚拟CPU</h3><p>虚拟机所有用户级别(user)的指令集，都会直接由宿主机线程执行，此线程会调用KVM的ioctl方式提供的接口加载guest的指令并在特殊的CPU模式下运行，不需要经过CPU指令集的软件模拟转换，大大的减少了虚拟化成本，这也是KVM优于其他虚拟化方式的点之一。</p>
-<p>KVM向外提供了一个虚拟设备/dev/kvm，通过ioctl(IO设备带外管理接口）来对KVM进行操作，包括虚拟机的初始化，分配内存，指令加载等等。</p>
-<h3 id="虚拟IO设备"><a href="#虚拟IO设备" class="headerlink" title="虚拟IO设备"></a>虚拟IO设备</h3><p>guest作为一个进程存在，当然他的内核的所有驱动等都存在，只是硬件被QEMU所模拟。guest的所有虚拟的硬件操作都会有QEMU来接管，那些由host passthrough给guest的设备除外，QEMU负责与真实的宿主机硬件打交道。</p>
-<h3 id="虚拟内存"><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h3><p>guest的内存在host上由emulator提供，对emulator来说，guest访问的内存就是他的虚拟地址空间，guest上需要经过一次虚拟地址到物理地址的转换，转换到guest的物理地址其实也就是emulator的虚拟地址，emulator再次经过一次转换，转换为host的物理地址。</p>
+        <p>原文出自：<a href="http://oenhan.com/kvm-src-1" target="_blank" rel="noopener">http://oenhan.com/kvm-src-1</a><br>文章写作以及技术水平远远在我之上，感觉自己无力写出如此精炼的文章，膜拜并转发</p>
+<h4 id="1-KVM模型结构"><a href="#1-KVM模型结构" class="headerlink" title="1.KVM模型结构"></a>1.KVM模型结构</h4><p>为什么有OS虚拟化？随着CPU计算能力的提高，单独的OS已不能充分利用CPU的计算能力，1.很多应用的执行需要单独占用一个OS环境，如安全测试等；2.而IAAS云计算厂商也是以OS为范围销售计算能力。那么在所有虚拟化方案中，都是由hypervisor取代原生的OS去控制具体硬件资源，而同时hypervisor将资源分配具体的VM，VM中运行的是没有修改过的OS，如果让VM中的OS能正常运行，hypervisor的任务就是模拟具体的硬件资源，让OS不能识别出是真是假。</p>
+<p><img src="/2014/12/11/kvm-src-1/hypervisor-1.png" alt=""></p>
+<p>当然上面的模型是Xen示例，OS对应用而言是硬件资源管理中心，那么hypervisor就是具体VM的OS了，KVM是就利用了这一点，利用现有的kernel代码，构建了一个hypervisor，这个样子<a href="http://www.oenhan.com/kernel-program-exec" target="_blank" rel="noopener">内存分配</a>，<a href="http://www.oenhan.com/task-group-sched" target="_blank" rel="noopener">进程调度</a>等就无需重写代码，如此hypervisor就是所谓的host，VM中的OS就是guest。</p>
+<p>guest OS保证具体运行场景中的程序正常执行，而KVM的代码则部署在HOST上，Userspace对应的是QEMU，Kernel对应的是KVM Driver，KVM Driver负责模拟虚拟机的CPU运行，<a href="http://www.oenhan.com/size-512-slab-kmalloc" title="从size-512内存泄露看slab分配" target="_blank" rel="noopener">内存管理</a>，设备管理等；QEMU则模拟虚拟机的IO设备接口以及用户态控制接口。QEMU通过KVM等fd进行IOCTL控制KVM驱动的运行过程。</p>
+<p><img src="/2014/12/11/kvm-src-1/kvm_arch_map-1.png" alt=""></p>
+<p>如上图所示，guest自身有自己的用户模式和<a href="http://www.oenhan.com/iowait-wa-vmstat" title="iowait的形成原因和内核分析" target="_blank" rel="noopener">内核模式</a>；guest是在host中是作为一个用户态进程存在的，这个进程就是qemu，qemu本身就是一个虚拟化程序，只是纯软件虚拟化效率很低，它被KVM进行改造后，作为KVM的前端存在，用来进行<a href="http://www.oenhan.com/cpu-load-balance" title="Linux内核CPU负载均衡机制" target="_blank" rel="noopener">创建进程</a>或者IO交互等；而KVM Driver则是Linux内核模式，它提供KVM fd给qemu调用，用来进行cpu虚拟化，内存虚拟化等。QEMU通KVM提供的fd接口，通过ioctl系统调用创建和运行虚拟机。KVM Driver使得整个Linux成为一个虚拟机监控器，负责接收qemu模拟效率很低的命令。</p>
+<h4 id="2-KVM工作原理"><a href="#2-KVM工作原理" class="headerlink" title="2.KVM工作原理"></a>2.KVM工作原理</h4><p><img src="/2014/12/11/kvm-src-1/kvm_process-1.png" alt=""></p>
+<p>上图是一个执行过程图，首先启动一个虚拟化管理软件qemu，开始启动一个虚拟机，通过ioctl等系统调用向内核中申请指定的资源，搭建好虚拟环境，启动虚拟机内的OS，执行 VMLAUCH 指令，即进入了guest代码执行过程。如果 Guest OS 发生外部中断或者影子页表缺页之类的事件，暂停 Guest OS 的执行，退出QEMU即guest VM-exit，进行一些必要的处理，然后重新进入客户模式，执行guest代码；这个时候如果是io请求，则提交给用户态下的qemu处理，qemu处理后再次通过IOCTL反馈给KVM驱动。</p>
+<h4 id="3-CPU虚拟化"><a href="#3-CPU虚拟化" class="headerlink" title="3.CPU虚拟化"></a>3.CPU虚拟化</h4><p>X86体系结构CPU虚拟化技术的称为 Intel VT-x 技术，引入了VMX，提供了两种处理器的工作环境。 VMCS 结构实现两种环境之间的切换。 VM Entry 使虚拟机进去guest模式，VM Exit 使虚拟机退出guest模式。</p>
+<p>VMM调度guest执行时，qemu 通过 ioctl <a href="http://www.oenhan.com/kernel-program-exec" target="_blank" rel="noopener">系统调用</a>进入内核模式，在 KVM Driver中获得当前物理 CPU的引用。之后将guest状态从VMCS中读出， 并装入物理CPU中。执行 VMLAUCH 指令使得物理处理器进入非根操作环境，运行guest OS代码。</p>
+<p>当 guest OS 执行一些特权指令或者外部事件时， 比如I/O访问，对控制寄存器的操作，MSR的读写等， 都会导致物理CPU发生 VMExit， 停止运行 Guest OS，将 Guest OS保存到VMCS中， Host 状态装入物理处理器中， 处理器进入根操作环境，KVM取得控制权，通过读取 VMCS 中 VM_EXIT_REASON 字段得到引起 VM Exit 的原因。 从而调用kvm_exit_handler 处理函数。 如果由于 I/O 获得信号到达，则退出到userspace模式的 Qemu 处理。处理完毕后，重新进入guest模式运行虚拟 CPU。</p>
+<h4 id="4-Mem虚拟化"><a href="#4-Mem虚拟化" class="headerlink" title="4.Mem虚拟化"></a>4.Mem虚拟化</h4><p>OS对于物理内存主要有两点认识：1.物理地址从0开始；2.<a href="http://www.oenhan.com/kernel-program-exec" target="_blank" rel="noopener">内存地址</a>是连续的。VMM接管了所有内存，但guest OS的对内存的使用就存在这两点冲突了，除此之外，一个guest对内存的操作很有可能影响到另外一个guest乃至host的运行。VMM的内存虚拟化就要解决这些问题。</p>
+<p>在OS代码中，应用也是占用所有的逻辑地址，同时不影响其他应用的关键点在于有线性地址这个中间层；解决方法则是添加了一个中间层：guest物理地址空间；guest看到是从0开始的guest物理地址空间（类比从0开始的线性地址），而且是连续的，虽然有些地址没有映射；同时guest物理地址映射到不同的host逻辑地址，如此保证了VM之间的安全性要求。</p>
+<p>这样MEM虚拟化就是GVA-&gt;GPA-&gt;HPA的寻址过程，传统软件方法有影子页表，硬件虚拟化提供了EPT支持。</p>
+<p>总体描述到此，后面代码里面见真相。</p>
 
       
     </div>
@@ -514,7 +517,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://www.owalle.com/2018/12/10/kvm-overview/" title="KVM 虚拟化原理1 -- 概述">http://www.owalle.com/2018/12/10/kvm-overview/</a>
+    <a href="http://www.owalle.com/2014/12/11/kvm-src-1/" title="KVM源代码分析1:基本工作原理">http://www.owalle.com/2014/12/11/kvm-src-1/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>
@@ -542,18 +545,14 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/12/10/qmp-introduction/" rel="next" title="QMP 简介">
-                <i class="fa fa-chevron-left"></i> QMP 简介
-              </a>
-            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2018/12/10/kvm-boot/" rel="prev" title="KVM 虚拟化原理2— QEMU启动过程">
-                KVM 虚拟化原理2— QEMU启动过程 <i class="fa fa-chevron-right"></i>
+              <a href="/2014/12/11/kvm-src-2-vm-run/" rel="prev" title="KVM源代码分析2:虚拟机的创建与运行">
+                KVM源代码分析2:虚拟机的创建与运行 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -735,7 +734,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#KVM虚拟化简介"><span class="nav-number">1.</span> <span class="nav-text">KVM虚拟化简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#KVM整体架构"><span class="nav-number">2.</span> <span class="nav-text">KVM整体架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟CPU"><span class="nav-number">2.1.</span> <span class="nav-text">虚拟CPU</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟IO设备"><span class="nav-number">2.2.</span> <span class="nav-text">虚拟IO设备</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟内存"><span class="nav-number">2.3.</span> <span class="nav-text">虚拟内存</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-KVM模型结构"><span class="nav-number">1.</span> <span class="nav-text">1.KVM模型结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-KVM工作原理"><span class="nav-number">2.</span> <span class="nav-text">2.KVM工作原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-CPU虚拟化"><span class="nav-number">3.</span> <span class="nav-text">3.CPU虚拟化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-Mem虚拟化"><span class="nav-number">4.</span> <span class="nav-text">4.Mem虚拟化</span></a></li></ol></div>
             
 
           </div>

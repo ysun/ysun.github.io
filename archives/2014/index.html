@@ -76,7 +76,7 @@
 
 
 
-  <meta name="keywords" content="KVM,">
+  <meta name="keywords" content="Hexo, NexT">
 
 
 
@@ -87,21 +87,17 @@
 
 
 
-<meta name="description" content="KVM虚拟化简介KVM 全称 kernel-based virtual machine，由Qumranet公司发起，2008年被RedHat收购。KVM实现主要基于Intel-V或者AMD-V提供的虚拟化平台，利用Linux进程模拟虚拟机CPU和内存等。KVM不提供硬件虚拟化操作，其IO操作等都借助QEMU来完成。 Qemu  是纯软件实现的虚拟化模拟器，几乎可以模拟任何硬件设备，我们最熟悉的就是">
-<meta name="keywords" content="KVM">
-<meta property="og:type" content="article">
-<meta property="og:title" content="KVM 虚拟化原理1 -- 概述">
-<meta property="og:url" content="http://www.owalle.com/2018/12/10/kvm-overview/index.html">
+<meta name="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+<meta name="keywords" content="KVM Linux Kernel Qemu">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Yi颗烂樱桃">
+<meta property="og:url" content="http://www.owalle.com/archives/2014/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="KVM虚拟化简介KVM 全称 kernel-based virtual machine，由Qumranet公司发起，2008年被RedHat收购。KVM实现主要基于Intel-V或者AMD-V提供的虚拟化平台，利用Linux进程模拟虚拟机CPU和内存等。KVM不提供硬件虚拟化操作，其IO操作等都借助QEMU来完成。 Qemu  是纯软件实现的虚拟化模拟器，几乎可以模拟任何硬件设备，我们最熟悉的就是">
+<meta property="og:description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-overview/01_brief.png">
-<meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-overview/02_kvm_framework.png">
-<meta property="og:updated_time" content="2018-12-10T15:58:02.649Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="KVM 虚拟化原理1 -- 概述">
-<meta name="twitter:description" content="KVM虚拟化简介KVM 全称 kernel-based virtual machine，由Qumranet公司发起，2008年被RedHat收购。KVM实现主要基于Intel-V或者AMD-V提供的虚拟化平台，利用Linux进程模拟虚拟机CPU和内存等。KVM不提供硬件虚拟化操作，其IO操作等都借助QEMU来完成。 Qemu  是纯软件实现的虚拟化模拟器，几乎可以模拟任何硬件设备，我们最熟悉的就是">
-<meta name="twitter:image" content="http://www.owalle.com/2018/12/10/kvm-overview/01_brief.png">
+<meta name="twitter:title" content="Yi颗烂樱桃">
+<meta name="twitter:description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
 
 
 
@@ -131,13 +127,13 @@
 
 
 
-  <link rel="canonical" href="http://www.owalle.com/2018/12/10/kvm-overview/">
+  <link rel="canonical" href="http://www.owalle.com/archives/2014/">
 
 
 
 
 
-  <title>KVM 虚拟化原理1 -- 概述 | Yi颗烂樱桃</title>
+  <title>归档 | Yi颗烂樱桃</title>
   
 
 
@@ -156,7 +152,7 @@
     
   
 
-  <div class="container sidebar-position-left page-post-detail">
+  <div class="container sidebar-position-left page-archive">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
@@ -302,317 +298,177 @@
           <div id="content" class="content">
             
 
-  <div id="posts" class="posts-expand">
-    
+  
+  
+  
+  <div class="post-block archive">
+    <div id="posts" class="posts-collapse">
+      <span class="archive-move-on"></span>
 
-  
+      <span class="archive-page-counter">
+        
+        
+        
+          
+        
+        嗯..! 目前共计 11 篇日志。 继续努力。
+      </span>
 
-  
-  
-  
+      
+
+        
+        
+        
+
+        
+          
+          <div class="collection-title">
+            <h2 class="archive-year" id="archive-year-2014">2014</h2>
+          </div>
+        
+        
+
+        
 
   <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2018/12/10/kvm-overview/">
+    <header class="post-header">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Yi颗烂樱桃">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yi颗烂樱桃">
-    </span>
-
-    
-      <header class="post-header">
-
+      <h3 class="post-title">
         
+            <a class="post-title-link" href="/2014/12/11/kvm-src-4-mem/" itemprop="url">
+              
+                <span itemprop="name">KVM源代码分析4:内存虚拟化</span>
+              
+            </a>
         
-          <h2 class="post-title" itemprop="name headline">KVM 虚拟化原理1 -- 概述</h2>
-        
+      </h3>
 
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-12-10T22:32:20+08:00">
-                2018-12-10
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/12/10/kvm-overview/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2018/12/10/kvm-overview/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-            <span class="post-meta-divider">|</span>
-            <span class="page-pv"><i class="fa fa-file-o"></i>
-            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
-            </span>
-          
-
-          
-            <div class="post-wordcount">
-              
-                
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-file-word-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">字数统计&#58;</span>
-                
-                <span title="字数统计">
-                  661
-                </span>
-              
-
-              
-                <span class="post-meta-divider">|</span>
-              
-
-              
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-clock-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
-                
-                <span title="阅读时长">
-                  2
-                </span>
-              
-            </div>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        <h2 id="KVM虚拟化简介"><a href="#KVM虚拟化简介" class="headerlink" title="KVM虚拟化简介"></a>KVM虚拟化简介</h2><p>KVM 全称 kernel-based virtual machine，由Qumranet公司发起，2008年被RedHat收购。<br>KVM实现主要基于Intel-V或者AMD-V提供的虚拟化平台，利用Linux进程模拟虚拟机CPU和内存等。KVM不提供硬件虚拟化操作，其IO操作等都借助QEMU来完成。</p>
-<p>Qemu  是纯软件实现的虚拟化模拟器，几乎可以模拟任何硬件设备，我们最熟悉的就是能够模拟一台能够独立运行操作系统的虚拟机，虚拟机认为自己和硬件打交道，但其实是和 Qemu 模拟出来的硬件打交道，Qemu 将这些指令转译给真正的硬件。</p>
-<p>正因为 Qemu 是纯软件实现的，所有的指令都要经 Qemu 过一手，性能非常低，所以，在生产环境中，大多数的做法都是配合 KVM 来完成虚拟化工作，因为 KVM 是硬件辅助的虚拟化技术，主要负责 比较繁琐的 CPU 和内存虚拟化，而 Qemu 则负责 I/O 虚拟化，两者合作各自发挥自身的优势，相得益彰。</p>
-<p><img src="/2018/12/10/kvm-overview/01_brief.png" alt=""></p>
-<p>KVM有如下特点：</p>
-<ul>
-<li>guest作为一个普通进程运行于宿主机</li>
-<li>guest的CPU(vCPU)作为进程的线程存在，并受到宿主机内核的调度</li>
-</ul>
-<h2 id="KVM整体架构"><a href="#KVM整体架构" class="headerlink" title="KVM整体架构"></a>KVM整体架构</h2><p><img src="/2018/12/10/kvm-overview/02_kvm_framework.png" alt=""></p>
-<h3 id="虚拟CPU"><a href="#虚拟CPU" class="headerlink" title="虚拟CPU"></a>虚拟CPU</h3><p>虚拟机所有用户级别(user)的指令集，都会直接由宿主机线程执行，此线程会调用KVM的ioctl方式提供的接口加载guest的指令并在特殊的CPU模式下运行，不需要经过CPU指令集的软件模拟转换，大大的减少了虚拟化成本，这也是KVM优于其他虚拟化方式的点之一。</p>
-<p>KVM向外提供了一个虚拟设备/dev/kvm，通过ioctl(IO设备带外管理接口）来对KVM进行操作，包括虚拟机的初始化，分配内存，指令加载等等。</p>
-<h3 id="虚拟IO设备"><a href="#虚拟IO设备" class="headerlink" title="虚拟IO设备"></a>虚拟IO设备</h3><p>guest作为一个进程存在，当然他的内核的所有驱动等都存在，只是硬件被QEMU所模拟。guest的所有虚拟的硬件操作都会有QEMU来接管，那些由host passthrough给guest的设备除外，QEMU负责与真实的宿主机硬件打交道。</p>
-<h3 id="虚拟内存"><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h3><p>guest的内存在host上由emulator提供，对emulator来说，guest访问的内存就是他的虚拟地址空间，guest上需要经过一次虚拟地址到物理地址的转换，转换到guest的物理地址其实也就是emulator的虚拟地址，emulator再次经过一次转换，转换为host的物理地址。</p>
-
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-      <div>
-        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
-  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
-  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
-    <span>打赏</span>
-  </button>
-  <div id="QR" style="display: none;">
-
-    
-      <div id="wechat" style="display: inline-block">
-        <img id="wechat_qr" src="/images/wechatpay.png" alt="Yi颗烂樱桃 微信支付">
-        <p>微信支付</p>
+      <div class="post-meta">
+        <time class="post-time" itemprop="dateCreated" datetime="2014-12-11T11:05:05+08:00" content="2014-12-11">
+          12-11
+        </time>
       </div>
-    
 
-    
-      <div id="alipay" style="display: inline-block">
-        <img id="alipay_qr" src="/images/alipay.png" alt="Yi颗烂樱桃 支付宝">
-        <p>支付宝</p>
-      </div>
-    
-
-    
-
-  </div>
-</div>
-
-      </div>
-    
-
-    
-      <div>
-        <ul class="post-copyright">
-  <li class="post-copyright-author">
-    <strong>本文作者：</strong>
-    Yi颗烂樱桃
-  </li>
-  <li class="post-copyright-link">
-    <strong>本文链接：</strong>
-    <a href="http://www.owalle.com/2018/12/10/kvm-overview/" title="KVM 虚拟化原理1 -- 概述">http://www.owalle.com/2018/12/10/kvm-overview/</a>
-  </li>
-  <li class="post-copyright-license">
-    <strong>版权声明： </strong>
-    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="external nofollow" target="_blank">CC BY-NC-ND 3.0</a> 许可协议。转载请注明出处！
-  </li>
-</ul>
-
-      </div>
-    
-
-    <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/KVM/" rel="tag"># KVM</a>
-          
-        </div>
-      
-
-      
-      
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
-            
-              <a href="/2018/12/10/qmp-introduction/" rel="next" title="QMP 简介">
-                <i class="fa fa-chevron-left"></i> QMP 简介
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/12/10/kvm-boot/" rel="prev" title="KVM 虚拟化原理2— QEMU启动过程">
-                KVM 虚拟化原理2— QEMU启动过程 <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
-      
-
-      
-      
-    </footer>
-  </div>
-  
-  
-  
+    </header>
   </article>
 
 
 
-    <div class="post-spread">
       
+
         
-  <div class="bdsharebuttonbox">
-    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
-    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
-    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
-    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
-    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
-    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
-    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
-    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
-    <a href="#" class="bds_more" data-cmd="more"></a>
-    <a class="bds_count" data-cmd="count"></a>
-  </div>
-  <script>
-    window._bd_share_config = {
-      "common": {
-        "bdText": "",
-        "bdMini": "2",
-        "bdMiniList": false,
-        "bdPic": ""
-      },
-      "share": {
-        "bdSize": "16",
-        "bdStyle": "0"
-      },
-      "image": {
-        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
-        "viewText": "分享到：",
-        "viewSize": "16"
-      }
-    }
-  </script>
+        
+        
 
-<script>
-  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
-</script>
+        
+        
+
+        
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+    <header class="post-header">
+
+      <h3 class="post-title">
+        
+            <a class="post-title-link" href="/2014/12/11/kvm-src-3-cpu/" itemprop="url">
+              
+                <span itemprop="name">KVM源代码分析3:CPU虚拟化</span>
+              
+            </a>
+        
+      </h3>
+
+      <div class="post-meta">
+        <time class="post-time" itemprop="dateCreated" datetime="2014-12-11T10:34:48+08:00" content="2014-12-11">
+          12-11
+        </time>
+      </div>
+
+    </header>
+  </article>
+
+
 
       
+
+        
+        
+        
+
+        
+        
+
+        
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+    <header class="post-header">
+
+      <h3 class="post-title">
+        
+            <a class="post-title-link" href="/2014/12/11/kvm-src-2-vm-run/" itemprop="url">
+              
+                <span itemprop="name">KVM源代码分析2:虚拟机的创建与运行</span>
+              
+            </a>
+        
+      </h3>
+
+      <div class="post-meta">
+        <time class="post-time" itemprop="dateCreated" datetime="2014-12-11T09:38:35+08:00" content="2014-12-11">
+          12-11
+        </time>
+      </div>
+
+    </header>
+  </article>
+
+
+
+      
+
+        
+        
+        
+
+        
+        
+
+        
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+    <header class="post-header">
+
+      <h3 class="post-title">
+        
+            <a class="post-title-link" href="/2014/12/11/kvm-src-1/" itemprop="url">
+              
+                <span itemprop="name">KVM源代码分析1:基本工作原理</span>
+              
+            </a>
+        
+      </h3>
+
+      <div class="post-meta">
+        <time class="post-time" itemprop="dateCreated" datetime="2014-12-11T09:28:48+08:00" content="2014-12-11">
+          12-11
+        </time>
+      </div>
+
+    </header>
+  </article>
+
+
+
+      
+
     </div>
   </div>
+  
+  
+  
+
+  
+
 
 
           </div>
@@ -620,13 +476,6 @@
 
 
           
-
-  
-    <div class="comments" id="comments">
-    </div>
-  
-
-
 
         </div>
         
@@ -647,17 +496,8 @@
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            文章目录
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            站点概览
-          </li>
-        </ul>
-      
 
-      <section class="site-overview-wrap sidebar-panel">
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
             
@@ -725,22 +565,6 @@
         </div>
       </section>
 
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#KVM虚拟化简介"><span class="nav-number">1.</span> <span class="nav-text">KVM虚拟化简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#KVM整体架构"><span class="nav-number">2.</span> <span class="nav-text">KVM整体架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟CPU"><span class="nav-number">2.1.</span> <span class="nav-text">虚拟CPU</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟IO设备"><span class="nav-number">2.2.</span> <span class="nav-text">虚拟IO设备</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟内存"><span class="nav-number">2.3.</span> <span class="nav-text">虚拟内存</span></a></li></ol></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
       
 
       
@@ -916,10 +740,6 @@
   
 
   
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
-
-
 
   
 
@@ -1331,6 +1151,26 @@
   
 
   
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
   
 
 
