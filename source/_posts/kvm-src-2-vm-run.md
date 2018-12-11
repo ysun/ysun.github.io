@@ -26,7 +26,7 @@ QEMU和KVM是通过IOCTL进行配合的，直接抓住这个线看有kvm_ioctl�
 
 所有看QEMU和KVM的配合流程如下：
 
-![](http://oenhan.com/wp-content/uploads/2014/12/qemu_create_kvm_vm-1.png)
+![](qemu_create_kvm_vm-1.png)
 
 接下来参考上图分析qemu代码流程： 从vl.c代码的main函数开始。 atexit(qemu_run_exit_notifiers)注册了qemu的退出[处理函数](http://www.oenhan.com/5w2h "5W2H:技术活动逻辑方法")，后面在具体看qemu_run_exit_notifiers函数。 module_call_init则开始初始化qemu的各个模块，陆陆续续的有以下参数：
 
@@ -41,7 +41,7 @@ typedef enum {
 </pre>
 
 最开始初始化的MODULE_INIT_QOM，QOM是qemu实现的一种[模拟设备](http://www.oenhan.com/ext3-jbd-journal "journal block device代码分析")，具体可以参考http://wiki.qemu.org/Features/QOM，代码下面的不远处就MODULE_INIT_MACHINE的初始化，这两条语句放到一起看，直接说一下module_call_init的机制。 module_call_init实际设计的一个函数链表，ModuleTypeList ，链表关系如下图  
-![](http://oenhan.com/wp-content/uploads/2014/04/qemu_module_init-1.png)
+![](qemu_module_init-1.png)
 
 它把相关的函数注册到对应的数组链表上，通过执行init项目完成所有设备的初始化。module_call_init就是执行e->init()完成功能的，而e->init是什么时候通过register_module_init注册到ModuleTypeList上的ModuleEntry，是module_init注册的，而调用module_init的有
 
@@ -221,7 +221,7 @@ pc_cpus_init入参是cpu_model，前面说过这是具体的CPU模型，所有X8
 CPU进入执行状态的时候我们看到其他的VCPU包括内存可能还没有初始化，关键是此处有一个开关，qemu_cpu_cond,打开这个开关才能进入到CPU执行状态，谁来打开这个开关，后面再说。先看kvm_init_vcpu，通过kvm_vm_ioctl，KVM_CREATE_VCPU创建VCPU，用KVM_GET_VCPU_MMAP_SIZE获取env->kvm_run对应的内存映射，kvm_arch_init_vcpu则填充对应的kvm_arch内容，具体内核部分，后面单独写。kvm_init_vcpu就是获取了vcpu，将相关内容填充了env。  
 qemu_kvm_init_cpu_signals则是将中断组合掩码传递给kvm_set_signal_mask，最终给内核KVM_SET_SIGNAL_MASK。kvm_cpu_exec此时还在阻塞过程中，先挂起来，看[内存的初始化](http://www.oenhan.com/size-512-slab-kmalloc "从size-512内存泄露看slab分配")。  
 内存初始化函数是pc_memory_init,memory_region_init_ram传入了高端内存和低端内存的值，memory_region_init负责填充mr，重点在qemu_ram_alloc，即qemu_ram_alloc_from_ptr，首先有RAMBlock，ram_list，那就直接借助find_ram_offset函数一起看一下qemu的内存分布模型。  
-![](http://oenhan.com/wp-content/uploads/2014/04/qemu_memory_module-1.bmp)
+![](qemu_memory_module-1.bmp)
 
 qemu模拟了普通内存分布模型，内存的线性也是分块被使用的，每个块称为RAMBlock，由ram_list统领，RAMBlock.offset则是区块的线性地址，即相对于开始的偏移位，RAMBlock.length(size)则是区块的大小，find_ram_offset则是在线性区间内找到没有使用的一段空间，可以完全容纳新申请的ramblock length大小，代码就是进行了所有区块的遍历，找到满足新申请length的最小区间，把ramblock安插进去即可，返回的offset即是新分配区间的开始地址。  
 而RAMBlock的物理则是在RAMBlock.host,由kvm_vmalloc(size)分配真正物理内存，内部qemu_vmalloc使用qemu_memalign页[对齐分配](http://www.oenhan.com/ubuntu-debuginfo-package "ubuntu下载debuginfo deb进行调试")内存。后续的都是对RAMBlock的插入等处理。  
