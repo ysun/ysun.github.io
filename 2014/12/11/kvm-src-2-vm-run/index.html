@@ -95,14 +95,14 @@
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="原文链接：http://oenhan.com/kvm-src-2-vm-run 前段时间挖了一个坑，KVM源代码分析1:基本工作原理，准备写一下kvm的代码机制，结果一直没时间填土，现在还一下旧账，争取能温故而知新。 基本原理里面提到kvm虚拟化由用户态程序Qemu和内核态驱动kvm配合完成，qemu负责HOST用户态层面进程管理，IO处理等，KVM负责把qemu的部分指令在硬件上直接实现，从虚拟">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://oenhan.com/wp-content/uploads/2014/12/qemu_create_kvm_vm-1.png">
-<meta property="og:image" content="http://oenhan.com/wp-content/uploads/2014/04/qemu_module_init-1.png">
-<meta property="og:image" content="http://oenhan.com/wp-content/uploads/2014/04/qemu_memory_module-1.bmp">
-<meta property="og:updated_time" content="2018-12-11T02:28:26.076Z">
+<meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/qemu_create_kvm_vm-1.png">
+<meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/qemu_module_init-1.png">
+<meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/qemu_memory_module-1.bmp">
+<meta property="og:updated_time" content="2018-12-11T07:04:43.120Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="KVM源代码分析2:虚拟机的创建与运行">
 <meta name="twitter:description" content="原文链接：http://oenhan.com/kvm-src-2-vm-run 前段时间挖了一个坑，KVM源代码分析1:基本工作原理，准备写一下kvm的代码机制，结果一直没时间填土，现在还一下旧账，争取能温故而知新。 基本原理里面提到kvm虚拟化由用户态程序Qemu和内核态驱动kvm配合完成，qemu负责HOST用户态层面进程管理，IO处理等，KVM负责把qemu的部分指令在硬件上直接实现，从虚拟">
-<meta name="twitter:image" content="http://oenhan.com/wp-content/uploads/2014/12/qemu_create_kvm_vm-1.png">
+<meta name="twitter:image" content="http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/qemu_create_kvm_vm-1.png">
 
 
 
@@ -462,7 +462,7 @@
 <p>而调用kvm_vm_ioctl的函数真是海了去了，需要看的是KVM_SET_USER_MEMORY_REGION，KVM_CREATE_VCPU，KVM_CREATE_DEVICE。</p>
 <p>所有寄存器的交换信息都是通过kvm_vcpu_ioctl，需要记住的操作只有，KVM_RUN。</p>
 <p>所有看QEMU和KVM的配合流程如下：</p>
-<p><img src="http://oenhan.com/wp-content/uploads/2014/12/qemu_create_kvm_vm-1.png" alt=""></p>
+<p><img src="/2014/12/11/kvm-src-2-vm-run/qemu_create_kvm_vm-1.png" alt=""></p>
 <p>接下来参考上图分析qemu代码流程： 从vl.c代码的main函数开始。 atexit(qemu_run_exit_notifiers)注册了qemu的退出<a href="http://www.oenhan.com/5w2h" title="5W2H:技术活动逻辑方法" target="_blank" rel="noopener">处理函数</a>，后面在具体看qemu_run_exit_notifiers函数。 module_call_init则开始初始化qemu的各个模块，陆陆续续的有以下参数：</p>
 <pre class="lang:c decode:1 hljs cpp">
 typedef enum {
@@ -474,7 +474,7 @@ typedef enum {
 } module_init_type;
 </pre>
 
-<p>最开始初始化的MODULE_INIT_QOM，QOM是qemu实现的一种<a href="http://www.oenhan.com/ext3-jbd-journal" title="journal block device代码分析" target="_blank" rel="noopener">模拟设备</a>，具体可以参考<a href="http://wiki.qemu.org/Features/QOM，代码下面的不远处就MODULE_INIT_MACHINE的初始化，这两条语句放到一起看，直接说一下module_call_init的机制。" target="_blank" rel="noopener">http://wiki.qemu.org/Features/QOM，代码下面的不远处就MODULE_INIT_MACHINE的初始化，这两条语句放到一起看，直接说一下module_call_init的机制。</a> module_call_init实际设计的一个函数链表，ModuleTypeList ，链表关系如下图<br><img src="http://oenhan.com/wp-content/uploads/2014/04/qemu_module_init-1.png" alt=""></p>
+<p>最开始初始化的MODULE_INIT_QOM，QOM是qemu实现的一种<a href="http://www.oenhan.com/ext3-jbd-journal" title="journal block device代码分析" target="_blank" rel="noopener">模拟设备</a>，具体可以参考<a href="http://wiki.qemu.org/Features/QOM，代码下面的不远处就MODULE_INIT_MACHINE的初始化，这两条语句放到一起看，直接说一下module_call_init的机制。" target="_blank" rel="noopener">http://wiki.qemu.org/Features/QOM，代码下面的不远处就MODULE_INIT_MACHINE的初始化，这两条语句放到一起看，直接说一下module_call_init的机制。</a> module_call_init实际设计的一个函数链表，ModuleTypeList ，链表关系如下图<br><img src="/2014/12/11/kvm-src-2-vm-run/qemu_module_init-1.png" alt=""></p>
 <p>它把相关的函数注册到对应的数组链表上，通过执行init项目完成所有设备的初始化。module_call_init就是执行e-&gt;init()完成功能的，而e-&gt;init是什么时候通过register_module_init注册到ModuleTypeList上的ModuleEntry，是module_init注册的，而调用module_init的有</p>
 <pre class="lang:c decode:1 hljs cpp">
 \#define block_init(function) module_init(function, MODULE_INIT_BLOCK)
@@ -631,7 +631,7 @@ case QEMU_OPTION_machine:
     }
 </pre>
 
-<p>CPU进入执行状态的时候我们看到其他的VCPU包括内存可能还没有初始化，关键是此处有一个开关，qemu_cpu_cond,打开这个开关才能进入到CPU执行状态，谁来打开这个开关，后面再说。先看kvm_init_vcpu，通过kvm_vm_ioctl，KVM_CREATE_VCPU创建VCPU，用KVM_GET_VCPU_MMAP_SIZE获取env-&gt;kvm_run对应的内存映射，kvm_arch_init_vcpu则填充对应的kvm_arch内容，具体内核部分，后面单独写。kvm_init_vcpu就是获取了vcpu，将相关内容填充了env。<br>qemu_kvm_init_cpu_signals则是将中断组合掩码传递给kvm_set_signal_mask，最终给内核KVM_SET_SIGNAL_MASK。kvm_cpu_exec此时还在阻塞过程中，先挂起来，看<a href="http://www.oenhan.com/size-512-slab-kmalloc" title="从size-512内存泄露看slab分配" target="_blank" rel="noopener">内存的初始化</a>。<br>内存初始化函数是pc_memory_init,memory_region_init_ram传入了高端内存和低端内存的值，memory_region_init负责填充mr，重点在qemu_ram_alloc，即qemu_ram_alloc_from_ptr，首先有RAMBlock，ram_list，那就直接借助find_ram_offset函数一起看一下qemu的内存分布模型。<br><img src="http://oenhan.com/wp-content/uploads/2014/04/qemu_memory_module-1.bmp" alt=""></p>
+<p>CPU进入执行状态的时候我们看到其他的VCPU包括内存可能还没有初始化，关键是此处有一个开关，qemu_cpu_cond,打开这个开关才能进入到CPU执行状态，谁来打开这个开关，后面再说。先看kvm_init_vcpu，通过kvm_vm_ioctl，KVM_CREATE_VCPU创建VCPU，用KVM_GET_VCPU_MMAP_SIZE获取env-&gt;kvm_run对应的内存映射，kvm_arch_init_vcpu则填充对应的kvm_arch内容，具体内核部分，后面单独写。kvm_init_vcpu就是获取了vcpu，将相关内容填充了env。<br>qemu_kvm_init_cpu_signals则是将中断组合掩码传递给kvm_set_signal_mask，最终给内核KVM_SET_SIGNAL_MASK。kvm_cpu_exec此时还在阻塞过程中，先挂起来，看<a href="http://www.oenhan.com/size-512-slab-kmalloc" title="从size-512内存泄露看slab分配" target="_blank" rel="noopener">内存的初始化</a>。<br>内存初始化函数是pc_memory_init,memory_region_init_ram传入了高端内存和低端内存的值，memory_region_init负责填充mr，重点在qemu_ram_alloc，即qemu_ram_alloc_from_ptr，首先有RAMBlock，ram_list，那就直接借助find_ram_offset函数一起看一下qemu的内存分布模型。<br><img src="/2014/12/11/kvm-src-2-vm-run/qemu_memory_module-1.bmp" alt=""></p>
 <p>qemu模拟了普通内存分布模型，内存的线性也是分块被使用的，每个块称为RAMBlock，由ram_list统领，RAMBlock.offset则是区块的线性地址，即相对于开始的偏移位，RAMBlock.length(size)则是区块的大小，find_ram_offset则是在线性区间内找到没有使用的一段空间，可以完全容纳新申请的ramblock length大小，代码就是进行了所有区块的遍历，找到满足新申请length的最小区间，把ramblock安插进去即可，返回的offset即是新分配区间的开始地址。<br>而RAMBlock的物理则是在RAMBlock.host,由kvm_vmalloc(size)分配真正物理内存，内部qemu_vmalloc使用qemu_memalign页<a href="http://www.oenhan.com/ubuntu-debuginfo-package" title="ubuntu下载debuginfo deb进行调试" target="_blank" rel="noopener">对齐分配</a>内存。后续的都是对RAMBlock的插入等处理。<br>从上面看，memory_region_init_ram已经将qemu内存模型和实际的物理内存初始化了。<br>vmstate_register_ram_global这个函数则是负责将前面提到的ramlist中的ramblock和memory region的初始地址对应一下，将mr-&gt;name填充到ramblock的idstr里面，就是让二者有确定的对应关系，如此mr就有了物理内存使用。<br>后面则是subregion的处理，memory_region_init_alias初始化，其中将ram传递给mr-&gt;owner确定了隶属关系，memory_region_add_subregion则是大头，memory_region_add_subregion_common前面的判断忽略，QTAILQ_INSERT_TAIL(&amp;mr-&gt;subregions, subregion, subregions_link)就是插入了链表而已，主要内容在memory_region_transaction_commit。<br>memory_region_transaction_commit中引入了新的结构address_spaces（AS），注释里面提到“AddressSpace: describes a mapping of addresses to #MemoryRegion objects”，就是内存地址的映射关系，因为内存有不同的应用类型，address_spaces以链表形式存在，commit函数则是对所有AS执行address_space_update_topology，先看AS在哪里注册的，就是前面提到的kvm_init里面，执行memory_listener_register，注册了address_space_memory和address_space_io两个，涉及的另外一个结构体则是MemoryListener，有kvm_memory_listener和kvm_io_listener，就是用于监控内存映射关系发生变化之后执行回调函数。<br>下面进入到address_space_update_topology函数，FlatView则是“Flattened global view of current active memory hierarchy”，address_space_get_flatview直接获取当前的，generate_memory_topology则根据前面已经变化的mr重新生成FlatView,然后通过address_space_update_topology_pass比较，简单说address_space_update_topology_pass就是两个FlatView逐条的FlatRange进行对比，以后一个FlatView为准，如果前面FlatView的FlatRange和后面的不一样，则对前面的FlatView的这条FlatRange进行处理，差别就是3种情况，如代码：</p>
 <pre class="lang:c decode:1 hljs php">
 while (iold < old_view->nr || inew < new_view->nr) {
