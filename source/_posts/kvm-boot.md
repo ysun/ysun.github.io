@@ -2,7 +2,7 @@ title: KVM 虚拟化原理2— QEMU启动过程
 donate: true
 date: 2018-12-10 22:57:17
 categories: KVM
-tags:
+tags: KVM
 ---
 
 ## 虚拟机启动过程

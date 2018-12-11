@@ -76,7 +76,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT">
+  <meta name="keywords" content="KVM,">
 
 
 
@@ -88,7 +88,7 @@
 
 
 <meta name="description" content="CPU 虚拟化简介上一篇文章笼统的介绍了一个虚拟机的诞生过程，从demo中也可以看到，运行一个虚拟机再也不需要像以前想象的那样，需要用软件来模拟硬件指令集了。虚拟机的指令集直接运行在宿主机物理CPU上，当虚拟机中的指令设计到IO操作或者一些特殊指令的时候，控制权转让给了宿主机（这里其实是转让给了vm monitor，下面检查VMM），也就是一个demo进程，他在宿主机上的表现形式也就是一个用户级进">
-<meta name="keywords" content="KVM Linux Kernel Qemu">
+<meta name="keywords" content="KVM">
 <meta property="og:type" content="article">
 <meta property="og:title" content="KVM 虚拟化原理3--CPU">
 <meta property="og:url" content="http://www.owalle.com/2018/12/10/kvm-cpu/index.html">
@@ -98,7 +98,7 @@
 <meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-cpu/vcpu-follow.png">
 <meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-cpu/vcpu-ring.png">
 <meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-cpu/vmm_guest_switch.png">
-<meta property="og:updated_time" content="2018-12-10T15:26:15.033Z">
+<meta property="og:updated_time" content="2018-12-11T02:30:26.704Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="KVM 虚拟化原理3--CPU">
 <meta name="twitter:description" content="CPU 虚拟化简介上一篇文章笼统的介绍了一个虚拟机的诞生过程，从demo中也可以看到，运行一个虚拟机再也不需要像以前想象的那样，需要用软件来模拟硬件指令集了。虚拟机的指令集直接运行在宿主机物理CPU上，当虚拟机中的指令设计到IO操作或者一些特殊指令的时候，控制权转让给了宿主机（这里其实是转让给了vm monitor，下面检查VMM），也就是一个demo进程，他在宿主机上的表现形式也就是一个用户级进">
@@ -357,6 +357,28 @@
           </span>
 
           
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
 
           
             
@@ -517,6 +539,12 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/KVM/" rel="tag"># KVM</a>
+          
+        </div>
+      
 
       
       
@@ -658,7 +686,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-count">11</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -753,7 +781,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">14.4k</span>
+    <span title="Site words total count">26.2k</span>
   
 </div>
 

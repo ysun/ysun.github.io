@@ -1,0 +1,357 @@
+---
+title: KVM源代码分析4:内存虚拟化
+donate: true
+date: 2014-12-11 11:05:05
+categories: KVM
+tags: KVM
+---
+
+代码版本：https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git v3.16.37
+
+在虚拟机的创建与运行中pc_init_pci负责("KVM源代码分析2:虚拟机的创建与运行")，内存初始化也是在这里完成的，还是一步步从qemu说起，在vl.c的main函数中有ram_size参数，由qemu入参标识QEMU_OPTION_m设定，顾名思义就是虚拟机内存的大小，通过machine->init一步步传递给pc_init1函数。在这里分出了above_4g_mem_size和below_4g_mem_size，即高低端内存（也不一定是32bit机器..），然后开始初始化内存，即pc_memory_init，内存通过memory_region_init_ram下面的qemu_ram_alloc分配，使用qemu_ram_alloc_from_ptr。
+
+插播qemu对内存条的模拟管理，是通过RAMBlock和ram_list管理的，RAMBlock就是每次申请的内存池，ram_list则是RAMBlock的链表，他们结构如下：
+
+<pre class="lang:c decode:1 hljs cpp">
+typedefstruct RAMBlock {
+//对应宿主的内存地址
+    uint8_t *host;
+//block在ramlist中的偏移
+    ram_addr_t offset;
+//block长度
+    ram_addr_t length;
+    uint32_t flags;
+//block名字
+    char idstr[256];
+    QLIST_ENTRY(RAMBlock) next;
+\#if defined(__linux__) && !defined(TARGET_S390X)
+    int fd;
+\#endif
+} RAMBlock;
+
+typedef struct RAMList {
+//看代码理解就是list的head，但是不知道为啥叫dirty...
+    uint8_t *phys_dirty;
+    QLIST_HEAD(ram, RAMBlock) blocks;
+} RAMList;
+</pre>
+
+下面再回到qemu_ram_alloc_from_ptr函数，使用find_ram_offset赋值给new block的offset，find_ram_offset具体工作模型已经在"KVM源代码分析2:虚拟机的创建与运行"，不赘述。然后是一串判断，在kvm_enabled的情况下使用new_block->host = kvm_vmalloc(size)，最终内存是qemu_vmalloc分配的，使用qemu_memalign干活。
+
+<pre class="lang:c decode:1 hljs cpp">
+void \*qemu_memalign(size_t alignment, size_t size){
+    void *ptr;
+//使用posix进行内存针对页大小对齐
+\#if defined(_POSIX_C_SOURCE) && !defined(__sun__)
+    int ret;
+    ret = posix_memalign(&ptr, alignment, size);
+    if (ret != 0) {
+        fprintf(stderr, "Failed to allocate %zu B: %sn",
+                size, strerror(ret));
+        abort();
+    }
+\#elif defined(CONFIG_BSD)
+    ptr = qemu_oom_check(valloc(size));
+\#else
+//所谓检查oom就是看memalign对应malloc申请内存是否成功
+    ptr = qemu_oom_check(memalign(alignment, size));
+\#endif
+    trace_qemu_memalign(alignment, size, ptr);
+    return ptr;
+}
+</pre>
+
+以上qemu_vmalloc进行内存申请就结束了。在qemu_ram_alloc_from_ptr函数末尾则是将block添加到链表，realloc整个ramlist，用memset初始化整个ramblock，madvise对内存使用限定。  
+然后一层层的退回到pc_memory_init函数。
+
+此时pc.ram已经分配完成，ram_addr已经拿到了[分配的内存](http://www.oenhan.com/kernel-program-exec "从一次内存泄露看程序在内核中的执行过程")地址，MemoryRegion ram初始化完成。下面则是对已有的ram进行分段，即ram-below-4g和ram-above-4g，也就是高端内存和低端内存。用memory_region_init_alias初始化子MemoryRegion，然后将memory_region_add_subregion添加关联起来，memory_region_add_subregion具体细节“KVM源码分析2”中已经说了，参考对照着看吧，中间很多映射代码过程也只是qemu遗留的软件实现，没看到具体存在的意义，直接看到kvm_set_user_memory_region函数，内核真正需要kvm_vm_ioctl传递过去的参数是什么， struct kvm_userspace_memory_region mem而已，也就是
+
+<pre class="lang:c decode:1 hljs cpp">
+struct kvm_userspace_memory_region {
+__u32 slot;
+__u32 flags;
+__u64 guest_phys_addr;
+__u64 memory_size; /* bytes */
+__u64 userspace_addr; /* start of the userspace allocated memory */
+};
+</pre>
+
+kvm_vm_ioctl进入到内核是在KVM_SET_USER_MEMORY_REGION参数中，即执行kvm_vm_ioctl_set_memory_region，然后一直向下，到__kvm_set_memory_region函数，check_memory_region_flags检查mem->flags是否合法，而当前flag也就使用了两位，KVM_MEM_LOG_DIRTY_PAGES和KVM_MEM_READONLY，从qemu传递过来只能是KVM_MEM_LOG_DIRTY_PAGES,下面是对mem中各参数的合规检查，(mem->memory_size & (PAGE_SIZE - 1))要求以页为单位，(mem->guest_phys_addr & (PAGE_SIZE - 1))要求guest_phys_addr页对齐，而((mem->userspace_addr & (PAGE_SIZE - 1)) || !access_ok(VERIFY_WRITE,(void __user *)(unsigned long)mem->userspace_addr,mem->memory_size))则保证host的线性地址页对齐而且该地址域有写权限。  
+id_to_memslot则是根据qemu的内存槽号得到kvm结构下的内存槽号，转换关系来自id_to_index数组，那映射关系怎么来的，映射关系是一一对应的，在kvm_create_vm "KVM源代码分析2:虚拟机的创建与运行"中，kvm_init_memslots_id初始化对应关系，即slots->id_to_index[i] = slots->memslots[i].id = i，当前映射是没有意义的，估计是为了后续扩展而存在的。  
+扩充了new的kvm_memory_slot，下面直接在代码中注释更方便：
+
+<pre class="lang:c decode:1 hljs cs">
+//映射内存有大小，不是删除内存条if (npages) {
+//内存槽号没有虚拟内存条，意味内存新创建if (!old.npages)
+		change = KVM_MR_CREATE;
+	else { /* Modify an existing slot. */
+//修改已存在的内存修改标志或者平移映射地址
+//下面是不能处理的状态（内存条大小不能变，物理地址不能变，不能修改只读）
+		if ((mem->userspace_addr != old.userspace_addr) ||
+		    (npages != old.npages) ||
+		    ((new.flags ^ old.flags) & KVM_MEM_READONLY))
+			goto out;
+//guest地址不同，内存条平移
+		if (base_gfn != old.base_gfn)
+			change = KVM_MR_MOVE;
+		else if (new.flags != old.flags)
+//修改属性
+			change = KVM_MR_FLAGS_ONLY;
+		else { /* Nothing to change. */
+			r = 0;
+			goto out;
+		}
+	}
+} else if (old.npages) {
+//申请插入的内存为0，而内存槽上有内存，意味删除
+	change = KVM_MR_DELETE;
+} else /* Modify a non-existent slot: disallowed. */
+	goto out;
+</pre>
+
+另外看kvm_mr_change就知道memslot的变动值了：
+
+<pre class="lang:c decode:1 hljs cpp">
+enum kvm_mr_change {
+	KVM_MR_CREATE,
+	KVM_MR_DELETE,
+	KVM_MR_MOVE,
+	KVM_MR_FLAGS_ONLY,
+};
+</pre>
+
+在往下是一段检查
+
+<pre class="lang:c decode:1 hljs php">
+if ((change == KVM_MR_CREATE) || (change == KVM_MR_MOVE)) {
+	/* Check for overlaps */
+	r = -EEXIST;
+	kvm_for_each_memslot(slot, kvm->memslots) {
+		if ((slot->id >= KVM_USER_MEM_SLOTS) ||
+//下面排除掉准备操作的内存条，在KVM_MR_MOVE中是有交集的
+		    (slot->id == mem->slot))
+			continue;
+//下面就是当前已有的slot与new在guest线性区间上有交集
+		if (!((base_gfn + npages <= slot->base_gfn) ||
+		      (base_gfn >= slot->base_gfn + slot->npages)))
+			goto out;
+//out错误码就是EEXIST
+	}
+}
+</pre>
+
+如果是新插入内存条，代码则走入kvm_arch_create_memslot函数，里面主要是一个循环，KVM_NR_PAGE_SIZES是分页的级数，此处是3，第一次循环，lpages = gfn_to_index(slot->base_gfn + npages - 1,slot->base_gfn, level) + 1，lpages就是一级页表所需要的page数，大致是npages>>0*9,然后为slot->arch.rmap[i]申请了内存空间，此处可以猜想，rmap就是一级页表了，继续看，lpages约为npages>>1*9,此处又多为lpage_info申请了同等空间，然后对lpage_info初始化赋值，现在看不到lpage_info的具体作用，看到后再补上。整体上看kvm_arch_create_memslot做了一个3级的软件页表。  
+如果有脏页,并且脏页位图为空,则分配[脏页位图](http://www.oenhan.com/linux-cache-writeback), kvm_create_dirty_bitmap实际就是"页数/8".
+
+<pre class="lang:c decode:1 hljs cpp">
+if ((new.flags & KVM_MEM_LOG_DIRTY_PAGES) && !new.dirty_bitmap) {
+		if (kvm_create_dirty_bitmap(&new) < 0)
+			goto out_free;
+	}
+</pre>
+
+当内存条的改变是KVM_MR_DELETE或者KVM_MR_MOVE,先申请一个slots,把kvm->memslots暂存到这里,首先通过id_to_memslot获取准备插入的内存条对应到kvm的插槽是slot,无论删除还是移动,将其先标记为KVM_MEMSLOT_INVALID,然后是install_new_memslots,其实就是更新了一下slots->generation的值。
+
+内存的添加说完了，看一下[EPT页表](http://www.oenhan.com/kernel-program-exec)的映射，在kvm_arch_vcpu_setup中有kvm_mmu_setup，是mmu的初始化，EPT的初始化是init_kvm_tdp_mmu，所谓的初始化就是填充了vcpu->arch.mmu结构体，里面有很多回调函数都会用到，最终的是tdp_page_fault。
+
+<pre class="hljs php">
+context->page_fault = tdp_page_fault;
+context->sync_page = nonpaging_sync_page;
+context->invlpg = nonpaging_invlpg;
+context->update_pte = nonpaging_update_pte;
+context->shadow_root_level = kvm_x86_ops->get_tdp_level();
+context->root_hpa = INVALID_PAGE;
+context->direct_map = true;
+context->set_cr3 = kvm_x86_ops->set_tdp_cr3;
+context->get_cr3 = get_cr3;
+context->get_pdptr = kvm_pdptr_read;
+context->inject_page_fault = kvm_inject_page_fault;
+</pre>
+
+当guest访问物理内存时发生vm-exit，进入vmx_handle_exit函数，根据EXIT_REASON_EPT_VIOLATION走到handle_ept_violation函数，exit_qualification = vmcs_readl(EXIT_QUALIFICATION)获取vm-exit的退出原因，进入kvm_mmu_page_fault函数：vcpu->arch.mmu.page_fault(vcpu, cr2, error_code, false)，即是tdp_page_fault，handle_mmio_page_fault的流程不提。
+
+<pre class="hljs cpp">
+//填充kvm mmu专用的slab
+r = mmu_topup_memory_caches(vcpu);
+//获取gfn使用的level，即hugepage的问题
+force_pt_level = mapping_level_dirty_bitmap(vcpu, gfn);
+if (likely(!force_pt_level)) {
+	level = mapping_level(vcpu, gfn);
+	gfn &= ~(KVM_PAGES_PER_HPAGE(level) - 1);
+} else
+	level = PT_PAGE_TABLE_LEVEL;
+
+//顾名思义，快速处理一个简单的page fault
+//即present同时有写权限的非mmio page fault
+//参考page_fault_can_be_fast函数
+//一部分处理没有写权限的page fault
+//一部分处理 TLB lazy
+//fast_pf_fix_direct_spte也就是将pte获取的写权限
+if (fast_page_fault(vcpu, gpa, level, error_code))
+	return 0;
+//下面函数主要就一件事情，gfn_to_pfn
+if (try_async_pf(vcpu, prefault, gfn, gpa, &pfn, write, &map_writable))
+      return 0;
+//direct map就是映射ept页表的过程
+r = __direct_map(vcpu, gpa, write, map_writable,
+      level, gfn, pfn, prefault);
+</pre>
+
+在try_async_pf中就是gfn转换成hva，然后hva转换成pfn的过程，gfn转换到hva:
+
+<pre class="hljs objectivec">
+static pfn_t
+__gfn_to_pfn_memslot(struct kvm_memory_slot *slot, gfn_t gfn, bool atomic,
+		     bool *async, bool write_fault, bool *writable)
+{
+	unsigned long addr = __gfn_to_hva_many(slot, gfn, NULL, write_fault);
+
+	if (addr == KVM_HVA_ERR_RO_BAD)
+		return KVM_PFN_ERR_RO_FAULT;
+
+	if (kvm_is_error_hva(addr))
+		return KVM_PFN_NOSLOT;
+
+	/* Do not map writable pfn in the readonly memslot. */
+	if (writable && memslot_is_readonly(slot)) {
+		*writable = false;
+		writable = NULL;
+	}
+
+	return hva_to_pfn(addr, atomic, async, write_fault,
+			  writable);
+}
+</pre>
+
+gfn2hva本质就是
+
+<pre class="hljs cpp">
+staticinline unsigned long
+__gfn_to_hva_memslot(struct kvm_memory_slot *slot, gfn_t gfn)
+{
+	return slot->userspace_addr + (gfn - slot->base_gfn) * PAGE_SIZE;
+}
+</pre>
+
+而hva_to_pfn则就是host的线性区进行地址转换的问题了，不提。
+
+<pre class="hljs php">
+static int __direct_map(struct kvm_vcpu *vcpu, gpa_t v, int write,
+			int map_writable, int level, gfn_t gfn, pfn_t pfn,
+			bool prefault)
+{
+	struct kvm_shadow_walk_iterator iterator;
+	struct kvm_mmu_page *sp;
+	int emulate = 0;
+	gfn_t pseudo_gfn;
+
+	if (!VALID_PAGE(vcpu->arch.mmu.root_hpa))
+		return0;
+//遍历ept四级页表
+	for_each_shadow_entry(vcpu, (u64)gfn << PAGE_SHIFT, iterator) {
+//如果是最后一级，level是hugepage下的level
+		if (iterator.level == level) {
+//设置pte，页表下一级的page地址就是pfn写入到pte
+			mmu_set_spte(vcpu, iterator.sptep, ACC_ALL,
+				     write, &emulate, level, gfn, pfn,
+				     prefault, map_writable);
+			direct_pte_prefetch(vcpu, iterator.sptep);
+			++vcpu->stat.pf_fixed;
+			break;
+		}
+
+		drop_large_spte(vcpu, iterator.sptep);
+//mmu page不在位的情况，也就是缺页
+		if (!is_shadow_present_pte(*iterator.sptep)) {
+			u64 base_addr = iterator.addr;
+//获取指向的具体mmu page entry的index
+			base_addr &= PT64_LVL_ADDR_MASK(iterator.level);
+			pseudo_gfn = base_addr >> PAGE_SHIFT;
+//获取mmu page
+			sp = kvm_mmu_get_page(vcpu, pseudo_gfn, iterator.addr,
+					      iterator.level - 1,
+					      1, ACC_ALL, iterator.sptep);
+//将当前的mmu page的地址写入到上一级别mmu page的pte中
+			link_shadow_page(iterator.sptep, sp, true);
+		}
+	}
+	return emulate;
+}
+
+static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
+					     gfn_t gfn,
+					     gva_t gaddr,
+					     unsigned level,
+					     int direct,
+					     unsigned access,
+					     u64 *parent_pte)
+{
+	union kvm_mmu_page_role role;
+	unsigned quadrant;
+	struct kvm_mmu_page *sp;
+	bool need_sync = false;
+
+	role = vcpu->arch.mmu.base_role;
+	role.level = level;
+	role.direct = direct;
+	if (role.direct)
+		role.cr4_pae = 0;
+	role.access = access;
+	if (!vcpu->arch.mmu.direct_map
+	    && vcpu->arch.mmu.root_level <= PT32_ROOT_LEVEL) {
+		quadrant = gaddr >> (PAGE_SHIFT + (PT64_PT_BITS * level));
+		quadrant &= (1 << ((PT32_PT_BITS - PT64_PT_BITS) * level)) - 1;
+		role.quadrant = quadrant;
+	}
+//根据一个hash索引来的
+	for_each_gfn_sp(vcpu->kvm, sp, gfn) {
+//检查整个mmu ept是否被失效了
+		if (is_obsolete_sp(vcpu->kvm, sp))
+			continue;
+
+		if (!need_sync && sp->unsync)
+			need_sync = true;
+
+		if (sp->role.word != role.word)
+			continue;
+
+		if (sp->unsync && kvm_sync_page_transient(vcpu, sp))
+			break;
+
+		mmu_page_add_parent_pte(vcpu, sp, parent_pte);
+		if (sp->unsync_children) {
+			kvm_make_request(KVM_REQ_MMU_SYNC, vcpu);
+			kvm_mmu_mark_parents_unsync(sp);
+		} else if (sp->unsync)
+			kvm_mmu_mark_parents_unsync(sp);
+
+		__clear_sp_write_flooding_count(sp);
+		trace_kvm_mmu_get_page(sp, false);
+		return sp;
+	}
+	++vcpu->kvm->stat.mmu_cache_miss;
+	sp = kvm_mmu_alloc_page(vcpu, parent_pte, direct);
+	if (!sp)
+		return sp;
+	sp->gfn = gfn;
+	sp->role = role;
+//新的mmu page加入hash索引，所以前面的for循环中才能知道gfn对应的mmu有没有
+//被分配
+	hlist_add_head(&sp->hash_link,
+		&vcpu->kvm->arch.mmu_page_hash[kvm_page_table_hashfn(gfn)]);
+	if (!direct) {
+		if (rmap_write_protect(vcpu->kvm, gfn))
+			kvm_flush_remote_tlbs(vcpu->kvm);
+		if (level > PT_PAGE_TABLE_LEVEL && need_sync)
+			kvm_sync_pages(vcpu, gfn);
+
+		account_shadowed(vcpu->kvm, gfn);
+	}
+	sp->mmu_valid_gen = vcpu->kvm->arch.mmu_valid_gen;
+	init_shadow_page_table(sp);
+	trace_kvm_mmu_get_page(sp, true);
+	return sp;
+}
+</pre>
+
+这样看每次缺页都会分配新的mmu page，虚拟机每次启动是根据guest不停的进行EXIT_REASON_EPT_VIOLATION，整个页表就建立起来了。

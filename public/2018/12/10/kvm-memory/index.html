@@ -76,7 +76,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT">
+  <meta name="keywords" content="KVM,">
 
 
 
@@ -88,7 +88,7 @@
 
 
 <meta name="description" content="内存虚拟化简介前一章介绍了CPU虚拟化的内容，这一章介绍一下KVM的内存虚拟化原理。可以说内存是除了CPU外最重要的组件，Guest最终使用的还是宿主机的内存，所以内存虚拟化其实就是关于如何做Guest到宿主机物理内存之间的各种地址转换，如何转换会让转换效率更高呢，KVM经历了三代的内存虚拟化技术，大大加快了内存的访问速率。 传统的地址转换在保护模式下，普通的应用进程使用的都是自己的虚拟地址空间，">
-<meta name="keywords" content="KVM Linux Kernel Qemu">
+<meta name="keywords" content="KVM">
 <meta property="og:type" content="article">
 <meta property="og:title" content="KVM 虚拟化原理4--内存">
 <meta property="og:url" content="http://www.owalle.com/2018/12/10/kvm-memory/index.html">
@@ -102,7 +102,7 @@
 <meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-memory/gpa_hpa3_shadow.png">
 <meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-memory/gpa_hpa4.png">
 <meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-memory/gpa_hpa5_ept.png">
-<meta property="og:updated_time" content="2018-12-10T15:42:56.429Z">
+<meta property="og:updated_time" content="2018-12-11T02:30:07.672Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="KVM 虚拟化原理4--内存">
 <meta name="twitter:description" content="内存虚拟化简介前一章介绍了CPU虚拟化的内容，这一章介绍一下KVM的内存虚拟化原理。可以说内存是除了CPU外最重要的组件，Guest最终使用的还是宿主机的内存，所以内存虚拟化其实就是关于如何做Guest到宿主机物理内存之间的各种地址转换，如何转换会让转换效率更高呢，KVM经历了三代的内存虚拟化技术，大大加快了内存的访问速率。 传统的地址转换在保护模式下，普通的应用进程使用的都是自己的虚拟地址空间，">
@@ -361,6 +361,28 @@
           </span>
 
           
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
 
           
             
@@ -523,6 +545,12 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/KVM/" rel="tag"># KVM</a>
+          
+        </div>
+      
 
       
       
@@ -660,7 +688,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-count">11</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -755,7 +783,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">14.4k</span>
+    <span title="Site words total count">26.2k</span>
   
 </div>
 

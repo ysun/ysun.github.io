@@ -2,8 +2,8 @@
 title: KVM 虚拟化原理3--CPU
 donate: true
 date: 2018-12-10 23:16:24
-categories:
-tags:
+categories: KVM
+tags: KVM
 ---
 ## CPU 虚拟化简介
 
