@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://www.owalle.com/2018/12/10/kvm-boot/</loc>
+    <lastmod>2018-12-15T15:46:42.748Z</lastmod>
+  </url>  <url>
     <loc>http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/</loc>
     <lastmod>2018-12-11T07:04:43.120Z</lastmod>
   </url>  <url>
@@ -9,9 +12,6 @@
   </url>  <url>
     <loc>http://www.owalle.com/2014/12/11/kvm-src-3-cpu/</loc>
     <lastmod>2018-12-11T03:02:52.188Z</lastmod>
-  </url>  <url>
-    <loc>http://www.owalle.com/2018/12/10/kvm-boot/</loc>
-    <lastmod>2018-12-11T02:32:50.364Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2018/12/10/kvm-cpu/</loc>
     <lastmod>2018-12-11T02:30:26.704Z</lastmod>

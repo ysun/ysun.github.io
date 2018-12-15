@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="虚拟机启动过程1234567891011121314第一步，获取到kvm句柄kvmfd = open(&amp;quot;/dev/kvm&amp;quot;, O_RDWR);第二步，创建虚拟机，获取到虚拟机句柄。vmfd = ioctl(kvmfd, KVM_CREATE_VM, 0);第三步，为虚拟机映射内存，还有其他的PCI，信号处理的初始化。ioctl(kvmfd, KVM_SET_USER_MEMOR">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-12-11T02:32:50.364Z">
+<meta property="og:updated_time" content="2018-12-15T15:46:42.748Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="KVM 虚拟化原理2— QEMU启动过程">
 <meta name="twitter:description" content="虚拟机启动过程1234567891011121314第一步，获取到kvm句柄kvmfd = open(&amp;quot;/dev/kvm&amp;quot;, O_RDWR);第二步，创建虚拟机，获取到虚拟机句柄。vmfd = ioctl(kvmfd, KVM_CREATE_VM, 0);第三步，为虚拟机映射内存，还有其他的PCI，信号处理的初始化。ioctl(kvmfd, KVM_SET_USER_MEMOR">
@@ -484,6 +484,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">➜  kvmsample git:(master) ✗ ./kvmsample</span><br><span class="line">read size: 712288</span><br><span class="line">KVM start run</span><br><span class="line">KVM_EXIT_IO</span><br><span class="line">out port: 16, data: 0</span><br><span class="line">KVM start run</span><br><span class="line">KVM_EXIT_IO</span><br><span class="line">out port: 16, data: 1</span><br><span class="line">KVM start run</span><br><span class="line">KVM_EXIT_IO</span><br><span class="line">out port: 16, data: 2</span><br><span class="line">KVM start run</span><br><span class="line">KVM_EXIT_IO</span><br><span class="line">out port: 16, data: 3</span><br><span class="line">KVM start run</span><br><span class="line">KVM_EXIT_IO</span><br><span class="line">out port: 16, data: 4</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>虚拟机的启动过程基本上可以这么总结：<br>创建kvm句柄-&gt;创建vm-&gt;分配内存-&gt;加载镜像到内存-&gt;启动线程执行KVM_RUN。从这个虚拟机的demo可以看出，虚拟机的内存是由宿主机通过mmap调用映射给虚拟机的，而vCPU是宿主机的一个线程，这个线程通过设置相应的vCPU的寄存器指定了虚拟机的程序加载地址后，开始运行虚拟机的指令，当虚拟机执行了IO操作后，CPU捕获到中断并把执行权又交回给宿主机。</p>
 <p>当然真实的qemu-kvm比这个复杂的多，包括设置很多IO设备的MMIO，设置信号处理等。</p>
+<h2 id="源代码"><a href="#源代码" class="headerlink" title="源代码"></a>源代码</h2><p>本文中提到的所有源代码都可以从这里下载到，仅供大家学习交流使用<br><a href="https://github.com/ysun/kvm-cheat" target="_blank" rel="noopener">github|kvm-cheat</a></p>
 
       
     </div>
@@ -754,7 +755,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#虚拟机启动过程"><span class="nav-number">1.</span> <span class="nav-text">虚拟机启动过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#先来一个KVM-API开胃菜"><span class="nav-number">2.</span> <span class="nav-text">先来一个KVM API开胃菜</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#另外一个简单的QEMU-emulator-demo"><span class="nav-number">3.</span> <span class="nav-text">另外一个简单的QEMU emulator demo</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#虚拟机启动过程"><span class="nav-number">1.</span> <span class="nav-text">虚拟机启动过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#先来一个KVM-API开胃菜"><span class="nav-number">2.</span> <span class="nav-text">先来一个KVM API开胃菜</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#另外一个简单的QEMU-emulator-demo"><span class="nav-number">3.</span> <span class="nav-text">另外一个简单的QEMU emulator demo</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#源代码"><span class="nav-number">5.</span> <span class="nav-text">源代码</span></a></li></ol></div>
             
 
           </div>
