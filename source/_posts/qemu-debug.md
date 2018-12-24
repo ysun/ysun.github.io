@@ -108,34 +108,45 @@ Ctrl + o
 之所以需要切换激活窗口，是因为有些快捷键，比如箭头上下左右，page up/down只有在当前窗口起作用
 
 ### GDB command
-``` c ``` : continue
-``` r ``` : run
-``` n ``` : next
-``` s ``` : step
+` c ` : continue
+` r ` : run
+` n ` : next
+` s ` : step
 
 ### TUI 特有命令
-```info win``` ：显示正在显示的窗口大小信息
-```layout next``` ：显示下一个窗口
-```layout prev``` ：显示上一个窗口
-```layout src``` ：显示源代码窗口
-```layout asm``` ：显示汇编窗口
-```layout split``` ：显示源代码和汇编窗口
-```layout regs``` ：显示寄存器窗口
-```focus next``` ： 将一个窗口置为激活状态
-```focus prev``` ：将上一个窗口置为激活状态
-```focus src``` : 将源代码窗口置为激活状态
-```focus asm``` ：将汇编窗口置为激活状态
-```focus regs``` ： 将寄存器窗口置为激活状态
-```focus cmd``` ：将命令行窗口置为激活状态
-```refresh``` ： 更新窗口，与C-L快捷键同
+`info win` ：显示正在显示的窗口大小信息
+`layout next` ：显示下一个窗口
+`layout prev` ：显示上一个窗口
+`layout src` ：显示源代码窗口
+`layout asm` ：显示汇编窗口
+`layout split` ：显示源代码和汇编窗口
+`layout regs` ：显示寄存器窗口
+`focus next` ： 将一个窗口置为激活状态
+`focus prev` ：将上一个窗口置为激活状态
+`focus src` : 将源代码窗口置为激活状态
+`focus asm` ：将汇编窗口置为激活状态
+`focus regs` ： 将寄存器窗口置为激活状态
+`focus cmd` ：将命令行窗口置为激活状态
+`refresh` ： 更新窗口，与C-L快捷键同
 
-```tuireg float``` ：寄存器窗口显示内容为浮点寄存器
-```tuireg general``` ：寄存器窗口显示内容为普通寄存器
-```tuireg next``` ：显示下一组寄存器，预定义的寄存器组: `general`, `float`,`system`, `vector`,`all`, `save`,`restore`. 
-```tuireg system``` ：显示上一组寄存器
-```update``` ：更新源代码窗口到当前运行点
-```winname + count``` ：增加指定窗口的高度
-```winname + count``` ：减小指定窗口的高度
-```tabset nchars ``` : Set the width of tab stops to be nchars characters
+`tuireg float` ：寄存器窗口显示内容为浮点寄存器
+`tuireg general` ：寄存器窗口显示内容为普通寄存器
+`tuireg next` ：显示下一组寄存器，预定义的寄存器组: general, float,system, vector,all, save,restore. 
+`tuireg system` ：显示上一组寄存器
+`update` ：更新源代码窗口到当前运行点
+`winname + count` ：增加指定窗口的高度
+`winname + count` ：减小指定窗口的高度
+`tabset nchars ` : Set the width of tab stops to be nchars characters
+
+### 条件断点：
+在gdb中可以watch一个寄存器，命令：
+
+```
+watch $eax == 0x0000ffaa
+```
+另外，当我们想有条件的设置某一个断点的时候，命令如下：
+```
+break test.c:120 if $eax == 0x0000ffaa
+```
 
 ![](gdb_tui.png)
