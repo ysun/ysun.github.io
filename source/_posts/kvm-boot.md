@@ -10,17 +10,26 @@ tags: KVM
 ```hljs
 第一步，获取到kvm句柄
 kvmfd = open("/dev/kvm", O_RDWR);
+
 第二步，创建虚拟机，获取到虚拟机句柄。
 vmfd = ioctl(kvmfd, KVM_CREATE_VM, 0);
+
 第三步，为虚拟机映射内存，还有其他的PCI，信号处理的初始化。
-ioctl(kvmfd, KVM_SET_USER_MEMORY_REGION, &mem);
-第四步，将虚拟机镜像映射到内存，相当于物理机的boot过程，把镜像映射到内存。
-第五步，创建vCPU，并为vCPU分配内存空间。
-ioctl(kvmfd, KVM_CREATE_VCPU, vcpuid);
-vcpu->kvm_run_mmap_size = ioctl(kvm->dev_fd, KVM_GET_VCPU_MMAP_SIZE, 0);
-第五步，创建vCPU个数的线程并运行虚拟机。
-ioctl(kvm->vcpus->vcpu_fd, KVM_RUN, 0);
-第六步，线程进入循环，并捕获虚拟机退出原因，做相应的处理。
+ioctl(vmfd, KVM_SET_USER_MEMORY_REGION, &mem);
+
+第四步，创建vCPU
+vcpufd = ioctl(vmfd, KVM_CREATE_VCPU, vcpuio)
+
+第五步，为vCPU分配内存
+vcpu_size=ioctl(kvmfd, KVM_GET_VCPU_MMAP_SIZE, NULL)
+run = (struct kvm_run*)mmap(NULL, mmap_size, PROT_READ|PROT_WRITE, MAP_SHARED, vcpufd, 0)
+
+第六步，创建vCPU个数的线程并运行虚拟机。
+ioctl(vcpufd, KVM_RUN, 0);
+将汇编代码加载到用户内存中，并且设置vCPU的寄存器，例如RIP
+
+第七步，线程进入循环，并捕获虚拟机退出原因，做相应的处理。
+while(1) { ioctl(kvm->vcpus->vcpu_fd, KVM_RUN, 0); };
 这里的退出并不一定是虚拟机关机，虚拟机如果遇到IO操作，访问硬件设备，缺页中断等都会退出执行，退出执行可以理解为将CPU执行上下文返回到QEMU。
 ```
 
@@ -117,7 +126,7 @@ int main(void)
     size_t mmap_size;
     struct kvm_run *run;
 
-    // 获取 kvm 句柄
+    // 获取 kvm 句柄 第一步
     kvm = open("/dev/kvm", O_RDWR | O_CLOEXEC);
     if (kvm == -1)
         err(1, "/dev/kvm");
@@ -129,7 +138,7 @@ int main(void)
     if (ret != 12)
         errx(1, "KVM_GET_API_VERSION %d, expected 12", ret);
 
-    // 创建一虚拟机
+    // 创建一虚拟机 第二步
     vmfd = ioctl(kvm, KVM_CREATE_VM, (unsigned long)0);
     if (vmfd == -1)
         err(1, "KVM_CREATE_VM");
@@ -147,12 +156,12 @@ int main(void)
         .memory_size = 0x1000,
         .userspace_addr = (uint64_t)mem,
     };
-    // 设置 KVM 的内存区域
+    // 设置 KVM 的内存区域 第三部
     ret = ioctl(vmfd, KVM_SET_USER_MEMORY_REGION, &region);
     if (ret == -1)
         err(1, "KVM_SET_USER_MEMORY_REGION");
 
-    // 创建虚拟CPU
+    // 创建虚拟CPU 第四部
     vcpufd = ioctl(vmfd, KVM_CREATE_VCPU, (unsigned long)0);
     if (vcpufd == -1)
         err(1, "KVM_CREATE_VCPU");
@@ -164,12 +173,12 @@ int main(void)
     mmap_size = ret;
     if (mmap_size < sizeof(*run))
         errx(1, "KVM_GET_VCPU_MMAP_SIZE unexpectedly small");
-    // 将 kvm run 与 vcpu 做关联，这样能够获取到kvm的运行时信息
+    // 将 kvm run 与 vcpu 做关联，这样能够获取到kvm的运行时信息 第五步
     run = mmap(NULL, mmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, vcpufd, 0);
     if (!run)
         err(1, "mmap vcpu");
 
-    // 获取特殊寄存器
+    // 获取特殊寄存器  第六步
     ret = ioctl(vcpufd, KVM_GET_SREGS, &sregs);
     if (ret == -1)
         err(1, "KVM_GET_SREGS");
@@ -194,7 +203,7 @@ int main(void)
     if (ret == -1)
         err(1, "KVM_SET_REGS");
 
-    // 开始运行虚拟机，如果是qemu-kvm，会用一个线程来执行这个vCPU，并加载指令
+    // 开始运行虚拟机，如果是qemu-kvm，会用一个线程来执行这个vCPU，并加载指令 第七步
     while (1) {
         // 开始运行虚拟机
         ret = ioctl(vcpufd, KVM_RUN, NULL);
