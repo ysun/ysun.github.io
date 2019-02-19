@@ -97,7 +97,7 @@
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-overview/01_brief.png">
 <meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-overview/02_kvm_framework.png">
-<meta property="og:updated_time" content="2018-12-10T15:58:02.649Z">
+<meta property="og:updated_time" content="2019-02-19T05:23:41.045Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="KVM 虚拟化原理1 -- 概述">
 <meta name="twitter:description" content="KVM虚拟化简介KVM 全称 kernel-based virtual machine，由Qumranet公司发起，2008年被RedHat收购。KVM实现主要基于Intel-V或者AMD-V提供的虚拟化平台，利用Linux进程模拟虚拟机CPU和内存等。KVM不提供硬件虚拟化操作，其IO操作等都借助QEMU来完成。 Qemu  是纯软件实现的虚拟化模拟器，几乎可以模拟任何硬件设备，我们最熟悉的就是">
@@ -414,7 +414,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  661
+                  892
                 </span>
               
 
@@ -430,7 +430,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  2
+                  3
                 </span>
               
             </div>
@@ -465,6 +465,72 @@
 <p>KVM向外提供了一个虚拟设备/dev/kvm，通过ioctl(IO设备带外管理接口）来对KVM进行操作，包括虚拟机的初始化，分配内存，指令加载等等。</p>
 <h3 id="虚拟IO设备"><a href="#虚拟IO设备" class="headerlink" title="虚拟IO设备"></a>虚拟IO设备</h3><p>guest作为一个进程存在，当然他的内核的所有驱动等都存在，只是硬件被QEMU所模拟。guest的所有虚拟的硬件操作都会有QEMU来接管，那些由host passthrough给guest的设备除外，QEMU负责与真实的宿主机硬件打交道。</p>
 <h3 id="虚拟内存"><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h3><p>guest的内存在host上由emulator提供，对emulator来说，guest访问的内存就是他的虚拟地址空间，guest上需要经过一次虚拟地址到物理地址的转换，转换到guest的物理地址其实也就是emulator的虚拟地址，emulator再次经过一次转换，转换为host的物理地址。</p>
+<blockquote class="raw-class mindmap mindmap-lg"># 虚拟化概述
+
+## CPU虚拟化
+
+### 指令的模拟
+
+#### 陷入（利用处理器的保护机制，中断和异常）
+
+1，基于处理器保护机制出发的异常
+2，虚拟机主动触发的异常
+3，异步zhognduan
+
+##### 虚拟处理器
+
+##### 虚拟寄存器
+
+##### 上下文
+
+### 中断和异常的虚拟化
+
+### 对称对处理器技术的虚拟化（SMP）
+
+#### VMM选择第一个虚拟处理器，BSP
+
+#### 其他虚拟处理器，AP
+
+## Memory虚拟化
+
+### 物理地址从0开始
+
+### 内存地址连续
+
+## I/O虚拟化
+
+### 设备发现
+
+#### 总线类型的设备
+
+##### 总线类型不可枚举
+
+###### ISA设备
+
+###### PS/2键盘、鼠标、RTC
+
+###### 传统IDE控制器
+
+##### 总线类型可枚举、资源可配置
+
+###### PCI
+
+#### 完全模拟的设备
+
+##### Frontend / backend 模型
+
+### 访问截获
+
+#### I/O端口的访问
+
+##### I/O位图来决定
+
+#### MMIO访问
+
+##### 页表项设置为无效
+
+### 设备模拟
+</blockquote>
 
       
     </div>
@@ -769,7 +835,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">31.5k</span>
+    <span title="Site words total count">33.2k</span>
   
 </div>
 
@@ -909,6 +975,12 @@
   <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
 
   <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kity.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kityminder.core.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/mindmap.js?v=5.1.4"></script>
 
 
 

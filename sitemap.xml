@@ -2,9 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://www.owalle.com/2018/12/10/kvm-overview/</loc>
+    
+    <lastmod>2019-02-19T05:23:41.045Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://www.owalle.com/2019/01/29/Intel-SDM/</loc>
     
-    <lastmod>2019-01-30T01:58:22.743Z</lastmod>
+    <lastmod>2019-02-19T05:20:49.801Z</lastmod>
     
   </url>
   
@@ -68,13 +75,6 @@
     <loc>http://www.owalle.com/2014/12/11/kvm-src-1/</loc>
     
     <lastmod>2018-12-11T02:28:56.744Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://www.owalle.com/2018/12/10/kvm-overview/</loc>
-    
-    <lastmod>2018-12-10T15:58:02.649Z</lastmod>
     
   </url>
   

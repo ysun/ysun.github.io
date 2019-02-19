@@ -96,7 +96,8 @@
 <meta property="og:description" content="23.1 概述本章介绍虚拟机体系结构的基础知识和虚拟机扩展的概述(VMX),支持多个软件环境的处理器硬件虚拟化。关于VMX指令的信息参考英特尔®64和IA-32架构软件开发人员手册中的第2B卷。其他关于VMX和系统编程参考SDM 第3B卷 23.2虚拟机器结构虚拟机扩展为IA-32处理器上的虚拟机定义了处理器级支持。两个重要支持的软件类别：  虚拟机监视器(VMM)VMM充当主机，可以完全控制处理">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://www.owalle.com/2019/01/29/Intel-SDM/figure23-1.png">
-<meta property="og:updated_time" content="2019-01-30T01:58:22.743Z">
+<meta property="og:image" content="http://www.owalle.com/2019/01/29/Intel-SDM/figure24-1.png">
+<meta property="og:updated_time" content="2019-02-19T05:20:49.801Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="英特尔®64和IA-32架构软件开发人员手册(Intel SDM)">
 <meta name="twitter:description" content="23.1 概述本章介绍虚拟机体系结构的基础知识和虚拟机扩展的概述(VMX),支持多个软件环境的处理器硬件虚拟化。关于VMX指令的信息参考英特尔®64和IA-32架构软件开发人员手册中的第2B卷。其他关于VMX和系统编程参考SDM 第3B卷 23.2虚拟机器结构虚拟机扩展为IA-32处理器上的虚拟机定义了处理器级支持。两个重要支持的软件类别：  虚拟机监视器(VMM)VMM充当主机，可以完全控制处理">
@@ -391,7 +392,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  1.7k
+                  3.2k
                 </span>
               
 
@@ -407,7 +408,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  6
+                  11
                 </span>
               
             </div>
@@ -462,7 +463,56 @@
 <ul>
 <li>当逻辑处理器在VMX root操作时，中断信号是被block的。但当在VMX non-root模式的时候，不会被block，相反中断信号会触发VM exit。</li>
 </ul>
-<p>未完待续……</p>
+<h3 id="24-1-虚拟机控制结构-VMCS"><a href="#24-1-虚拟机控制结构-VMCS" class="headerlink" title="24.1 虚拟机控制结构(VMCS)"></a>24.1 虚拟机控制结构(VMCS)</h3><p>逻辑处理器在VMX操作中使用”虚拟机控制结构”（VMCS）。这些管理VMX进出非root与root操作（VM entry和VM exit）以及处理器在VMX non-root时的行为。这个结构由新指令VMCLEAR，VMPTRLD，VMREAD, VMWRITE操纵。<br>VMM可以为其支持的每个虚拟机使用不同的VMCS。对于具有多个的虚拟机在逻辑处理器（虚拟处理器）中，VMM可以为每个虚拟处理器使用不同的VMCS。<br>逻辑处理器将存储器中的区域与每个VMCS相关联。该区域称为VMCS region。软件使用区域的64位物理地址（VMCS指针）引用特定VMCS。 VMCS指针必须在4 KB边界上对齐（位11：0必须为零）。这些指针不能设置超出理器的物理地址宽度。<br>逻辑处理器可以维护多个活动的VMCS。处理器通过维护内存中活跃VMCS的状态来优化VMX操作。在任何给定时间，最多一个活动VMCS的数量是当前VMCS。 （本文档经常使用术语“VMCS”来指代当前VMCS。）VMLAUNCH，VMREAD，VMRESUME和VMWRITE指令仅对当前操作VMCS。<br>以下各项描述了逻辑处理器如何确定哪些VMCS处于活动状态以及哪些VMCS处于当前状态：</p>
+<ul>
+<li>VMPTRLD指令的内存操作数是VMCS的地址。执行完指令后VMCS在逻辑处理器上既是活动的和也是当前的。任何其他活动的VMCS都不是当前VMCS。</li>
+<li>VMCS中的VMCS链接指针字段（参见第24.4.2节）本身就是VMCS的地址。如果VM entry正确执行了，并且“VMCS shadow”VM执行控制（VMCS）的1设置成功，那么VMCS链接指针字段引用的字符在逻辑处理器上变为活动状态。当前VMCS不会改变。</li>
+<li>VMCLEAR指令的内存操作数也是VMCS的地址。执行完毕后指令，VMCS在逻辑处理器上既不是活动的也不是当前的。如果VMCS已经开启逻辑处理器，逻辑处理器不再具有当前的VMCS。</li>
+</ul>
+<p>VMPTRST指令将逻辑处理器的当前VMCS的地址存储到指定的存储器位置（如果没有当前的VMCS，则存储值FFFFFFFF_FFFFFFFFH）。<br>VMCS的启动状态确定哪个VM-entry指令应该与该VMCS一起使用：VMLAUNCH指令需要VMCS，其启动状态为“清除”; VMRESUME指令需要VMCS，其发射状态是“发射”。逻辑处理器在相应的VMCS中维护VMCS的启动状态区域。以下各项描述了逻辑处理器如何管理VMCS的启动状态：</p>
+<ul>
+<li>如果当前VMCS的启动状态为“clear”，则VMLAUNCH指令的成功执行会发生变化发射状态为“launched”。</li>
+<li>VMCLEAR指令的内存操作数是VMCS的地址。执行完指令后VMCS的启动状态是“clear”。</li>
+<li>没有其他方法可以修改VMCS的启动状态（无法使用VMWRITE进行修改）也没有直接的方法来发现它（它无法使用VMREAD读取）</li>
+</ul>
+<p>图24-1说明了VMCS的不同状态。它使用“X”表示VMCS，使用“Y”表示任何其他VMCS。因此：“VMPTRLD X”总是使得VMCS变为当前和活动状态; “VMPTRLD Y”让X不再是当前状态（因为它使Y变为当前状态）;如果X是当前的并且其启动状态时，则VMLAUNCH的会将X变为“launched”; VMCLEAR X总是使X处于非活动状态而不是当前状态，并使其启动状态“clear”。<br>该图未示出相对于这些参数不修改VMCS状态的操作（例如，当X已经是当前时执行VMPTRLD X）。请注意，VMCLEAR X使X“处于非活动状态，非当前状态，并且clear。即使X的当前状态未定义（例如，即使X尚未初始化）。见24.11.3节。<br>由于影子VMCS（请参阅第24.10节）不能用于VM条目，因此影子VMCS的启动状态为没有意义。图24-1未说明可以使影子VMCS处于活动状态的所有方式。<br><img src="/2019/01/29/Intel-SDM/figure24-1.png" alt=""></p>
+<h3 id="24-2-VMCS-Region的格式"><a href="#24-2-VMCS-Region的格式" class="headerlink" title="24.2 VMCS Region的格式"></a>24.2 VMCS Region的格式</h3><p>VMCS的格式包含了4K，VMCS的格式如表24-1</p>
+<table>
+<thead>
+<tr>
+<th>byte offside</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0~30位 VMCS保留，识别符<br>31位: shadow-VMCS标识位</td>
+</tr>
+<tr>
+<td>4</td>
+<td>VMCS终止位</td>
+</tr>
+<tr>
+<td>8</td>
+<td>VMCS 数据</td>
+</tr>
+</tbody>
+</table>
+<p>VMCS区域的前4个字节包含位30：0的VMCS修订标识符。维护的处理器不同格式的VMCS数据（见下文）使用不同的VMCS修订标识符。位31：shadow-VMCS指标（参见第24.10节）</p>
+<p>在将该区域用于VMCS之前，软件应将VMCS标识符写入VMCS区域。该VMCS标识符永远不会被处理器写入;如果VMPTRLD的操作数引用VMCS区域的标识符与处理器正在使用的VMCS不同，则VMPTRLD会失败。 （如果是影子VMCS，并且处理器不支持shadow-VMCS，那么VMPTRLD也会失败）软件可以通过读取VMX相关MSR IA32_VMX_BASIC来检查处理器VMCS标识符。<br>软件应根据VMCS是否为普通还是shadow-vmcs来设置或者清楚shadow-VMCS标识符.不支持“VMCS阴影”VM执行控件的1设置。软件可以通过读取VMX功能MSR IA32_VMX_PROCBASED_CTLS2来检查是否支持。<br>VMCS区域的接下来的4个字节用于VMX中止指示符。这些位的内容没有控制处理器。当VMX中止发生时，逻辑处理器将非零值写入这些位。软件也可以写入此字段。<br>VMCS区域的其余部分用于VMCS数据（控制VMX non-root操作以及VMX转换）。这些数据的格式是特定的。写回可缓存内存中的VMCS区域和相关结构（在第24.11.4节中列举）。未来实现可以允许或要求不同的存储器类型。软件应参考VMX功能MSR<br>IA32_VMX_BASIC（见附录A.1）</p>
+<blockquote class="raw-class mindmap mindmap-lg">
+# 中心主题
+## 分支主题 1
+### 子主题 1
+## 分支主题 4
+## 分支主题 2
+### 子主题 1
+### 子主题 2
+### 子主题 3
+## 分支主题 3
+</blockquote>
+<p>未完待续…… </p>
 
       
     </div>
@@ -723,7 +773,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#23-1-概述"><span class="nav-number">1.</span> <span class="nav-text">23.1 概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-2虚拟机器结构"><span class="nav-number">2.</span> <span class="nav-text">23.2虚拟机器结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-3-VMX操作简介"><span class="nav-number">3.</span> <span class="nav-text">23.3 VMX操作简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-4-VMM软件的生命周期"><span class="nav-number">4.</span> <span class="nav-text">23.4 VMM软件的生命周期</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-5虚拟机控制结构"><span class="nav-number">5.</span> <span class="nav-text">23.5虚拟机控制结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-6-发现对VMX的支持"><span class="nav-number">6.</span> <span class="nav-text">23.6 发现对VMX的支持</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-7启用和进入VMX操作"><span class="nav-number">7.</span> <span class="nav-text">23.7启用和进入VMX操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-8-VMX操作限制"><span class="nav-number">8.</span> <span class="nav-text">23.8 VMX操作限制</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#23-1-概述"><span class="nav-number">1.</span> <span class="nav-text">23.1 概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-2虚拟机器结构"><span class="nav-number">2.</span> <span class="nav-text">23.2虚拟机器结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-3-VMX操作简介"><span class="nav-number">3.</span> <span class="nav-text">23.3 VMX操作简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-4-VMM软件的生命周期"><span class="nav-number">4.</span> <span class="nav-text">23.4 VMM软件的生命周期</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-5虚拟机控制结构"><span class="nav-number">5.</span> <span class="nav-text">23.5虚拟机控制结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-6-发现对VMX的支持"><span class="nav-number">6.</span> <span class="nav-text">23.6 发现对VMX的支持</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-7启用和进入VMX操作"><span class="nav-number">7.</span> <span class="nav-text">23.7启用和进入VMX操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-8-VMX操作限制"><span class="nav-number">8.</span> <span class="nav-text">23.8 VMX操作限制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#24-1-虚拟机控制结构-VMCS"><span class="nav-number">9.</span> <span class="nav-text">24.1 虚拟机控制结构(VMCS)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#24-2-VMCS-Region的格式"><span class="nav-number">10.</span> <span class="nav-text">24.2 VMCS Region的格式</span></a></li></ol></div>
             
 
           </div>
@@ -757,7 +807,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">31.5k</span>
+    <span title="Site words total count">33.2k</span>
   
 </div>
 
@@ -897,6 +947,12 @@
   <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
 
   <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kity.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kityminder.core.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/mindmap.js?v=5.1.4"></script>
 
 
 
