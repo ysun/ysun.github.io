@@ -97,7 +97,7 @@
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://www.owalle.com/2019/01/29/Intel-SDM/figure23-1.png">
 <meta property="og:image" content="http://www.owalle.com/2019/01/29/Intel-SDM/figure24-1.png">
-<meta property="og:updated_time" content="2019-02-19T05:20:49.801Z">
+<meta property="og:updated_time" content="2019-02-20T15:39:43.614Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="英特尔®64和IA-32架构软件开发人员手册(Intel SDM)">
 <meta name="twitter:description" content="23.1 概述本章介绍虚拟机体系结构的基础知识和虚拟机扩展的概述(VMX),支持多个软件环境的处理器硬件虚拟化。关于VMX指令的信息参考英特尔®64和IA-32架构软件开发人员手册中的第2B卷。其他关于VMX和系统编程参考SDM 第3B卷 23.2虚拟机器结构虚拟机扩展为IA-32处理器上的虚拟机定义了处理器级支持。两个重要支持的软件类别：  虚拟机监视器(VMM)VMM充当主机，可以完全控制处理">
@@ -501,17 +501,6 @@
 </table>
 <p>VMCS区域的前4个字节包含位30：0的VMCS修订标识符。维护的处理器不同格式的VMCS数据（见下文）使用不同的VMCS修订标识符。位31：shadow-VMCS指标（参见第24.10节）</p>
 <p>在将该区域用于VMCS之前，软件应将VMCS标识符写入VMCS区域。该VMCS标识符永远不会被处理器写入;如果VMPTRLD的操作数引用VMCS区域的标识符与处理器正在使用的VMCS不同，则VMPTRLD会失败。 （如果是影子VMCS，并且处理器不支持shadow-VMCS，那么VMPTRLD也会失败）软件可以通过读取VMX相关MSR IA32_VMX_BASIC来检查处理器VMCS标识符。<br>软件应根据VMCS是否为普通还是shadow-vmcs来设置或者清楚shadow-VMCS标识符.不支持“VMCS阴影”VM执行控件的1设置。软件可以通过读取VMX功能MSR IA32_VMX_PROCBASED_CTLS2来检查是否支持。<br>VMCS区域的接下来的4个字节用于VMX中止指示符。这些位的内容没有控制处理器。当VMX中止发生时，逻辑处理器将非零值写入这些位。软件也可以写入此字段。<br>VMCS区域的其余部分用于VMCS数据（控制VMX non-root操作以及VMX转换）。这些数据的格式是特定的。写回可缓存内存中的VMCS区域和相关结构（在第24.11.4节中列举）。未来实现可以允许或要求不同的存储器类型。软件应参考VMX功能MSR<br>IA32_VMX_BASIC（见附录A.1）</p>
-<blockquote class="raw-class mindmap mindmap-lg">
-# 中心主题
-## 分支主题 1
-### 子主题 1
-## 分支主题 4
-## 分支主题 2
-### 子主题 1
-### 子主题 2
-### 子主题 3
-## 分支主题 3
-</blockquote>
 <p>未完待续…… </p>
 
       
@@ -593,6 +582,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/02/20/kvm-src-analysis/" rel="prev" title="kvm-src-analysis">
+                kvm-src-analysis <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -712,7 +705,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-count">14</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -723,7 +716,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-count">3</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -734,7 +727,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-count">5</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -807,7 +800,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">33.2k</span>
+    <span title="Site words total count">39.6k</span>
   
 </div>
 

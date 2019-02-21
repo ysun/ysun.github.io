@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+<meta name="google-site-verification" content="MrnK1va2f2DY7TM-4onuV7g_G6yZyI3WkYbaykR0Ln0">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-minimal.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="kvm,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="VMCS对于Intel的vt技术而言，它的软件部分基本体现在VMCS结构中（virtual machine control block)。主要通过VMCS结构来控制vcpu的运转。  VMCS是个不超过4K的内存块。 VMCS通过下列的指令控制: VMCLEAR: 清空VMCS结构 VMREAD: 读取VMCS数据 VMWRITE: 数据写入VMCS   通过VMPTR指针指向vmcs结构，该指针">
+<meta name="keywords" content="kvm">
+<meta property="og:type" content="article">
+<meta property="og:title" content="kvm-src-analysis">
+<meta property="og:url" content="http://www.owalle.com/2019/02/20/kvm-src-analysis/index.html">
+<meta property="og:site_name" content="Yi颗烂樱桃">
+<meta property="og:description" content="VMCS对于Intel的vt技术而言，它的软件部分基本体现在VMCS结构中（virtual machine control block)。主要通过VMCS结构来控制vcpu的运转。  VMCS是个不超过4K的内存块。 VMCS通过下列的指令控制: VMCLEAR: 清空VMCS结构 VMREAD: 读取VMCS数据 VMWRITE: 数据写入VMCS   通过VMPTR指针指向vmcs结构，该指针">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-02-21T15:27:51.148Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="kvm-src-analysis">
+<meta name="twitter:description" content="VMCS对于Intel的vt技术而言，它的软件部分基本体现在VMCS结构中（virtual machine control block)。主要通过VMCS结构来控制vcpu的运转。  VMCS是个不超过4K的内存块。 VMCS通过下列的指令控制: VMCLEAR: 清空VMCS结构 VMREAD: 读取VMCS数据 VMWRITE: 数据写入VMCS   通过VMPTR指针指向vmcs结构，该指针">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.owalle.com/2019/02/20/kvm-src-analysis/">
+
+
+
+
+
+  <title>kvm-src-analysis | Yi颗烂樱桃</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a rel="external nofollow" href="/" class="brand">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Yi颗烂樱桃</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">虚拟化相关技术</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a rel="external nofollow" href="/">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a rel="external nofollow" href="/archives/">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a rel="external nofollow" href="/categories/">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a rel="external nofollow" href="/tags/">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a rel="external nofollow" href="/about/">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-sitemap">
+          <a rel="external nofollow" href="/sitemap.xml">
+            
+              <i class="menu-item-icon fa fa-fw fa-sitemap"></i> <br>
+            
+            站点地图
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a rel="external nofollow" href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2019/02/20/kvm-src-analysis/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">kvm-src-analysis</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-02-20T23:42:57+08:00">
+                2019-02-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/kvm/" itemprop="url" rel="index">
+                    <span itemprop="name">kvm</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/02/20/kvm-src-analysis/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/02/20/kvm-src-analysis/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  6.4k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  27
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="VMCS"><a href="#VMCS" class="headerlink" title="VMCS"></a>VMCS</h2><p>对于Intel的vt技术而言，它的软件部分基本体现在VMCS结构中（virtual machine control block)。主要通过VMCS结构来控制vcpu的运转。</p>
+<ul>
+<li>VMCS是个不超过4K的内存块。</li>
+<li>VMCS通过下列的指令控制:<ul>
+<li>VMCLEAR: 清空VMCS结构</li>
+<li>VMREAD: 读取VMCS数据</li>
+<li>VMWRITE: 数据写入VMCS</li>
+</ul>
+</li>
+<li>通过VMPTR指针指向vmcs结构，该指针包含vmcs的物理地址。</li>
+</ul>
+<h3 id="VMCS包含的信息可以分为六个部分"><a href="#VMCS包含的信息可以分为六个部分" class="headerlink" title="VMCS包含的信息可以分为六个部分:"></a>VMCS包含的信息可以分为六个部分:</h3><ul>
+<li>Guest state area：虚拟机状态域，保存非根模式的vcpu运行状态。当VM-Exit发生，vcpu的运行状态要写入这个区域，当VM-Entry发生时，cpu会把这个区域保存的信息加载到自身，从而进入非根模式。这个过程是硬件自动完成的。保存是自动的，加载也是自动的，软件只需要修改这个区域的信息就可以控制cpu的运转。</li>
+<li>Host state area：宿主机状态域，保存根模式下cpu的运行状态。只在vm-exit时需要将状态加载到CPU.</li>
+<li>VM-Execution control filelds：包括page fault控制，I/O位图地址，CR3目标控制，异常位图，pin-based运行控制（异步事件），processor-based运行控制（同步事件）。这个域可以设置哪些指令触发VM-Exit。触发VM-Exit的指令分为无条件指令和有条件指令，这里设置的是有条件指令。</li>
+<li>VM-entry contorl filelds：包括vm-entry控制，vm-entry MSR控制，VM-Entry插入的事件。MSR是cpu的模式寄存器，设置cpu的工作环境和标识cpu的工作状态。</li>
+<li>VM-exit control filelds：包括VM-Exit控制，VM-Exit MSR控制。</li>
+<li>VM退出信息：这个域保存VM-Exit退出时的信息，并且描述原因。</li>
+</ul>
+<p>有了VMCS结构后，对虚拟机的控制就是读写VMCS结构。后面对VCPU设置中断，检查状态实际上都是在读写VMCS结构。在vmx.c文件给出了intel定义的VMCS结构的内容。<br><code>struct __packed vmcs12</code></p>
+<h2 id="CPU-虚拟化"><a href="#CPU-虚拟化" class="headerlink" title="CPU 虚拟化"></a>CPU 虚拟化</h2><h3 id="VCPU创建"><a href="#VCPU创建" class="headerlink" title="VCPU创建"></a>VCPU创建</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">static int kvm_dev_ioctl_create_vm(void)</span><br><span class="line">&#123;</span><br><span class="line">	int fd;</span><br><span class="line">	struct kvm *kvm;</span><br><span class="line"></span><br><span class="line">	kvm = kvm_create_vm();</span><br><span class="line">	if (IS_ERR(kvm))</span><br><span class="line">		return PTR_ERR(kvm);</span><br><span class="line"></span><br><span class="line">	kvm_coalesced_mmio_init(kvm);</span><br><span class="line"></span><br><span class="line">       /*生成kvm-vm控制文件*/</span><br><span class="line">	fd = anon_inode_getfd(&quot;kvm-vm&quot;, &amp;kvm_vm_fops, kvm, 0);</span><br><span class="line">	if (fd &lt; 0)</span><br><span class="line">		kvm_put_kvm(kvm);</span><br><span class="line"></span><br><span class="line">	return fd;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>调用了函数kvm_create_vm，然后是创建一个文件，这个文件的作用是提供对vm的io_ctl控制。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">static struct kvm *kvm_create_vm(void)</span><br><span class="line">&#123;</span><br><span class="line">	struct kvm *kvm = kvm_arch_create_vm();</span><br><span class="line">       /*设置kvm的mm结构为当前进程的mm,然后引用计数加一*/</span><br><span class="line">	kvm-&gt;mm = current-&gt;mm;</span><br><span class="line">	kvm_eventfd_init(kvm);</span><br><span class="line">	mutex_init(&amp;kvm-&gt;lock);</span><br><span class="line">	mutex_init(&amp;kvm-&gt;irq_lock);</span><br><span class="line">	mutex_init(&amp;kvm-&gt;slots_lock);</span><br><span class="line">	refcount_set(&amp;kvm-&gt;users_count, 1);</span><br><span class="line">	INIT_LIST_HEAD(&amp;kvm-&gt;devices);</span><br><span class="line">	INIT_HLIST_HEAD(&amp;kvm-&gt;irq_ack_notifier_list);</span><br><span class="line"></span><br><span class="line">	for (i = 0; i &lt; KVM_NR_BUSES; i++) &#123;</span><br><span class="line">		rcu_assign_pointer(kvm-&gt;buses[i],</span><br><span class="line">		kzalloc(sizeof(struct kvm_io_bus), GFP_KERNEL));</span><br><span class="line">	&#125;</span><br><span class="line">	kvm_init_mmu_notifier(kvm); </span><br><span class="line">	...............................</span><br><span class="line">       /*把kvm链表加入总链表*/</span><br><span class="line">	list_add(&amp;kvm-&gt;vm_list, &amp;vm_list);</span><br><span class="line"></span><br><span class="line">	return kvm;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，这个函数首先是申请一个kvm结构。然后执行初始化工作。<br>初始化第一步是把kvm的mm结构设置为当前进程的mm。我们知道，mm结构反应了整个进程的内存使用情况，也包括进程使用的页目录信息。<br>然后是初始化io bus和eventfd。这两者和设备io有关。<br>最后把kvm加入到一个全局链表头。通过这个链表头，可以遍历所有的vm虚拟机。<br>创建VM之后，就是创建VCPU。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">static int kvm_vm_ioctl_create_vcpu(struct kvm *kvm, u32 id)</span><br><span class="line">&#123;</span><br><span class="line">	int r;</span><br><span class="line">	struct kvm_vcpu *vcpu, *v;</span><br><span class="line">       /*调用相关cpu的vcpu_create*/</span><br><span class="line">	vcpu = kvm_arch_vcpu_create(kvm, id);</span><br><span class="line">	.................................</span><br><span class="line">       /*调用相关cpu的vcpu_setup*/</span><br><span class="line">	r = kvm_arch_vcpu_setup(vcpu);</span><br><span class="line"></span><br><span class="line">       /*判断是否达到最大cpu个数*/</span><br><span class="line">	mutex_lock(&amp;kvm-&gt;lock);</span><br><span class="line">	if (atomic_read(&amp;kvm-&gt;online_vcpus) == KVM_MAX_VCPUS) &#123;</span><br><span class="line">		r = -EINVAL;</span><br><span class="line">		goto vcpu_destroy;</span><br><span class="line">	&#125;</span><br><span class="line">       /*判断该vcpu是否已经存在*/</span><br><span class="line">	kvm_for_each_vcpu(r, v, kvm)</span><br><span class="line">		if (v-&gt;vcpu_id == id) &#123;</span><br><span class="line">			r = -EEXIST;</span><br><span class="line">			goto vcpu_destroy;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">       /*生成kvm-vcpu控制文件*/</span><br><span class="line">	/* Now it&apos;s all set up, let userspace reach it */</span><br><span class="line">	kvm_get_kvm(kvm);</span><br><span class="line">	r = create_vcpu_fd(vcpu);</span><br><span class="line">       ..................................</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从代码可见，分别调用相关cpu提供的vcpu_create和vcpu_setup来完成vcpu创建。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">static struct kvm_vcpu *vmx_create_vcpu(struct kvm *kvm, unsigned int id)</span><br><span class="line">&#123;</span><br><span class="line">	int err;</span><br><span class="line">       /*申请一个vmx结构*/</span><br><span class="line">	struct vcpu_vmx *vmx = kmem_cache_zalloc(kvm_vcpu_cache, GFP_KERNEL);</span><br><span class="line">	int cpu;</span><br><span class="line">       .......................................</span><br><span class="line">	err = kvm_vcpu_init(&amp;vmx-&gt;vcpu, kvm, id);</span><br><span class="line">      /*申请guest的msrs,host的msrs*/ </span><br><span class="line">	vmx-&gt;guest_msrs = kmalloc(PAGE_SIZE, GFP_KERNEL);</span><br><span class="line">	vmx-&gt;host_msrs = kmalloc(PAGE_SIZE, GFP_KERNEL);</span><br><span class="line">       /*申请一个vmcs结构*/</span><br><span class="line">	vmx-&gt;vmcs = alloc_vmcs();</span><br><span class="line">	vmcs_clear(vmx-&gt;vmcs);</span><br><span class="line"></span><br><span class="line">	cpu = get_cpu();</span><br><span class="line">	vmx_vcpu_load(&amp;vmx-&gt;vcpu, cpu);</span><br><span class="line">       /*设置vcpu为实模式，设置各种寄存器*/</span><br><span class="line">	err = vmx_vcpu_setup(vmx);</span><br><span class="line">	vmx_vcpu_put(&amp;vmx-&gt;vcpu);</span><br><span class="line">	put_cpu();</span><br><span class="line">	if (vm_need_virtualize_apic_accesses(kvm))</span><br><span class="line">		if (alloc_apic_access_page(kvm) != 0)</span><br><span class="line">			goto free_vmcs;</span><br><span class="line">	return &amp;vmx-&gt;vcpu;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>首先申请一个vcpu_vmx结构，然后初始化vcpu_vmx包含的mmu，仿真断芯片等等成员。<br>MSR寄存器是cpu模式寄存器，所以要分别为guest 和host申请页面，这个页面要保存MSR寄存器的信息。然后申请一个vmcs结构。然后调用vmx_vcpu_setup设置vcpu工作在实模式。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">static int vmx_vcpu_setup(struct vcpu_vmx *vmx)</span><br><span class="line">&#123;	     </span><br><span class="line">	/* Control */</span><br><span class="line">	vmcs_write32(PIN_BASED_VM_EXEC_CONTROL,</span><br><span class="line">		vmcs_config.pin_based_exec_ctrl);</span><br><span class="line"></span><br><span class="line">	exec_control = vmcs_config.cpu_based_exec_ctrl;</span><br><span class="line">	/*如果不支持EPT，有条件退出指令要增加*/</span><br><span class="line">	if (!enable_ept)</span><br><span class="line">		exec_control |= CPU_BASED_CR3_STORE_EXITING |</span><br><span class="line">				CPU_BASED_CR3_LOAD_EXITING  |</span><br><span class="line">				CPU_BASED_INVLPG_EXITING;</span><br><span class="line">	vmcs_write32(CPU_BASED_VM_EXEC_CONTROL, exec_control);</span><br><span class="line">       ......................................</span><br><span class="line">	vmcs_write32(PAGE_FAULT_ERROR_CODE_MASK, !!bypass_guest_pf);</span><br><span class="line">	vmcs_write32(PAGE_FAULT_ERROR_CODE_MATCH, !!bypass_guest_pf);</span><br><span class="line">	vmcs_write32(CR3_TARGET_COUNT, 0);           /* 22.2.1 */</span><br><span class="line"></span><br><span class="line">	vmcs_writel(HOST_CR0, read_cr0());  /* 22.2.3 */</span><br><span class="line">	vmcs_writel(HOST_CR4, read_cr4());  /* 22.2.3, 22.2.5 */</span><br><span class="line">	vmcs_writel(HOST_CR3, read_cr3());  /* 22.2.3  FIXME: shadow tables */</span><br><span class="line">       .........................................</span><br><span class="line">	/*保存host的MSR值*/</span><br><span class="line">	for (i = 0; i &lt; NR_VMX_MSR; ++i) &#123;</span><br><span class="line">		u32 index = vmx_msr_index[i];</span><br><span class="line">		u32 data_low, data_high;</span><br><span class="line">		u64 data;</span><br><span class="line">		int j = vmx-&gt;nmsrs;</span><br><span class="line"></span><br><span class="line">		if (rdmsr_safe(index, &amp;data_low, &amp;data_high) &lt; 0)</span><br><span class="line">			continue;</span><br><span class="line">		if (wrmsr_safe(index, data_low, data_high) &lt; 0)</span><br><span class="line">			continue;</span><br><span class="line">		data = data_low | ((u64)data_high &lt;&lt; 32);</span><br><span class="line">		vmx-&gt;host_msrs[j].index = index;</span><br><span class="line">		vmx-&gt;host_msrs[j].reserved = 0;</span><br><span class="line">		vmx-&gt;host_msrs[j].data = data;</span><br><span class="line">		vmx-&gt;guest_msrs[j] = vmx-&gt;host_msrs[j];</span><br><span class="line">		++vmx-&gt;nmsrs;</span><br><span class="line">	&#125;</span><br><span class="line">	vmcs_write32(VM_EXIT_CONTROLS, vmcs_config.vmexit_ctrl);</span><br><span class="line">	.................................................</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个函数要写一堆的寄存器和控制信息，信息很多。所以只重点分析其中的几个地方：<br>当cpu不支持EPT扩展技术时候，有条件退出vm的指令要增加。这些指令是cr3 store和cr3 load，要把这个新内容写入cpu_based控制里面。（cpu_based控制是vmcs结构的一部分）。<br>然后是写cr0,cr3寄存器以及cs，ds以及es等段选择寄存器。<br>之后，要保存host的MSR寄存器的值到前面分配的guest_msrs页面。</p>
+<h3 id="VCPU运行"><a href="#VCPU运行" class="headerlink" title="VCPU运行"></a>VCPU运行</h3><p>推动vcpu运行，启动虚拟机开始运行，主要在__vcpu_run函数执行。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">static int vcpu_run(struct kvm_vcpu *vcpu)</span><br><span class="line">&#123;</span><br><span class="line">        int r;</span><br><span class="line">        struct kvm *kvm = vcpu-&gt;kvm;</span><br><span class="line">        for (;;) &#123;</span><br><span class="line">		/*vcpu进入guest模式*/ </span><br><span class="line">                if (kvm_vcpu_running(vcpu)) &#123;</span><br><span class="line">                        r = vcpu_enter_guest(vcpu);</span><br><span class="line">                &#125; else &#123;</span><br><span class="line">                        r = vcpu_block(kvm, vcpu);</span><br><span class="line">                &#125;</span><br><span class="line">                kvm_clear_request(KVM_REQ_PENDING_TIMER, vcpu);        </span><br><span class="line"></span><br><span class="line">		/*检查是否有阻塞的时钟timer*/</span><br><span class="line">                if (kvm_cpu_has_pending_timer(vcpu))</span><br><span class="line">                        kvm_inject_pending_timer_irqs(vcpu);</span><br><span class="line"></span><br><span class="line">		/*检查是否有用户空间的中断注入*/ </span><br><span class="line">                if (dm_request_for_irq_injection(vcpu) &amp;&amp;</span><br><span class="line">                        kvm_vcpu_ready_for_interrupt_injection(vcpu)) &#123;</span><br><span class="line">                        r = 0;</span><br><span class="line">                        vcpu-&gt;run-&gt;exit_reason = KVM_EXIT_IRQ_WINDOW_OPEN;</span><br><span class="line">                        ++vcpu-&gt;stat.request_irq_exits;</span><br><span class="line">                        break;</span><br><span class="line">                &#125;</span><br><span class="line">                kvm_check_async_pf_completion(vcpu);</span><br><span class="line"></span><br><span class="line">		/*是否有阻塞的signal*/</span><br><span class="line">                if (signal_pending(current)) &#123;</span><br><span class="line">                        r = -EINTR;</span><br><span class="line">                        vcpu-&gt;run-&gt;exit_reason = KVM_EXIT_INTR;</span><br><span class="line">                        ++vcpu-&gt;stat.signal_exits;</span><br><span class="line">                        break;</span><br><span class="line">                &#125;</span><br><span class="line">		/*执行一个调度*/</span><br><span class="line">                 if (need_resched()) &#123;</span><br><span class="line">                         cond_resched();</span><br><span class="line">                 &#125;</span><br><span class="line">         &#125;</span><br></pre></td></tr></table></figure>
+<p>这里理解的关键是vcpu_enter_guest进入了Guest，然后一直是vcpu在运行，当退出这个函数的时候，虚拟机已经执行了VM-Exit指令，也就是说，已经退出了虚拟机，进入根模式了。<br>退出之后，要检查退出的原因。如果有时钟中断发生，则插入一个时钟中断，如果是用户空间的中断发生，则退出原因要填写为KVM_EXIT_INTR。<br>注意一点的是，对于导致退出的事件，vcpu_enter_guest函数里面已经处理了一部分，处理的是虚拟机本身运行导致退出的事件。虚拟机一旦退出后，执行vmx_handle_exit。比如虚拟机内部写磁盘io导致退出，就在vcpu_enter_guest里面处理（只是设置了退出的原因为io，并没有真正执行io）。KVM是如何知道退出的原因的？这个就是vmcs结构的作用了，vmcs结构里面有VM-Exit的信息。<br>退出VM之后，如果内核没有完成处理，那么要退出内核到QEMU进程。然后是QEMU进程要处理。后面io处理一节可以看到QEMU的处理过程。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">static int vcpu_enter_guest(struct kvm_vcpu *vcpu, struct kvm_run *kvm_run)</span><br><span class="line">&#123;</span><br><span class="line">      ...........................</span><br><span class="line">       /*装载mmu*/</span><br><span class="line">	r = kvm_mmu_reload(vcpu);</span><br><span class="line">       /*注入阻塞的事件，中断，异常和nmi等*/</span><br><span class="line">	inject_pending_event(vcpu, kvm_run);</span><br><span class="line">       ................................</span><br><span class="line">       /*计算进入guest的时间*/</span><br><span class="line">	kvm_guest_enter();</span><br><span class="line"></span><br><span class="line">	kvm_x86_ops-&gt;run(vcpu, kvm_run);</span><br><span class="line">	/*</span><br><span class="line">	 * We must have an instruction between local_irq_enable() and</span><br><span class="line">	 * kvm_guest_exit(), so the timer interrupt isn&apos;t delayed by</span><br><span class="line">	 * the interrupt shadow.  The stat.exits increment will do nicely.</span><br><span class="line">	 * But we need to prevent reordering, hence this barrier():</span><br><span class="line">	 */</span><br><span class="line">       /*计算退出的时间*/</span><br><span class="line">	kvm_guest_exit();</span><br><span class="line">       ................................/*退出之前，设置各种参数*/</span><br><span class="line">	r = kvm_x86_ops-&gt;handle_exit(kvm_run, vcpu);</span><br><span class="line">out:</span><br><span class="line">	return r;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>首先要装载mmu，然后注入事件，像中断，异常什么的。然后调用cpu架构相关的run函数，这个函数里面有一堆汇编写的语句，用来进入虚拟机以及指定从虚拟机退出的执行地址。最后调用cpu的handle_exit，用来从vmcs读取退出的信息。<br>将注入中断的函数简化一下。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">static void vmx_inject_irq(struct kvm_vcpu *vcpu)</span><br><span class="line">&#123;</span><br><span class="line">	int irq = vcpu-&gt;arch.interrupt.nr;</span><br><span class="line">	..........................</span><br><span class="line">	intr = irq | INTR_INFO_VALID_MASK;</span><br><span class="line">       ...............................</span><br><span class="line">	vmcs_write32(VM_ENTRY_INTR_INFO_FIELD, intr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，实际上注入中断就是写vmcs里面的VM_ENTRY_INTR_INFO_FIELD这个域。然后在cpu的run函数里面设置cpu进入非根模式，vcpu会自动检查vmcs结构，然后注入中断，这是硬件自动完成的工作。而处理中断，就是Guest os内核所完成的工作了。</p>
+<h3 id="调度"><a href="#调度" class="headerlink" title="调度"></a>调度</h3><p>KVM只是个内核模块，虚拟机实际上是运行在QEMU的进程上下文中。所以VCPU的调度实际上直接使用了LINUX自身的调度机制。也就是linux自身的进程调度机制。<br>QEMU可以设置每个VCPU都运作在一个线程中。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">static void qemu_kvm_start_vcpu(CPUState *env)</span><br><span class="line">&#123;</span><br><span class="line">    env-&gt;thread = qemu_mallocz(sizeof(QemuThread));</span><br><span class="line">    env-&gt;halt_cond = qemu_mallocz(sizeof(QemuCond));</span><br><span class="line">    qemu_cond_init(env-&gt;halt_cond);</span><br><span class="line">    qemu_thread_create(env-&gt;thread, qemu_kvm_cpu_thread_fn, env);</span><br><span class="line">    .................................................</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从Qemu的代码，看到Qemu启动了一个kvm_cpu_thread线程。这个线程是循环调用<br>kvm_cpu_exec函数。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">int kvm_cpu_exec(CPUState *env)</span><br><span class="line">&#123;</span><br><span class="line">    struct kvm_run *run = env-&gt;kvm_run;</span><br><span class="line">    int ret, run_ret;</span><br><span class="line">    do &#123;</span><br><span class="line">        ...............................</span><br><span class="line">        run_ret = kvm_vcpu_ioctl(env, KVM_RUN, 0);</span><br><span class="line">       ......................................</span><br><span class="line">       /*处理退出的事件*/</span><br><span class="line">        switch (run-&gt;exit_reason) &#123;</span><br><span class="line">        case KVM_EXIT_IO:</span><br><span class="line">            DPRINTF(&quot;handle_io\n&quot;);</span><br><span class="line">            kvm_handle_io(run-&gt;io.port,</span><br><span class="line">                          (uint8_t *)run + run-&gt;io.data_offset,</span><br><span class="line">                          run-&gt;io.direction,</span><br><span class="line">                          run-&gt;io.size,</span><br><span class="line">                          run-&gt;io.count);</span><br><span class="line">            ret = 0;</span><br><span class="line">            break;</span><br><span class="line">        case KVM_EXIT_MMIO:</span><br><span class="line">            DPRINTF(&quot;handle_mmio\n&quot;);</span><br><span class="line">            cpu_physical_memory_rw(run-&gt;mmio.phys_addr,</span><br><span class="line">                                   run-&gt;mmio.data,</span><br><span class="line">                                   run-&gt;mmio.len,</span><br><span class="line">                                   run-&gt;mmio.is_write);</span><br><span class="line">      ..........................................</span><br><span class="line">    &#125; while (ret == 0);</span><br><span class="line">   ..............................</span><br><span class="line">    env-&gt;exit_request = 0;</span><br><span class="line">    cpu_single_env = NULL;</span><br><span class="line">    return ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个函数就是调用了前面分析过的KVM_RUN。回顾一下前面的分析，KVM_RUN就进入了虚拟机，如果从虚拟化退出到这里，那么Qemu要处理退出的事件。这些事件，可能是因为io引起的KVM_EXIT_IO，也可能是内部错误引起的KVM_EXIT_INTERNAL_ERROR。如果事件没有被完善处理，那么要停止虚拟机。</p>
+<h3 id="中断"><a href="#中断" class="headerlink" title="中断"></a>中断</h3><p>如何向vcpu注入中断？是通过向真实CPU模拟注入NMI（非可屏蔽中断）中断来实现。<br>KVM要模拟一个中断控制芯片，这个是通过KVM_CREATE_IRQCHIP来实现的。然后，如果Qemu想注入一个中断，就通过KVM_IRQ_LINE实现。这个所谓中断控制芯片只是在内存中存在的结构，kvm通过软件方式模拟了中断的机制。<br>KVM_CREATE_IRQCHIP实际上调用了kvm_pic_init这个函数。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">struct kvm_pic *kvm_create_pic(struct kvm *kvm)</span><br><span class="line">&#123;</span><br><span class="line">	struct kvm_pic *s;</span><br><span class="line">	int ret;</span><br><span class="line"></span><br><span class="line">	s = kzalloc(sizeof(struct kvm_pic), GFP_KERNEL);</span><br><span class="line">	s-&gt;irq_request = pic_irq_request;</span><br><span class="line"> 	s-&gt;irq_request_opaque = kvm;</span><br><span class="line">       ..................................</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，这个函数很简单，其实就是申请了一个kvm_pic的结构。然后指定irq_request指针为pic_irq_request。</p>
+<p>而KVM_IRQ_LINE实际上调用的是kvm_set_irq，分析一下它是如何注入中断的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">int kvm_set_irq(struct kvm *kvm, int irq_source_id, int irq, int level)</span><br><span class="line">&#123;</span><br><span class="line">	struct kvm_kernel_irq_routing_entry *e;</span><br><span class="line">	unsigned long *irq_state, sig_level;</span><br><span class="line">	int ret = -1;</span><br><span class="line">	...................................................</span><br><span class="line">	/* Not possible to detect if the guest uses the PIC or the</span><br><span class="line">	 * IOAPIC.  So set the bit in both. The guest will ignore</span><br><span class="line">	 * writes to the unused one.</span><br><span class="line">	 */</span><br><span class="line">	list_for_each_entry(e, &amp;kvm-&gt;irq_routing, link)</span><br><span class="line">		if (e-&gt;gsi == irq) &#123;</span><br><span class="line">			int r = e-&gt;set(e, kvm, sig_level);</span><br><span class="line">			if (r &lt; 0)</span><br><span class="line">				continue;</span><br><span class="line"></span><br><span class="line">			ret = r + ((ret &lt; 0) ? 0 : ret);</span><br><span class="line">		&#125;</span><br><span class="line">	return ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从英文解释可以看到，因为不可能判断Guest使用的是PIC还是APIC，所以为每一个中断路由都设置中断。<br>这里解释一下，PIC就是传统的中断控制器8259，x86体系最初使用的中断控制器。后来，又推出了APIC，也就是高级中断控制器。APIC为支持多核架构做了更多的设计。实际上，在kvm模拟中，既有PIC的模拟，也有APIC的模拟。 如果使用PIC的话，这里的这个set函数，其实就是kvm_pic_set_irq。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">int kvm_pic_set_irq(void *opaque, int irq, int level)</span><br><span class="line">&#123;     struct kvm_pic *s = opaque;</span><br><span class="line">	if (irq &gt;= 0 &amp;&amp; irq &lt; PIC_NUM_PINS) &#123;</span><br><span class="line">		ret = pic_set_irq1(&amp;s-&gt;pics[irq &gt;&gt; 3], irq &amp; 7, level);</span><br><span class="line">		pic_update_irq(s);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，前面申请的kvm_pic结构作为参数被引入。然后设置irq到这个结构的pic成员。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">static void pic_update_irq(struct kvm_pic *s)</span><br><span class="line">&#123;</span><br><span class="line">	int irq2, irq;</span><br><span class="line"></span><br><span class="line">	irq2 = pic_get_irq(&amp;s-&gt;pics[1]);</span><br><span class="line">	if (irq2 &gt;= 0) &#123;</span><br><span class="line">		/*</span><br><span class="line">		 * if irq request by slave pic, signal master PIC</span><br><span class="line">		 */</span><br><span class="line">		pic_set_irq1(&amp;s-&gt;pics[0], 2, 1);</span><br><span class="line">		pic_set_irq1(&amp;s-&gt;pics[0], 2, 0);</span><br><span class="line">	&#125;</span><br><span class="line">	irq = pic_get_irq(&amp;s-&gt;pics[0]);</span><br><span class="line">	if (irq &gt;= 0)</span><br><span class="line">		s-&gt;irq_request(s-&gt;irq_request_opaque, 1);</span><br><span class="line">	else</span><br><span class="line">		s-&gt;irq_request(s-&gt;irq_request_opaque, 0);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>此时调用irq_request，就是初始化中断芯片时候绑定的函数pic_irq_request。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">static void pic_irq_request(void *opaque, int level)</span><br><span class="line">&#123;</span><br><span class="line">	struct kvm *kvm = opaque;</span><br><span class="line">	struct kvm_vcpu *vcpu = kvm-&gt;bsp_vcpu;</span><br><span class="line">	struct kvm_pic *s = pic_irqchip(kvm);</span><br><span class="line">	int irq = pic_get_irq(&amp;s-&gt;pics[0]);</span><br><span class="line">       /*设置中断*/ </span><br><span class="line">	s-&gt;output = level;</span><br><span class="line">       if (vcpu &amp;&amp; level &amp;&amp; (s-&gt;pics[0].isr_ack &amp; (1 &lt;&lt; irq))) &#123;</span><br><span class="line">		s-&gt;pics[0].isr_ack &amp;= ~(1 &lt;&lt; irq);</span><br><span class="line">		kvm_vcpu_kick(vcpu);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个函数很简单，就是设置中断控制芯片的output，然后调用kvm_vcpu_kick。<br>kvm_vcpu_kick这个地方很容易混淆。我们知道，对一个注入的中断来说，需要vcpu立即响应，但是在多核的架构下（smp），目的cpu可能正在运行，所以要提供一种机制停止目的cpu的运行，让它立即处理注入的中断。kvm_vcpu_kick就是给目的cpu发送一个处理器间中断(INI)，让目的cpu停止运行。</p>
+<p>等VM-exit退出后，就接上了前文分析过的部分。VCPU再次进入虚拟机的时候，通过inject_pengding_event检查中断。这个检查的过程就发现了通过KVM_IRQ_LINE注入的中断，然后就是写vmcs结构了注入中断，已经分析过了。</p>
+<h2 id="VCPU的内存虚拟化"><a href="#VCPU的内存虚拟化" class="headerlink" title="VCPU的内存虚拟化"></a>VCPU的内存虚拟化</h2><p>在KMV初始化的时候，要检查是否支持vt里面的EPT扩展技术。如果支持，enable_ept这个变量置为1，然后设置tdp_enabled为1。Tdp就是两维页表的意思，也就是EPT技术。<br>为陈述方便，给出kvm中下列名字的定义：</p>
+<ul>
+<li>GPA：guest机物理地址</li>
+<li>GVA：guest机虚拟地址</li>
+<li>HVA：host机虚拟地址</li>
+<li>HPA：host机物理地址</li>
+</ul>
+<h3 id="虚拟机页表初始化"><a href="#虚拟机页表初始化" class="headerlink" title="虚拟机页表初始化"></a>虚拟机页表初始化</h3><p>在vcpu初始化的时候，要调用kvm_init_mmu来设置不同的内存虚拟化方式。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">void kvm_init_mmu(struct kvm_vcpu *vcpu, bool reset_roots)</span><br><span class="line">&#123;</span><br><span class="line">        if (reset_roots) &#123;</span><br><span class="line">                uint i;</span><br><span class="line"></span><br><span class="line">                vcpu-&gt;arch.mmu-&gt;root_hpa = INVALID_PAGE;</span><br><span class="line"></span><br><span class="line">                for (i = 0; i &lt; KVM_MMU_NUM_PREV_ROOTS; i++)</span><br><span class="line">                        vcpu-&gt;arch.mmu-&gt;prev_roots[i] = KVM_MMU_ROOT_INFO_INVALID;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (mmu_is_nested(vcpu))</span><br><span class="line">                init_kvm_nested_mmu(vcpu);</span><br><span class="line">        else if (tdp_enabled)</span><br><span class="line">                init_kvm_tdp_mmu(vcpu);</span><br><span class="line">        else</span><br><span class="line">                init_kvm_softmmu(vcpu);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>设置两种方式，一种是支持EPT的方式，一种是soft mmu，也就是影子页表的方式。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">static int init_kvm_softmmu(struct kvm_vcpu *vcpu)</span><br><span class="line">&#123;</span><br><span class="line">	int r;</span><br><span class="line">       /*无分页模式的设置*/ </span><br><span class="line">	if (!is_paging(vcpu))</span><br><span class="line">		r = nonpaging_init_context(vcpu);</span><br><span class="line">	else if (is_long_mode(vcpu)) /*64位cpu的设置*/</span><br><span class="line">		r = paging64_init_context(vcpu);</span><br><span class="line">	else if (is_pae(vcpu))/*32位cpu的设置*/</span><br><span class="line">		r = paging32E_init_context(vcpu);/*PAE模式cpu的设置*/</span><br><span class="line">	else</span><br><span class="line">		r = paging32_init_context(vcpu);</span><br><span class="line">	vcpu-&gt;arch.mmu.base_role.glevels = vcpu-&gt;arch.mmu.root_level;</span><br><span class="line">	return r;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个函数为多种模式的cpu设置了不同的虚拟化处理函数。选择32位非PAE模式的cpu进行分析<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">static int paging32_init_context(struct kvm_vcpu *vcpu)</span><br><span class="line">&#123;</span><br><span class="line">	struct kvm_mmu *context = &amp;vcpu-&gt;arch.mmu;</span><br><span class="line"></span><br><span class="line">	reset_rsvds_bits_mask(vcpu, PT32_ROOT_LEVEL);</span><br><span class="line">	context-&gt;new_cr3 = paging_new_cr3;</span><br><span class="line">	context-&gt;page_fault = paging32_page_fault;</span><br><span class="line">	context-&gt;gva_to_gpa = paging32_gva_to_gpa;</span><br><span class="line">	context-&gt;free = paging_free;</span><br><span class="line">	context-&gt;prefetch_page = paging32_prefetch_page;</span><br><span class="line">	context-&gt;sync_page = paging32_sync_page;</span><br><span class="line">	context-&gt;invlpg = paging32_invlpg;</span><br><span class="line">       /*指定页表为两级模式*/</span><br><span class="line">	context-&gt;root_level = PT32_ROOT_LEVEL;</span><br><span class="line">	context-&gt;shadow_root_level = PT32E_ROOT_LEVEL;</span><br><span class="line">       /*页表根地址设为无效*/</span><br><span class="line">	context-&gt;root_hpa = INVALID_PAGE;</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个函数要设置一堆函数指针。其中paging32_page_fault等函数直接找是找不到的。这是内核代码经常用的一个技巧（好像别的代码很少见到这种用法）。真正函数定义在paging_tmpl.h这个文件。通过FNAME这个宏根据不同的cpu平台定义了各自的函数。比如paging32_page_fault实际上就是FNAME(page_fault)这个函数。<br>我们知道，linux为不同的cpu提供不同的页表层级。64位cpu使用了四级页表。这里指定页表是两级，也就是PT32_ROOT_LEVEL，同时设定页表根地址为无效。此时页表尚未分配。</p>
+<p>何时真正分配vcpu的页表？是在vcpu_enter_guest的开始位置，通过调用kvm_mmu_reload实现。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">static inline int kvm_mmu_reload(struct kvm_vcpu *vcpu)</span><br><span class="line">&#123;      /*页表根地址不是无效的，则退出，不用分配。*/</span><br><span class="line">	if (likely(vcpu-&gt;arch.mmu.root_hpa != INVALID_PAGE))</span><br><span class="line">		return 0;</span><br><span class="line">	return kvm_mmu_load(vcpu);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>首先检查页表根地址是否无效，如果无效，则调用kvm_mmu_load。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">int kvm_mmu_load(struct kvm_vcpu *vcpu)</span><br><span class="line">&#123;</span><br><span class="line">	int r;</span><br><span class="line">	r = mmu_alloc_roots(vcpu);</span><br><span class="line">       /*同步页表*/</span><br><span class="line">	mmu_sync_roots(vcpu);</span><br><span class="line"></span><br><span class="line">	/* set_cr3() should ensure TLB has been flushed */</span><br><span class="line">	kvm_x86_ops-&gt;set_cr3(vcpu, vcpu-&gt;arch.mmu.root_hpa);</span><br><span class="line">       ....................</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>mmu_alloc_roots这个函数要申请内存，作为根页表使用，同时root_hpa指向根页表的物理地址。然后可以看到，vcpu中cr3寄存器的地址要指向这个根页表的物理地址。</p>
+<h3 id="虚拟机物理地址"><a href="#虚拟机物理地址" class="headerlink" title="虚拟机物理地址"></a>虚拟机物理地址</h3><p>我们已经分析过，kvm的虚拟机实际上运行在Qemu的进程上下文中。于是，虚拟机的物理内存实际上是Qemu进程的虚拟地址。Kvm要把虚拟机的物理内存分成几个slot。这是因为，对计算机系统来说，物理地址是不连续的，除了bios和显存要编入内存地址，IO设备的内存也可能映射到内存，所以内存实际上是分为一段段的。<br>Qemu通过KVM_SET_USER_MEMORY_REGION来为虚拟机设置内存。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">int __kvm_set_memory_region(struct kvm *kvm,</span><br><span class="line">			    struct kvm_userspace_memory_region *mem,</span><br><span class="line">			    int user_alloc)</span><br><span class="line">&#123;</span><br><span class="line">	.......................</span><br><span class="line">      /*找到现在的memslot*/</span><br><span class="line">	memslot = &amp;kvm-&gt;memslots[mem-&gt;slot];</span><br><span class="line">	base_gfn = mem-&gt;guest_phys_addr &gt;&gt; PAGE_SHIFT;</span><br><span class="line">	npages = mem-&gt;memory_size &gt;&gt; PAGE_SHIFT;</span><br><span class="line"></span><br><span class="line">	new = old = *memslot;</span><br><span class="line">       /*new是新的slots,old保持老的数值不变*/</span><br><span class="line">	new.base_gfn = base_gfn;</span><br><span class="line">	new.npages = npages;</span><br><span class="line">	new.flags = mem-&gt;flags;</span><br><span class="line"></span><br><span class="line">	new.user_alloc = user_alloc;</span><br><span class="line">       /*用户已经分配了内存，slot的用户空间地址就等于用户分配的地址*/</span><br><span class="line">	if (user_alloc)</span><br><span class="line">		new.userspace_addr = mem-&gt;userspace_addr;</span><br><span class="line"></span><br><span class="line">	spin_lock(&amp;kvm-&gt;mmu_lock);</span><br><span class="line">	if (mem-&gt;slot &gt;= kvm-&gt;nmemslots)</span><br><span class="line">		kvm-&gt;nmemslots = mem-&gt;slot + 1;</span><br><span class="line">	*memslot = new;</span><br><span class="line">	spin_unlock(&amp;kvm-&gt;mmu_lock);</span><br><span class="line">	kvm_free_physmem_slot(&amp;old, npages ? &amp;new : NULL);</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个函数大幅简化了。看代码时候，要注意对内存地址页的检查和内存overlap的检查部分。经过简化之后，代码很清晰了。就是创建一个新的memslot，代替原来的memslot。一个内存slot，最重要部分是指定了vm的物理地址，同时指定了Qemu分配的用户地址，前面一个地址是GPA，后面一个地址是HVA。可见，一个memslot就是建立了GPA到HVA的映射关系。</p>
+<h3 id="内存虚拟化过程"><a href="#内存虚拟化过程" class="headerlink" title="内存虚拟化过程"></a>内存虚拟化过程</h3><p>这里，有必要描述一下内存虚拟化的过程：<br>VM要访问GVA 地址x，那么首先查询VM的页表得到PTE（页表项），通过PTE将GVA x映射到物理地址GPA y.<br>GPA y此时不存在，发生页缺失。<br>KVM接管。<br>从memslot，可以知道GPA对应的其实是HVA x’，然后从HVA x’，可以查找得到HPA y’，然后将HPA y’这个映射写入到页表。<br>VM再次存取GVA x，这是从页表项已经可以查到HPA y’了，内存可正常访问。</p>
+<p>首先，从page_fault处理开始。从前文的分析，知道VM里面的异常产生VM-Exit，然后由各自cpu提供的处理函数处理。对intel的vt技术，就是handle_exception这个函数。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">static int handle_exception(struct kvm_vcpu *vcpu, struct kvm_run *kvm_run)</span><br><span class="line">&#123;</span><br><span class="line">       /*读vmcs，获得VM-exit的信息*/</span><br><span class="line">	intr_info = vmcs_read32(VM_EXIT_INTR_INFO);</span><br><span class="line">       /*发现是page_fault引起*/</span><br><span class="line">	if (is_page_fault(intr_info)) &#123;</span><br><span class="line">		/* EPT won&apos;t cause page fault directly */</span><br><span class="line">                 /*如果支持EPT，不会因为page_fault退出，所以是bug*/</span><br><span class="line">		if (enable_ept)</span><br><span class="line">			BUG();</span><br><span class="line">                 /*读cr2寄存器的值*/ </span><br><span class="line">		cr2 = vmcs_readl(EXIT_QUALIFICATION);</span><br><span class="line">		trace_kvm_page_fault(cr2, error_code);</span><br><span class="line"></span><br><span class="line">		if (kvm_event_needs_reinjection(vcpu))</span><br><span class="line">			kvm_mmu_unprotect_page_virt(vcpu, cr2);</span><br><span class="line">		return kvm_mmu_page_fault(vcpu, cr2, error_code);</span><br><span class="line">	&#125;</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从这个函数，可以看到对vmcs的使用。通过读vmcs的域，可以获得退出vm的原因。如果是page_fault引起，则调用kvm_mmu_page_fault去处理。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">int kvm_mmu_page_fault(struct kvm_vcpu *vcpu, gva_t cr2, u32 error_code)</span><br><span class="line">&#123;</span><br><span class="line">	int r;</span><br><span class="line">	enum emulation_result er;</span><br><span class="line">       /*调用mmu的page_fault*/</span><br><span class="line">	r = vcpu-&gt;arch.mmu.page_fault(vcpu, cr2, error_code);</span><br><span class="line">	if (r &lt; 0)</span><br><span class="line">		goto out;</span><br><span class="line">	if (!r) &#123;</span><br><span class="line">		r = 1;</span><br><span class="line">		goto out;</span><br><span class="line">	&#125;</span><br><span class="line">       /*模拟指令*/</span><br><span class="line">	er = emulate_instruction(vcpu, vcpu-&gt;run, cr2, error_code, 0);</span><br><span class="line">      ..................................</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里调用了MMU的page_fault处理函数。这个函数就是前面初始化时候设置的paging32_page_fault。也就是通过FNAME宏展开的FNAME(page_fault)。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">static int FNAME(page_fault)(struct kvm_vcpu *vcpu, gva_t addr,</span><br><span class="line">			       u32 error_code)</span><br><span class="line">&#123;</span><br><span class="line">	/*查guest页表，物理地址是否存在	 */</span><br><span class="line">	r = FNAME(walk_addr)(&amp;walker, vcpu, addr, write_fault, user_fault,</span><br><span class="line">			     fetch_fault);</span><br><span class="line"></span><br><span class="line">	/*页还没映射，交Guest OS处理 */</span><br><span class="line">	if (!r) &#123;</span><br><span class="line">		pgprintk(&quot;%s: guest page fault\n&quot;, __func__);</span><br><span class="line">		inject_page_fault(vcpu, addr, walker.error_code);</span><br><span class="line">		vcpu-&gt;arch.last_pt_write_count = 0; /* reset fork detector */</span><br><span class="line">		return 0;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	if (walker.level &gt;= PT_DIRECTORY_LEVEL) &#123;</span><br><span class="line">		level = min(walker.level, mapping_level(vcpu, walker.gfn));</span><br><span class="line">		walker.gfn = walker.gfn &amp; ~(KVM_PAGES_PER_HPAGE(level) - 1);</span><br><span class="line">	&#125;</span><br><span class="line">       /*通过gfn找pfn*/</span><br><span class="line">	pfn = gfn_to_pfn(vcpu-&gt;kvm, walker.gfn);</span><br><span class="line"></span><br><span class="line">	/* mmio ,如果是mmio，是io访问，不是内存，返回*/</span><br><span class="line">	if (is_error_pfn(pfn)) &#123;</span><br><span class="line">		pgprintk(&quot;gfn %lx is mmio\n&quot;, walker.gfn);</span><br><span class="line">		kvm_release_pfn_clean(pfn);</span><br><span class="line">		return 1;</span><br><span class="line">	&#125;</span><br><span class="line">       /*写入HVA到页表*/</span><br><span class="line">	sptep = FNAME(fetch)(vcpu, addr, &amp;walker, user_fault, write_fault,</span><br><span class="line">			     level, &amp;write_pt, pfn);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>对照前面的分析，比较容易理解这个函数了。首先是查guest机的页表，如果从GVA到GPA的映射都没建立，那么返回，让Guest OS做这个工作。<br>然后，如果映射已经建立，GPA存在，那么从Guest的页面号，查找Host的页面号。如何执行这个查找？从memslot可以知道user space首地址，就可以把物理地址GPA转为HVA，通过HVA就可以查到HPA，然后找到所在页的页号。<br>最后，写HVA到页表里面。页表在那里？回顾一下前面kvm_mmu_load的过程，页表是host申请的，host知道页表的真实物理地址。通过页表一层层的搜索，就可以找到要写入的页表项。<br>已知虚拟地址，一级级查找页表找到要写的页表项位置，是经常用的一种操作，这个函数可以认真分析一下实现过程。</p>
+<h2 id="IO虚拟化"><a href="#IO虚拟化" class="headerlink" title="IO虚拟化"></a>IO虚拟化</h2><p>IO虚拟化有两种方案，一种是半虚拟化方案，一种是全虚拟化方案。全虚拟化方案不需要修改Guest的代码，那么Guest里面的io操作最终都变成io指令。在前面的分析中，其实已经涉及了io虚拟化的流程。在VM-exit的时候，前文分析过page fault导致的退出。那么io指令，同样会导致VM-exit退出，然后kvm会把io交给Qemu进程处理。<br>而半虚拟化方案，基本都是把io变成了消息处理，从guest机器发消息出来，然后由host机器处理。此时，在guest机器的驱动都被接管，已经不能被称为驱动（因为已经不再处理io指令，不和具体设备打交道），称为消息代理更合适。</p>
+<h3 id="Vmm对io的处理"><a href="#Vmm对io的处理" class="headerlink" title="Vmm对io的处理"></a>Vmm对io的处理</h3><p>当guest因为执行io执行退出后，由handle_io函数处理.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">static int handle_io(struct kvm_vcpu *vcpu, struct kvm_run *kvm_run)</span><br><span class="line">&#123;</span><br><span class="line">	++vcpu-&gt;stat.io_exits;</span><br><span class="line">	exit_qualification = vmcs_readl(EXIT_QUALIFICATION);</span><br><span class="line">       ...................................</span><br><span class="line">	size = (exit_qualification &amp; 7) + 1;</span><br><span class="line">	in = (exit_qualification &amp; 8) != 0;</span><br><span class="line">	port = exit_qualification &gt;&gt; 16;</span><br><span class="line">      .................................................</span><br><span class="line"> 	return kvm_emulate_pio(vcpu, kvm_run, in, size, port);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>要从vmcs读退出的信息，然后调用kvm_emulate_pio处理。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">int kvm_emulate_pio(struct kvm_vcpu *vcpu, struct kvm_run *run, int in,</span><br><span class="line">		  int size, unsigned port)</span><br><span class="line">&#123;</span><br><span class="line">       unsigned long val;</span><br><span class="line">       /*要赋值退出的种种参数*/</span><br><span class="line">	vcpu-&gt;run-&gt;exit_reason = KVM_EXIT_IO;</span><br><span class="line">	vcpu-&gt;run-&gt;io.direction = in ? KVM_EXIT_IO_IN : KVM_EXIT_IO_OUT;</span><br><span class="line">	vcpu-&gt;run-&gt;io.size = vcpu-&gt;arch.pio.size = size;</span><br><span class="line">	vcpu-&gt;run-&gt;io.data_offset = KVM_PIO_PAGE_OFFSET * PAGE_SIZE;</span><br><span class="line">	vcpu-&gt;run-&gt;io.count = vcpu-&gt;arch.pio.count = vcpu-&gt;arch.pio.cur_count = 1;</span><br><span class="line">	vcpu-&gt;run-&gt;io.port = vcpu-&gt;arch.pio.port = port;</span><br><span class="line">	vcpu-&gt;arch.pio.in = in;</span><br><span class="line">	vcpu-&gt;arch.pio.string = 0;</span><br><span class="line">	vcpu-&gt;arch.pio.down = 0;</span><br><span class="line">	vcpu-&gt;arch.pio.rep = 0;</span><br><span class="line">       .................................</span><br><span class="line">       /*内核能不能处理？*/ </span><br><span class="line">	if (!kernel_pio(vcpu, vcpu-&gt;arch.pio_data)) &#123;</span><br><span class="line">		complete_pio(vcpu);</span><br><span class="line">		return 1;</span><br><span class="line">	&#125;</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里要为io处理赋值各种参数，然后看内核能否处理这个io，如果内核能处理，就不用Qemu进程处理，否则退出内核态，返回用户态。从前文的分析中，我们知道返回是到Qemu的线程上下文中。实际上就是kvm_handle_io这个函数里面。</p>
+<h3 id="虚拟化io流程"><a href="#虚拟化io流程" class="headerlink" title="虚拟化io流程"></a>虚拟化io流程</h3><p>用户态的Qemu如何处理io指令？首先，每种设备都需要注册自己的io指令处理函数到Qemu。<br>这是通过register_ioport_write和register_ioport_read是实现的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">int register_ioport_read(pio_addr_t start, int length, int size,</span><br><span class="line">                         IOPortReadFunc *func, void *opaque)</span><br><span class="line">&#123;</span><br><span class="line">    int i, bsize;</span><br><span class="line">    /*把处理函数写入ioport_read_table这个全局数据*/    </span><br><span class="line">    for(i = start; i &lt; start + length; i += size) &#123;</span><br><span class="line">        ioport_read_table[bsize][i] = func;</span><br><span class="line">        if (ioport_opaque[i] != NULL &amp;&amp; ioport_opaque[i] != opaque)</span><br><span class="line">            hw_error(&quot;register_ioport_read: invalid opaque for address 0x%x&quot;,</span><br><span class="line">                     i);</span><br><span class="line">        ioport_opaque[i] = opaque;</span><br><span class="line">    &#125;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过这个函数，实际上把io指令处理函数登记到一个全局的数组。每种支持的设备都登记在这个数组中。<br>再分析kvm_handle_io的流程。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">static void kvm_handle_io(uint16_t port, void *data, int direction, int size,</span><br><span class="line">                          uint32_t count)</span><br><span class="line">&#123;</span><br><span class="line">    .............................</span><br><span class="line">    for (i = 0; i &lt; count; i++) &#123;</span><br><span class="line">        if (direction == KVM_EXIT_IO_IN) &#123;</span><br><span class="line">            switch (size) &#123;</span><br><span class="line">            case 1:</span><br><span class="line">                stb_p(ptr, cpu_inb(port));</span><br><span class="line">                break;</span><br><span class="line">                 &#125; </span><br><span class="line">        ptr += size;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对于退出原因是KVM_EXIT_IO_IN的情况，调用cpu_inb处理。Cpu_inb是个封装函数，它的作用就是调用ioport_read.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">static uint32_t ioport_read(int index, uint32_t address)</span><br><span class="line">&#123;</span><br><span class="line">    static IOPortReadFunc * const default_func[3] = &#123;</span><br><span class="line">        default_ioport_readb,</span><br><span class="line">        default_ioport_readw,</span><br><span class="line">        default_ioport_readl</span><br><span class="line">    &#125;;</span><br><span class="line">    /*从全局数组读入处理函数*/</span><br><span class="line">    IOPortReadFunc *func = ioport_read_table[index][address];</span><br><span class="line">    if (!func)</span><br><span class="line">        func = default_func[index];</span><br><span class="line">    return func(ioport_opaque[address], address);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里代码很清晰，就是从登记io指令函数的数组中读出处理函数，然后调用每种设备所登记的指令处理函数处理，完成io。<br>各种设备都有自己的处理函数，所以Qemu需要支持各种不同的设备，Qemu的大部分代码都是各种各样设备的驱动代码（注意这里驱动的意义和传统驱动程序的含义有所不同）。</p>
+<h3 id="设备注册和设备模拟"><a href="#设备注册和设备模拟" class="headerlink" title="设备注册和设备模拟"></a>设备注册和设备模拟</h3><p>type_register注册一个设备。<br>Qemu要扫描注册的设备</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="Yi颗烂樱桃 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.png" alt="Yi颗烂樱桃 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者：</strong>
+    Yi颗烂樱桃
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://www.owalle.com/2019/02/20/kvm-src-analysis/" title="kvm-src-analysis">http://www.owalle.com/2019/02/20/kvm-src-analysis/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>
+    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="external nofollow" target="_blank">CC BY-NC-ND 3.0</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/kvm/" rel="tag"># kvm</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/29/Intel-SDM/" rel="next" title="英特尔®64和IA-32架构软件开发人员手册(Intel SDM)">
+                <i class="fa fa-chevron-left"></i> 英特尔®64和IA-32架构软件开发人员手册(Intel SDM)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
+    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
+    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a class="bds_count" data-cmd="count"></a>
+  </div>
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "2",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "share": {
+        "bdSize": "16",
+        "bdStyle": "0"
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      }
+    }
+  </script>
+
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="Yi颗烂樱桃">
+            
+              <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+            <div class="cc-license motion-element" itemprop="license">
+              <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" class="cc-opacity" target="_blank">
+                <img src="/images/cc-by-nc-nd.svg" alt="Creative Commons">
+              </a>
+            </div>
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#VMCS"><span class="nav-number">1.</span> <span class="nav-text">VMCS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#VMCS包含的信息可以分为六个部分"><span class="nav-number">1.1.</span> <span class="nav-text">VMCS包含的信息可以分为六个部分:</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU-虚拟化"><span class="nav-number">2.</span> <span class="nav-text">CPU 虚拟化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#VCPU创建"><span class="nav-number">2.1.</span> <span class="nav-text">VCPU创建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#VCPU运行"><span class="nav-number">2.2.</span> <span class="nav-text">VCPU运行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调度"><span class="nav-number">2.3.</span> <span class="nav-text">调度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#中断"><span class="nav-number">2.4.</span> <span class="nav-text">中断</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VCPU的内存虚拟化"><span class="nav-number">3.</span> <span class="nav-text">VCPU的内存虚拟化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟机页表初始化"><span class="nav-number">3.1.</span> <span class="nav-text">虚拟机页表初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟机物理地址"><span class="nav-number">3.2.</span> <span class="nav-text">虚拟机物理地址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#内存虚拟化过程"><span class="nav-number">3.3.</span> <span class="nav-text">内存虚拟化过程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IO虚拟化"><span class="nav-number">4.</span> <span class="nav-text">IO虚拟化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Vmm对io的处理"><span class="nav-number">4.1.</span> <span class="nav-text">Vmm对io的处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟化io流程"><span class="nav-number">4.2.</span> <span class="nav-text">虚拟化io流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#设备注册和设备模拟"><span class="nav-number">4.3.</span> <span class="nav-text">设备注册和设备模拟</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yi颗烂樱桃</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">39.6k</span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+  
+  <script type="text/javascript" color="129,216,208" opacity="0.5" zindex="-2" count="50" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three.min.js"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three-waves.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kity.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kityminder.core.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/mindmap.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: true,
+        notify: false,
+        appId: 'sIDOr6ptvMjLBmxig1vHlYsG-gzGzoHsz',
+        appKey: 'c1R9jtqasnufksgJUCE3eWo5',
+        placeholder: '亲，你不想说点什么吗？？ :D',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+</body>
+</html>
