@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="VMCS对于Intel的虚拟化技术(VT)而言，它的软件部分基本体现在VMCS结构中(Virtual Machine Control Block)。主要通过VMCS结构来控制VCPU的运转。  VMCS是个不超过4K的内存块。 VMCS通过下列的指令控制: VMCLEAR: 清空VMCS结构 VMREAD: 读取VMCS数据 VMWRITE: 数据写入VMCS   通过VMPTR指针指向VMCS结">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-02-25T06:14:08.993Z">
+<meta property="og:updated_time" content="2019-02-25T06:30:03.861Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="KVM(Kernel-based Virtual Machine)源码分析">
 <meta name="twitter:description" content="VMCS对于Intel的虚拟化技术(VT)而言，它的软件部分基本体现在VMCS结构中(Virtual Machine Control Block)。主要通过VMCS结构来控制VCPU的运转。  VMCS是个不超过4K的内存块。 VMCS通过下列的指令控制: VMCLEAR: 清空VMCS结构 VMREAD: 读取VMCS数据 VMWRITE: 数据写入VMCS   通过VMPTR指针指向VMCS结">
@@ -411,7 +411,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  9.1k
+                  9.3k
                 </span>
               
 
@@ -427,7 +427,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  42
+                  43
                 </span>
               
             </div>
@@ -555,6 +555,72 @@
 <p>对于退出原因是KVM_EXIT_IO_IN的情况，调用cpu_inb处理。Cpu_inb是个封装函数，它的作用就是调用ioport_read.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">static uint32_t ioport_read(int index, uint32_t address)</span><br><span class="line">&#123;</span><br><span class="line">    static IOPortReadFunc * const default_func[3] = &#123;</span><br><span class="line">        default_ioport_readb,</span><br><span class="line">        default_ioport_readw,</span><br><span class="line">        default_ioport_readl</span><br><span class="line">    &#125;;</span><br><span class="line">    /*从全局数组读入处理函数*/</span><br><span class="line">    IOPortReadFunc *func = ioport_read_table[index][address];</span><br><span class="line">    if (!func)</span><br><span class="line">        func = default_func[index];</span><br><span class="line">    return func(ioport_opaque[address], address);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>这里代码很清晰，就是从登记io指令函数的数组中读出处理函数，然后调用每种设备所登记的指令处理函数处理，完成io。<br>各种设备都有自己的处理函数，所以Qemu需要支持各种不同的设备，Qemu的大部分代码都是各种各样设备的驱动代码（注意这里驱动的意义和传统驱动程序的含义有所不同）。</p>
 <h3 id="设备注册和设备模拟"><a href="#设备注册和设备模拟" class="headerlink" title="设备注册和设备模拟"></a>设备注册和设备模拟</h3><p>QEMU设备注册可以移步<a href="https://www.owalle.com/2018/12/26/qemu-qom/">qemu-qom详解</a></p>
+<h2 id="虚拟化概述脑图"><a href="#虚拟化概述脑图" class="headerlink" title="虚拟化概述脑图"></a>虚拟化概述脑图</h2><blockquote class="raw-class mindmap mindmap-lg"># 虚拟化概述
+
+## CPU虚拟化
+
+### 指令的模拟
+
+#### 陷入（利用处理器的保护机制，中断和异常）
+
+1，基于处理器保护机制出发的异常
+2，虚拟机主动触发的异常
+3，异步zhognduan
+
+##### 虚拟处理器
+
+##### 虚拟寄存器
+
+##### 上下文
+
+### 中断和异常的虚拟化
+
+### 对称对处理器技术的虚拟化（SMP）
+
+#### VMM选择第一个虚拟处理器，BSP
+
+#### 其他虚拟处理器，AP
+
+## Memory虚拟化
+
+### 物理地址从0开始
+
+### 内存地址连续
+
+## I/O虚拟化
+
+### 设备发现
+
+#### 总线类型的设备
+
+##### 总线类型不可枚举
+
+###### ISA设备
+
+###### PS/2键盘、鼠标、RTC
+
+###### 传统IDE控制器
+
+##### 总线类型可枚举、资源可配置
+
+###### PCI
+
+#### 完全模拟的设备
+
+##### Frontend / backend 模型
+
+### 访问截获
+
+#### I/O端口的访问
+
+##### I/O位图来决定
+
+#### MMIO访问
+
+##### 页表项设置为无效
+
+### 设备模拟
+</blockquote>
 
       
     </div>
@@ -821,7 +887,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#VMCS"><span class="nav-number">1.</span> <span class="nav-text">VMCS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#VMCS包含的信息可以分为六个部分"><span class="nav-number">1.1.</span> <span class="nav-text">VMCS包含的信息可以分为六个部分:</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU-虚拟化"><span class="nav-number">2.</span> <span class="nav-text">CPU 虚拟化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#VCPU创建"><span class="nav-number">2.1.</span> <span class="nav-text">VCPU创建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#VCPU运行"><span class="nav-number">2.2.</span> <span class="nav-text">VCPU运行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调度"><span class="nav-number">2.3.</span> <span class="nav-text">调度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#中断"><span class="nav-number">2.4.</span> <span class="nav-text">中断</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VCPU的内存虚拟化"><span class="nav-number">3.</span> <span class="nav-text">VCPU的内存虚拟化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟机页表初始化"><span class="nav-number">3.1.</span> <span class="nav-text">虚拟机页表初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟机物理地址"><span class="nav-number">3.2.</span> <span class="nav-text">虚拟机物理地址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#内存虚拟化过程"><span class="nav-number">3.3.</span> <span class="nav-text">内存虚拟化过程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IO虚拟化"><span class="nav-number">4.</span> <span class="nav-text">IO虚拟化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Vmm对io的处理"><span class="nav-number">4.1.</span> <span class="nav-text">Vmm对io的处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟化io流程"><span class="nav-number">4.2.</span> <span class="nav-text">虚拟化io流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#设备注册和设备模拟"><span class="nav-number">4.3.</span> <span class="nav-text">设备注册和设备模拟</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#VMCS"><span class="nav-number">1.</span> <span class="nav-text">VMCS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#VMCS包含的信息可以分为六个部分"><span class="nav-number">1.1.</span> <span class="nav-text">VMCS包含的信息可以分为六个部分:</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU-虚拟化"><span class="nav-number">2.</span> <span class="nav-text">CPU 虚拟化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#VCPU创建"><span class="nav-number">2.1.</span> <span class="nav-text">VCPU创建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#VCPU运行"><span class="nav-number">2.2.</span> <span class="nav-text">VCPU运行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调度"><span class="nav-number">2.3.</span> <span class="nav-text">调度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#中断"><span class="nav-number">2.4.</span> <span class="nav-text">中断</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VCPU的内存虚拟化"><span class="nav-number">3.</span> <span class="nav-text">VCPU的内存虚拟化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟机页表初始化"><span class="nav-number">3.1.</span> <span class="nav-text">虚拟机页表初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟机物理地址"><span class="nav-number">3.2.</span> <span class="nav-text">虚拟机物理地址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#内存虚拟化过程"><span class="nav-number">3.3.</span> <span class="nav-text">内存虚拟化过程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IO虚拟化"><span class="nav-number">4.</span> <span class="nav-text">IO虚拟化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Vmm对io的处理"><span class="nav-number">4.1.</span> <span class="nav-text">Vmm对io的处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟化io流程"><span class="nav-number">4.2.</span> <span class="nav-text">虚拟化io流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#设备注册和设备模拟"><span class="nav-number">4.3.</span> <span class="nav-text">设备注册和设备模拟</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#虚拟化概述脑图"><span class="nav-number">5.</span> <span class="nav-text">虚拟化概述脑图</span></a></li></ol></div>
             
 
           </div>
@@ -855,7 +921,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">42.3k</span>
+    <span title="Site words total count">42.5k</span>
   
 </div>
 
