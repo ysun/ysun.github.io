@@ -95,10 +95,12 @@
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="(编者按：写完才发现，这篇分析写的又臭又长…… 原谅语言凝练和code阅读还是没有成熟，我会慢慢提炼，有兴趣的同学可以评论区吐槽。) VMCS对于Intel的虚拟化技术(VT)而言，它的软件部分基本体现在VMCS结构中(Virtual Machine Control Block)。主要通过VMCS结构来控制VCPU的运转。  VMCS是个不超过4K的内存块。 VMCS通过下列的指令控制: VMCL">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-02-28T02:57:49.852Z">
+<meta property="og:image" content="http://www.owalle.com/2019/02/20/kvm-src-analysis/kvm-src-analysis-mind.svg">
+<meta property="og:updated_time" content="2019-02-28T07:14:20.324Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="KVM(Kernel-based Virtual Machine)源码分析">
 <meta name="twitter:description" content="(编者按：写完才发现，这篇分析写的又臭又长…… 原谅语言凝练和code阅读还是没有成熟，我会慢慢提炼，有兴趣的同学可以评论区吐槽。) VMCS对于Intel的虚拟化技术(VT)而言，它的软件部分基本体现在VMCS结构中(Virtual Machine Control Block)。主要通过VMCS结构来控制VCPU的运转。  VMCS是个不超过4K的内存块。 VMCS通过下列的指令控制: VMCL">
+<meta name="twitter:image" content="http://www.owalle.com/2019/02/20/kvm-src-analysis/kvm-src-analysis-mind.svg">
 
 
 
@@ -411,7 +413,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  10.3k
+                  10.5k
                 </span>
               
 
@@ -427,7 +429,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  49
+                  50
                 </span>
               
             </div>
@@ -546,80 +548,285 @@
 <h2 id="IO虚拟化"><a href="#IO虚拟化" class="headerlink" title="IO虚拟化"></a>IO虚拟化</h2><p>IO虚拟化有两种方案，一种是半虚拟化方案，一种是全虚拟化方案。全虚拟化方案不需要修改Guest的代码，那么Guest里面的io操作最终都变成io指令。在前面的分析中，其实已经涉及了io虚拟化的流程。在VM-exit的时候，前文分析过page fault导致的退出。那么io指令，同样会导致VM-exit退出，然后kvm会把io交给Qemu进程处理。<br>而半虚拟化方案，基本都是把io变成了消息处理，从guest机器发消息出来，然后由host机器处理。此时，在guest机器的驱动都被接管。</p>
 <h3 id="Vmm对io的处理"><a href="#Vmm对io的处理" class="headerlink" title="Vmm对io的处理"></a>Vmm对io的处理</h3><p>当guest因为执行io执行退出后，由handle_io函数处理.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">arch/x86/kvm/vmx.c:</span><br><span class="line">static int handle_io(struct kvm_vcpu *vcpu)</span><br><span class="line">&#123;</span><br><span class="line">        unsigned long exit_qualification;</span><br><span class="line">        int size, in, string;</span><br><span class="line">        unsigned port;</span><br><span class="line"></span><br><span class="line">        exit_qualification = vmcs_readl(EXIT_QUALIFICATION);</span><br><span class="line">        string = (exit_qualification &amp; 16) != 0;</span><br><span class="line"></span><br><span class="line">        ++vcpu-&gt;stat.io_exits;</span><br><span class="line"></span><br><span class="line">        if (string)</span><br><span class="line">                return kvm_emulate_instruction(vcpu, 0) == EMULATE_DONE;</span><br><span class="line"></span><br><span class="line">        port = exit_qualification &gt;&gt; 16;</span><br><span class="line">        size = (exit_qualification &amp; 7) + 1;</span><br><span class="line">        in = (exit_qualification &amp; 8) != 0;</span><br><span class="line"></span><br><span class="line">        return kvm_fast_pio(vcpu, size, port, in);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>要从vmcs读退出的信息，然后调用kvm_fast_pio处理,最终走到真正的处理函数emulator_pio_in_out。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">arch/x86/kvm/x86.c:</span><br><span class="line">tatic int emulator_pio_in_out(struct kvm_vcpu *vcpu, int size,</span><br><span class="line">                               unsigned short port, void *val,</span><br><span class="line">                               unsigned int count, bool in)</span><br><span class="line">&#123;</span><br><span class="line">        vcpu-&gt;arch.pio.port = port;</span><br><span class="line">        vcpu-&gt;arch.pio.in = in;</span><br><span class="line">        vcpu-&gt;arch.pio.count  = count;</span><br><span class="line">        vcpu-&gt;arch.pio.size = size;</span><br><span class="line"></span><br><span class="line">        if (!kernel_pio(vcpu, vcpu-&gt;arch.pio_data)) &#123;</span><br><span class="line">                vcpu-&gt;arch.pio.count = 0;</span><br><span class="line">                return 1;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">       /*要赋值退出的种种参数*/</span><br><span class="line">        vcpu-&gt;run-&gt;exit_reason = KVM_EXIT_IO;</span><br><span class="line">        vcpu-&gt;run-&gt;io.direction = in ? KVM_EXIT_IO_IN : KVM_EXIT_IO_OUT;</span><br><span class="line">        vcpu-&gt;run-&gt;io.size = size;</span><br><span class="line">        vcpu-&gt;run-&gt;io.data_offset = KVM_PIO_PAGE_OFFSET * PAGE_SIZE;</span><br><span class="line">        vcpu-&gt;run-&gt;io.count = count;</span><br><span class="line">        vcpu-&gt;run-&gt;io.port = port;</span><br><span class="line"></span><br><span class="line">        return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>这里要为io处理赋值各种参数，然后看内核能否处理这个io，如果内核能处理，就不用Qemu进程处理，否则退出内核态，返回用户态。从前文的分析中，我们知道返回是到Qemu的线程上下文中。实际上就是kvm_handle_io这个函数里面。</p>
-<h3 id="虚拟化io流程"><a href="#虚拟化io流程" class="headerlink" title="虚拟化io流程"></a>虚拟化io流程</h3><p>用户态的Qemu如何处理io指令？通过address_space_rw实现的。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br></pre></td><td class="code"><pre><span class="line">exec.c:</span><br><span class="line">MemTxResult address_space_rw(AddressSpace *as, hwaddr addr, MemTxAttrs attrs,</span><br><span class="line">                             uint8_t *buf, int len, bool is_write)</span><br><span class="line">&#123;</span><br><span class="line">    hwaddr l;</span><br><span class="line">    uint8_t *ptr;</span><br><span class="line">    uint64_t val;</span><br><span class="line">    hwaddr addr1;</span><br><span class="line">    MemoryRegion *mr;</span><br><span class="line">    MemTxResult result = MEMTX_OK;</span><br><span class="line">    bool release_lock = false;</span><br><span class="line"></span><br><span class="line">    while (len &gt; 0) &#123;</span><br><span class="line">        l = len;</span><br><span class="line">        mr = address_space_translate(as, addr, &amp;addr1, &amp;l, is_write);</span><br><span class="line"></span><br><span class="line">        if (is_write) &#123;</span><br><span class="line">            if (!memory_access_is_direct(mr, is_write)) &#123;</span><br><span class="line">                release_lock |= prepare_mmio_access(mr);</span><br><span class="line">                l = memory_access_size(mr, l, addr1);</span><br><span class="line">                /* XXX: could force current_cpu to NULL to avoid</span><br><span class="line">                   potential bugs */</span><br><span class="line">                switch (l) &#123;</span><br><span class="line">                case 8:</span><br><span class="line">                    /* 64 bit write access */</span><br><span class="line">                    val = ldq_p(buf);</span><br><span class="line">                    result |= memory_region_dispatch_write(mr, addr1, val, 8,</span><br><span class="line">                                                           attrs);</span><br><span class="line">                    break;</span><br><span class="line">                case 4:</span><br><span class="line">                    /* 32 bit write access */</span><br><span class="line">                    break;</span><br><span class="line">                case 2:</span><br><span class="line">                    /* 16 bit write access */</span><br><span class="line">                    break;</span><br><span class="line">                case 1:</span><br><span class="line">                    /* 8 bit write access */</span><br><span class="line">                    break;</span><br><span class="line">                default:</span><br><span class="line">                    abort();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                addr1 += memory_region_get_ram_addr(mr);</span><br><span class="line">                /* RAM case */</span><br><span class="line">                ptr = qemu_get_ram_ptr(addr1);</span><br><span class="line">                memcpy(ptr, buf, l);</span><br><span class="line">                invalidate_and_set_dirty(mr, addr1, l);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            if (!memory_access_is_direct(mr, is_write)) &#123;</span><br><span class="line">                /* I/O case */</span><br><span class="line">                release_lock |= prepare_mmio_access(mr);</span><br><span class="line">                l = memory_access_size(mr, l, addr1);</span><br><span class="line">                switch (l) &#123;</span><br><span class="line">                case 8:</span><br><span class="line">                    /* 64 bit read access */</span><br><span class="line">                    result |= memory_region_dispatch_read(mr, addr1, &amp;val, 8,</span><br><span class="line">                                                          attrs);</span><br><span class="line">                    stq_p(buf, val);</span><br><span class="line">                    break;</span><br><span class="line">                case 4:</span><br><span class="line">                    /* 32 bit read access */</span><br><span class="line">                    break;</span><br><span class="line">                case 2:</span><br><span class="line">                    /* 16 bit read access */</span><br><span class="line">                    break;</span><br><span class="line">                case 1:</span><br><span class="line">                    /* 8 bit read access */</span><br><span class="line">                    break;</span><br><span class="line">                default:</span><br><span class="line">                    abort();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                /* RAM case */</span><br><span class="line">                ptr = qemu_get_ram_ptr(mr-&gt;ram_addr + addr1);</span><br><span class="line">                memcpy(buf, ptr, l);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (release_lock) &#123;</span><br><span class="line">            qemu_mutex_unlock_iothread();</span><br><span class="line">            release_lock = false;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        len -= l;</span><br><span class="line">        buf += l;</span><br><span class="line">        addr += l;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>再分析kvm_handle_io的流程。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">kvm-all.c:</span><br><span class="line">static void kvm_handle_io(uint16_t port, MemTxAttrs attrs, void *data, int di</span><br><span class="line">rection,</span><br><span class="line">                          int size, uint32_t count)</span><br><span class="line">&#123;</span><br><span class="line">    int i;</span><br><span class="line">    uint8_t *ptr = data;</span><br><span class="line"></span><br><span class="line">    for (i = 0; i &lt; count; i++) &#123;</span><br><span class="line">        address_space_rw(&amp;address_space_io, port, attrs,</span><br><span class="line">                         ptr, size,</span><br><span class="line">                         direction == KVM_EXIT_IO_OUT);</span><br><span class="line">        ptr += size;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里要为io处理赋值各种参数，然后看内核能否处理这个io，如果内核能处理，就不用Qemu进程处理，否则退出内核态，返回用户态。</p>
+<h3 id="虚拟化io流程"><a href="#虚拟化io流程" class="headerlink" title="虚拟化io流程"></a>虚拟化io流程</h3><p>从前文的分析中，我们知道返回是到Qemu的线程上下文中。实际上就是kvm_handle_io这个函数里面。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br></pre></td><td class="code"><pre><span class="line">kvm-all.c:</span><br><span class="line">static void kvm_handle_io(uint16_t port, MemTxAttrs attrs, void *data, int di</span><br><span class="line">rection,</span><br><span class="line">                          int size, uint32_t count)</span><br><span class="line">&#123;</span><br><span class="line">    int i;</span><br><span class="line">    uint8_t *ptr = data;</span><br><span class="line"></span><br><span class="line">    for (i = 0; i &lt; count; i++) &#123;</span><br><span class="line">        address_space_rw(&amp;address_space_io, port, attrs,</span><br><span class="line">                         ptr, size,</span><br><span class="line">                         direction == KVM_EXIT_IO_OUT);</span><br><span class="line">        ptr += size;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">exec.c:</span><br><span class="line">MemTxResult address_space_rw(AddressSpace *as, hwaddr addr, MemTxAttrs attrs,</span><br><span class="line">                             uint8_t *buf, int len, bool is_write)</span><br><span class="line">&#123;</span><br><span class="line">    hwaddr l;</span><br><span class="line">    uint8_t *ptr;</span><br><span class="line">    uint64_t val;</span><br><span class="line">    hwaddr addr1;</span><br><span class="line">    MemoryRegion *mr;</span><br><span class="line">    MemTxResult result = MEMTX_OK;</span><br><span class="line">    bool release_lock = false;</span><br><span class="line"></span><br><span class="line">    while (len &gt; 0) &#123;</span><br><span class="line">        l = len;</span><br><span class="line">        mr = address_space_translate(as, addr, &amp;addr1, &amp;l, is_write);</span><br><span class="line"></span><br><span class="line">        if (is_write) &#123;</span><br><span class="line">            if (!memory_access_is_direct(mr, is_write)) &#123;</span><br><span class="line">                release_lock |= prepare_mmio_access(mr);</span><br><span class="line">                l = memory_access_size(mr, l, addr1);</span><br><span class="line">                /* XXX: could force current_cpu to NULL to avoid</span><br><span class="line">                   potential bugs */</span><br><span class="line">                switch (l) &#123;</span><br><span class="line">                case 8:</span><br><span class="line">                    /* 64 bit write access */</span><br><span class="line">                    val = ldq_p(buf);</span><br><span class="line">                    result |= memory_region_dispatch_write(mr, addr1, val, 8,</span><br><span class="line">                                                           attrs);</span><br><span class="line">                    break;</span><br><span class="line">                case 4:</span><br><span class="line">                    /* 32 bit write access */</span><br><span class="line">                    break;</span><br><span class="line">                case 2:</span><br><span class="line">                    /* 16 bit write access */</span><br><span class="line">                    break;</span><br><span class="line">                case 1:</span><br><span class="line">                    /* 8 bit write access */</span><br><span class="line">                    break;</span><br><span class="line">                default:</span><br><span class="line">                    abort();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                addr1 += memory_region_get_ram_addr(mr);</span><br><span class="line">                /* RAM case */</span><br><span class="line">                ptr = qemu_get_ram_ptr(addr1);</span><br><span class="line">                memcpy(ptr, buf, l);</span><br><span class="line">                invalidate_and_set_dirty(mr, addr1, l);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            if (!memory_access_is_direct(mr, is_write)) &#123;</span><br><span class="line">                /* I/O case */</span><br><span class="line">                release_lock |= prepare_mmio_access(mr);</span><br><span class="line">                l = memory_access_size(mr, l, addr1);</span><br><span class="line">                switch (l) &#123;</span><br><span class="line">                case 8:</span><br><span class="line">                    /* 64 bit read access */</span><br><span class="line">                    result |= memory_region_dispatch_read(mr, addr1, &amp;val, 8,</span><br><span class="line">                                                          attrs);</span><br><span class="line">                    stq_p(buf, val);</span><br><span class="line">                    break;</span><br><span class="line">                case 4:</span><br><span class="line">                    /* 32 bit read access */</span><br><span class="line">                    break;</span><br><span class="line">                case 2:</span><br><span class="line">                    /* 16 bit read access */</span><br><span class="line">                    break;</span><br><span class="line">                case 1:</span><br><span class="line">                    /* 8 bit read access */</span><br><span class="line">                    break;</span><br><span class="line">                default:</span><br><span class="line">                    abort();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                /* RAM case */</span><br><span class="line">                ptr = qemu_get_ram_ptr(mr-&gt;ram_addr + addr1);</span><br><span class="line">                memcpy(buf, ptr, l);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (release_lock) &#123;</span><br><span class="line">            qemu_mutex_unlock_iothread();</span><br><span class="line">            release_lock = false;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        len -= l;</span><br><span class="line">        buf += l;</span><br><span class="line">        addr += l;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>然后调用每种设备所登记的指令处理函数处理，完成io。<br>各种设备都有自己的处理函数，所以Qemu需要支持各种不同的设备，Qemu的大部分代码都是各种各样设备的驱动代码（注意这里驱动的意义和传统驱动程序的含义有所不同）。</p>
 <h3 id="设备注册和设备模拟"><a href="#设备注册和设备模拟" class="headerlink" title="设备注册和设备模拟"></a>设备注册和设备模拟</h3><p>QEMU设备注册可以移步<a href="https://www.owalle.com/2018/12/26/qemu-qom/">qemu-qom详解</a></p>
 <h2 id="虚拟化概述脑图"><a href="#虚拟化概述脑图" class="headerlink" title="虚拟化概述脑图"></a>虚拟化概述脑图</h2><p>脑图有待进一步完善</p>
-<blockquote class="raw-class mindmap mindmap-lg"># 虚拟化概述
+<p><img src="/2019/02/20/kvm-src-analysis/kvm-src-analysis-mind.svg" alt=""><br><blockquote class="raw-class mindmap mindmap-lg">
+# 虚拟化概述
 
 ## CPU虚拟化
 
-### 指令的模拟
+### 概述
 
-#### 陷入（利用处理器的保护机制，中断和异常）
+#### 指令的模拟
+
+##### 陷入（利用处理器的保护机制，中断和异常）
 
 1，基于处理器保护机制出发的异常
 2，虚拟机主动触发的异常
 3，异步zhognduan
 
-##### 虚拟处理器
+###### 虚拟处理器
 
-##### 虚拟寄存器
+###### 虚拟寄存器
 
-##### 上下文
+###### 上下文
 
-### 中断和异常的虚拟化
+#### 中断和异常的虚拟化
 
-### 对称对处理器技术的虚拟化（SMP）
+#### 对称对处理器技术的虚拟化（SMP）
 
-#### VMM选择第一个虚拟处理器，BSP
+##### VMM选择第一个虚拟处理器，BSP
 
-#### 其他虚拟处理器，AP
+##### 其他虚拟处理器，AP
+
+### 主要函数
+
+#### 创建VCPU
+
+##### kvm_vm_ioctl_create_vcpu
+
+###### kvm_arch_vcpu_create
+
+###### kvm->created_vcpus++;
+
+###### create_vcpu_fd
+
+#### 创建VM
+
+##### kvm_dev_ioctl_create_vm
+
+###### kvm_create_vm
+
+####### kvm_arch_create_vm
+
+######## vmx_create_vcpu
+
+######### vmx->guest_msrs = kmalloc(PAGE_SIZE, GFP_KERNEL);
+
+######### vmx->host_msrs = kmalloc(PAGE_SIZE, GFP_KERNEL);
+
+######### alloc_loaded_vmcs(&vmx->vmcs01);
+
+######### alloc_apic_access_page
+
+####### kvm_arch_vcpu_setup
+
+######## vmcs_write64
+
+######## vmcs_write64
+
+####### kvm->mm = current->mm
+
+####### kvm_eventfd_init
+
+#### VCPU运行
+
+##### vcpu_run
+
+###### vcpu_enter_guest
+
+####### kvm_x86_ops->run(vcpu); 
+
+######## vmx_vcpu_run
+
+######### asm();
+
+####### kvm_x86_ops->handle_external_intr(vcpu);
+
+####### kvm_x86_ops->handle_exit(vcpu);
+
+#### 调度
+
+##### QEMU
+
+###### qemu_kvm_start_vcpu
+
+####### qemu_thread_create
+(cpu->thread, thread_name, qemu_kvm_cpu_thread_fn, 
+cpu, QEMU_THREAD_JOINABLE);
+
+######## kvm_cpu_exec
+
+######### kvm_vcpu_ioctl(cpu, KVM_RUN, 0);
+
+######### kvm_handle_io
+
+######### address_space_rw
+
+#### 中断
+
+##### 中断注入
+
+###### vmx_inject_irq
+
+####### vmcs_write32(VM_ENTRY_INTR_INFO_FIELD, intr);
+
+##### 中断控制芯片模拟
+
+###### QEMU
+
+####### kvm_irqchip_create
+
+######## kvm_vm_ioctl(s, KVM_CREATE_IRQCHIP); 
+
+####### kvm_vm_ioctl(s, s->irq_set_ioctl, &event); 
+
+######## KVM_IRQ_LINE
+
+####### qemu_cpu_kick_thread
+
+######## err = pthread_kill(cpu->thread->thread, SIG_IPI);
+
+####### kvm_set_irq
+
+###### Kernel
+
+####### kvm_vm_ioctl_irq_line
+
+######## kvm_set_irq
+
+######### kvm_pic_set_irq
+
+######## kvm_pic_update_irq
+
+######### pic_update_irq
+
+########## kvm_vcpu_kick
+
+########### send_ipi_message(cpumask_of(cpu), IPI_RESCHEDULE);
 
 ## Memory虚拟化
 
-### 物理地址从0开始
+### 概述
 
-### 内存地址连续
+#### 内存地址连续
+
+#### 物理地址从0开始
+
+### 主要函数
+
+#### kvm_init_mmu
+
+##### init_kvm_tdp_mmu
+
+###### context->page_fault = tdp_page_fault;
+
+####### mmu_topup_memory_caches
+
+####### mapping_level
+
+####### fast_page_fault
+
+####### try_async_pf(vcpu, prefault, gfn, gpa, &pfn, write, &map_writable)
+
+####### __direct_map(vcpu, write, map_writable, level, gfn, pfn, prefault);
+
+######## for_each_shadow_entry(vcpu, (u64)gfn << PAGE_SHIFT, iterator)
+
+######## kvm_mmu_get_page
+
+######### for_each_gfn_sp
+
+######### kvm_mmu_alloc_page(vcpu, parent_pte, direct); 
+
+########## mmu_memory_cache_alloc(&vcpu->arch.mmu_page_header_cache)
+
+########## mmu_memory_cache_alloc(&vcpu->arch.mmu_page_cache);
+
+######## link_shadow_page
+
+###### context->root_level = is_la57_mode(vcpu) ?PT64_ROOT_5LEVEL : PT64_ROOT_4LEVEL;
+
+##### init_kvm_softmmu???
+
+###### kvm_init_shadow_mmu
+
+####### paging64_init_context
+
+######## paging64_init_context_common
+
+######### paging64_page_fault
+
+########## FNAME(page_fault)
+
+########### inject_page_fault
+
+########### try_async_pf
+
+########### FNAME(fetch)
+
+#### kvm_mmu_reload
+
+##### kvm_mmu_load
+
+###### mmu_alloc_roots
+
+###### kvm_mmu_load_cr3
+
+#### __kvm_set_memory_region
+
+##### new.userspace_addr = mem->userspace_addr
+
+##### kvzalloc(sizeof(struct kvm_memslots), GFP_KERNEL);
+
+#### handle_exception
+
+##### intr_info = vmx->exit_intr_info;
+
+##### kvm_mmu_page_fault
 
 ## I/O虚拟化
 
-### 设备发现
+### 概述
 
-#### 总线类型的设备
+#### 设备发现
 
-##### 总线类型不可枚举
+##### 总线类型的设备
 
-###### ISA设备
+###### 总线类型不可枚举
 
-###### PS/2键盘、鼠标、RTC
+####### ISA设备
 
-###### 传统IDE控制器
+####### PS/2键盘、鼠标、RTC
 
-##### 总线类型可枚举、资源可配置
+####### 传统IDE控制器
 
-###### PCI
+###### 总线类型可枚举、资源可配置
 
-#### 完全模拟的设备
+####### PCI
 
-##### Frontend / backend 模型
+##### 完全模拟的设备
 
-### 访问截获
+###### Frontend / backend 模型
 
-#### I/O端口的访问
+#### 访问截获
 
-##### I/O位图来决定
+##### I/O端口的访问
 
-#### MMIO访问
+###### I/O位图来决定
 
-##### 页表项设置为无效
+##### MMIO访问
 
-### 设备模拟
-</blockquote>
+###### 页表项设置为无效
+
+#### 设备模拟
+
+### 主要函数
+
+#### handle_io
+
+##### emulator_pio_in_out
+
+###### kernel_pio
+
+#### kvm_handle_io
+
+##### address_space_rw
+</blockquote></p>
 
       
     </div>
@@ -920,7 +1127,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">43.5k</span>
+    <span title="Site words total count">43.7k</span>
   
 </div>
 
