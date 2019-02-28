@@ -96,7 +96,7 @@
 <meta property="og:description" content="(编者按：写完才发现，这篇分析写的又臭又长…… 原谅语言凝练和code阅读还是没有成熟，我会慢慢提炼，有兴趣的同学可以评论区吐槽。) VMCS对于Intel的虚拟化技术(VT)而言，它的软件部分基本体现在VMCS结构中(Virtual Machine Control Block)。主要通过VMCS结构来控制VCPU的运转。  VMCS是个不超过4K的内存块。 VMCS通过下列的指令控制: VMCL">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://www.owalle.com/2019/02/20/kvm-src-analysis/kvm-src-analysis-mind.svg">
-<meta property="og:updated_time" content="2019-02-28T07:14:20.324Z">
+<meta property="og:updated_time" content="2019-02-28T07:18:51.464Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="KVM(Kernel-based Virtual Machine)源码分析">
 <meta name="twitter:description" content="(编者按：写完才发现，这篇分析写的又臭又长…… 原谅语言凝练和code阅读还是没有成熟，我会慢慢提炼，有兴趣的同学可以评论区吐槽。) VMCS对于Intel的虚拟化技术(VT)而言，它的软件部分基本体现在VMCS结构中(Virtual Machine Control Block)。主要通过VMCS结构来控制VCPU的运转。  VMCS是个不超过4K的内存块。 VMCS通过下列的指令控制: VMCL">
@@ -554,7 +554,8 @@
 <p>然后调用每种设备所登记的指令处理函数处理，完成io。<br>各种设备都有自己的处理函数，所以Qemu需要支持各种不同的设备，Qemu的大部分代码都是各种各样设备的驱动代码（注意这里驱动的意义和传统驱动程序的含义有所不同）。</p>
 <h3 id="设备注册和设备模拟"><a href="#设备注册和设备模拟" class="headerlink" title="设备注册和设备模拟"></a>设备注册和设备模拟</h3><p>QEMU设备注册可以移步<a href="https://www.owalle.com/2018/12/26/qemu-qom/">qemu-qom详解</a></p>
 <h2 id="虚拟化概述脑图"><a href="#虚拟化概述脑图" class="headerlink" title="虚拟化概述脑图"></a>虚拟化概述脑图</h2><p>脑图有待进一步完善</p>
-<p><img src="/2019/02/20/kvm-src-analysis/kvm-src-analysis-mind.svg" alt=""><br><blockquote class="raw-class mindmap mindmap-lg">
+<p><img src="/2019/02/20/kvm-src-analysis/kvm-src-analysis-mind.svg" alt=""></p>
+<blockquote class="raw-class mindmap-lg mindmap">
 # 虚拟化概述
 
 ## CPU虚拟化
@@ -826,7 +827,7 @@ cpu, QEMU_THREAD_JOINABLE);
 #### kvm_handle_io
 
 ##### address_space_rw
-</blockquote></p>
+</blockquote>
 
       
     </div>
