@@ -97,7 +97,7 @@
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://www.owalle.com/2019/02/20/kvm-src-analysis/kvm-qemu-brief.svg">
 <meta property="og:image" content="http://www.owalle.com/2019/02/20/kvm-src-analysis/kvm-src-analysis-mind.svg">
-<meta property="og:updated_time" content="2019-03-06T07:36:16.072Z">
+<meta property="og:updated_time" content="2019-04-01T16:16:31.243Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="KVM(Kernel-based Virtual Machine)源码分析">
 <meta name="twitter:description" content="(编者按：写完才发现，这篇分析写的又臭又长…… 原谅语言凝练不足和code阅读还没有炉火纯青，我会慢慢提炼，有兴趣的同学可以评论区吐槽:) 在看code之前，先把KVM-QEMU的source code的大框架拎出来，给读者直观一点的感受，本文最后还有一个稍微详细的call graph。中间这些文字是帮助读者以及我自己阅读和理解code的，大多数是kernel source code，因为Qemu">
@@ -556,10 +556,11 @@
 <p>然后调用每种设备所登记的指令处理函数处理，完成io。<br>各种设备都有自己的处理函数，所以Qemu需要支持各种不同的设备，Qemu的大部分代码都是各种各样设备的驱动代码（注意这里驱动的意义和传统驱动程序的含义有所不同）。</p>
 <h3 id="设备注册和设备模拟"><a href="#设备注册和设备模拟" class="headerlink" title="设备注册和设备模拟"></a>设备注册和设备模拟</h3><p>QEMU设备注册可以移步<a href="https://www.owalle.com/2018/12/26/qemu-qom/">qemu-qom详解</a></p>
 <h2 id="虚拟化概述脑图"><a href="#虚拟化概述脑图" class="headerlink" title="虚拟化概述脑图"></a>虚拟化概述脑图</h2><p>脑图有待进一步完善</p>
+<p><strong><em> 查看大图请点击<a href="kvm-src-analysis-mind.svg">这里</a> </em></strong></p>
 <p><img src="/2019/02/20/kvm-src-analysis/kvm-src-analysis-mind.svg" alt=""></p>
 <!-- \" style="height:800px" 部分为自定义高度，因为有点bug-->
 <blockquote class="raw-class mindmap mindmap-lg \" style="height:800px" "="">
-# 虚拟化概述
+# 虚拟化
 
 ## CPU虚拟化
 
@@ -593,9 +594,25 @@
 
 ##### kvm_vm_ioctl_create_vcpu
 
+###### kvm->created_vcpus++;
+
 ###### kvm_arch_vcpu_create
 
-###### kvm->created_vcpus++;
+####### kvm_x86_ops->vcpu_create = vmx_create_vcpu
+
+######## kvm_vcpu_init
+
+######### kvm_arch_vcpu_init
+
+########## kvm_mmu_create
+
+########## kvm_create_lapic
+
+###### kvm_arch_vcpu_setup
+
+####### kvm_init_mmu
+
+######## init_kvm_tdp_mmu
 
 ###### create_vcpu_fd
 
@@ -606,6 +623,8 @@
 ###### kvm_create_vm
 
 ####### kvm_arch_create_vm
+
+######## kvm->mm = current->mm;
 
 ######## vmx_create_vcpu
 
@@ -629,19 +648,29 @@
 
 #### VCPU运行
 
-##### vcpu_run
+##### kvm_arch_vcpu_ioctl_run
 
-###### vcpu_enter_guest
+###### vcpu_run
 
-####### kvm_x86_ops->run(vcpu); 
+####### vcpu_enter_guest
 
-######## vmx_vcpu_run
+######## kvm_x86_ops->run(vcpu); 
 
-######### asm();
+######### vmx_vcpu_run
 
-####### kvm_x86_ops->handle_external_intr(vcpu);
+########## asm();
 
-####### kvm_x86_ops->handle_exit(vcpu);
+######## kvm_x86_ops->handle_external_intr(vcpu);
+
+######## kvm_x86_ops->handle_exit(vcpu);
+
+####### kvm_inject_pending_timer_irqs
+
+####### kvm_vcpu_ready_for_interrupt_injection
+
+######## exit_reason = KVM_EXIT_IRQ_WINDOW_OPEN
+
+####### kvm_check_async_pf_completion
 
 #### 调度
 
@@ -725,7 +754,19 @@ cpu, QEMU_THREAD_JOINABLE);
 
 ####### fast_page_fault
 
-####### try_async_pf(vcpu, prefault, gfn, gpa, &pfn, write, &map_writable)
+####### try_async_pf()
+
+######## kvm_find_async_pf_gfn (PV)
+
+######### yes: kvm_make_request(KVM_REQ_APF_HALT, vcpu);
+
+######### no: kvm_arch_setup_async_pf(vcpu, gva, gfn)
+
+########## kvm_setup_async_pf(vcpu, gva, kvm_vcpu_gfn_to_hva(vcpu, gfn), &arch)
+
+########### INIT_WORK(&work->work, async_pf_execute);
+
+########### kvm_inject_page_fault(vcpu, &fault);
 
 ####### __direct_map(vcpu, write, map_writable, level, gfn, pfn, prefault);
 
@@ -745,7 +786,7 @@ cpu, QEMU_THREAD_JOINABLE);
 
 ###### context->root_level = is_la57_mode(vcpu) ?PT64_ROOT_5LEVEL : PT64_ROOT_4LEVEL;
 
-##### init_kvm_softmmu???
+##### init_kvm_softmmu
 
 ###### kvm_init_shadow_mmu
 
@@ -821,15 +862,145 @@ cpu, QEMU_THREAD_JOINABLE);
 
 ### 主要函数
 
-#### handle_io
+#### PIO
 
-##### emulator_pio_in_out
+##### handle_io
 
-###### kernel_pio
+###### emulator_pio_in_out
 
-#### kvm_handle_io
+####### kernel_pio
 
-##### address_space_rw
+##### kvm_handle_io
+
+###### address_space_rw
+
+#### MMIO
+
+##### vmx_enable_tdp
+
+###### ept_set_mmio_spte_mask
+
+####### kvm_mmu_set_mmio_spte_mask(, 110b)
+ an EPT paging-structure entry is 110b (write/execute).
+
+##### vcpu_run/entry_guest之后
+
+###### vm_exit//tdp_page_fault
+
+####### kvm_check_async_pf_completion
+
+######## kvm_arch_async_page_ready
+
+######### context->page_fault = tdp_page_fault
+
+########## __direct_map / 构建EPT
+
+########### mmu_set_spte
+
+############  if (unlikely(is_noslot_pfn(pfn))) 
+ mark_mmio_spte(vcpu, sptep, gfn, access);
+
+##### handle_ept_misconfig
+
+###### kvm_mmu_page_fault
+
+####### ++vcpu->stat.mmio_exits;
+return 1;
+//Qemu process first
+
+## 中断虚拟化
+
+### 概述
+
+#### Local APIC per VCPU
+
+##### 虚拟PIC (i8259)
+
+##### 虚拟IO-APIC
+
+##### 虚拟Local APIC
+
+#### 中断采集
+
+#### 中断注入
+
+### 主要函数
+
+#### IOCTL (KVM_CREATE_IRQCHIP)
+
+##### kvm_pic_init
+
+###### kvm_io_bus_register_dev(kvm, KVM_PIO_BUS
+
+###### kvm->arch.vpic
+
+##### kvm_ioapic_init
+
+###### kvm_io_bus_register_dev(kvm, KVM_MMIO_BUS, ioapic->base_address,
+
+###### kvm->arch.vioapic
+
+##### kvm_setup_default_irq_routing
+
+###### kvm_set_irq_routing(kvm, default_routing,
+
+####### setup_routing_entry
+
+#### 虚拟设备中断
+
+##### IOCTL(KVM_IRQ_LINE)中断注入
+
+###### kvm_set_irq
+irq_set[i].set(
+
+####### kvm_set_pic_irq
+
+######## kvm_vcpu_kick
+
+####### kvm_set_ioapic_irq
+
+######## ioapic_service
+
+######### kvm_irq_delivery_to_apic
+
+########## kvm_apic_set_irq
+
+########### kvm_make_request
+
+########### kvm_vcpu_kick
+
+###### vcpu_enter_guest / guest_run之前！
+
+####### inject_pending_event
+
+######## kvm_x86_ops->set_irq(vcpu);
+
+######### vmx_inject_irq
+
+########## vmcs_write32(VM_ENTRY_INTR_INFO_FIELD, intr);
+
+#### 外部设备中断
+external interrupt
+
+##### vcpu_enter_guest
+
+###### kvm_x86_ops->handle_external_intr
+
+####### vmx_handle_external_intr
+
+######## vector =  exit_intr_info & INTR_INFO_VECTOR_MASK
+
+######## 直接把vector送给host上的中断handler
+
+### LAPIC 虚拟化
+
+#### alloc_apic_access_page
+
+#### page = gfn_to_page(kvm, 0xfee00 000)
+
+##### vmcs_write64(VIRTUAL_APIC_PAGE_ADDR, __pa(vmx->vcpu.arch.apic->regs))
+
+##### vmcs_write64(APIC_ACCESS_ADDR, page_to_phys(vmx->vcpu.kvm->arch.apic_access_page));
 </blockquote>
 
       
