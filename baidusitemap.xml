@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://www.owalle.com/2019/05/07/efi-shell-tftp/</loc>
+    <lastmod>2019-05-07T06:20:32.930Z</lastmod>
+  </url>  <url>
     <loc>http://www.owalle.com/2019/02/20/kvm-src-analysis/</loc>
     <lastmod>2019-04-03T04:27:20.548Z</lastmod>
   </url>  <url>
@@ -8,7 +11,7 @@
     <lastmod>2019-02-20T15:39:43.614Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2018/12/10/kvm-overview/</loc>
-    <lastmod>2019-02-19T05:23:41.045Z</lastmod>
+    <lastmod>2019-02-19T05:25:03.141Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2014/12/11/kvm-src-4-mem/</loc>
     <lastmod>2019-01-03T03:23:42.941Z</lastmod>
