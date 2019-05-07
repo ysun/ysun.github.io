@@ -76,7 +76,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT">
+  <meta name="keywords" content="KVM,">
 
 
 
@@ -87,17 +87,26 @@
 
 
 
-<meta name="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
-<meta name="keywords" content="KVM Linux Kernel Qemu">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Yi颗烂樱桃">
-<meta property="og:url" content="http://www.owalle.com/tags/kvm/index.html">
+<meta name="description" content="内存虚拟化简介前一章介绍了CPU虚拟化的内容，这一章介绍一下KVM的内存虚拟化原理。可以说内存是除了CPU外最重要的组件，Guest最终使用的还是宿主机的内存，所以内存虚拟化其实就是关于如何做Guest到宿主机物理内存之间的各种地址转换，如何转换会让转换效率更高呢，KVM经历了三代的内存虚拟化技术，大大加快了内存的访问速率。 传统的地址转换在保护模式下，普通的应用进程使用的都是自己的虚拟地址空间，">
+<meta name="keywords" content="KVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="KVM 虚拟化原理4--内存">
+<meta property="og:url" content="http://www.owalle.com/2018/12/10/kvm-memory/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+<meta property="og:description" content="内存虚拟化简介前一章介绍了CPU虚拟化的内容，这一章介绍一下KVM的内存虚拟化原理。可以说内存是除了CPU外最重要的组件，Guest最终使用的还是宿主机的内存，所以内存虚拟化其实就是关于如何做Guest到宿主机物理内存之间的各种地址转换，如何转换会让转换效率更高呢，KVM经历了三代的内存虚拟化技术，大大加快了内存的访问速率。 传统的地址转换在保护模式下，普通的应用进程使用的都是自己的虚拟地址空间，">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-memory/logical_address.png">
+<meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-memory/page.png">
+<meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-memory/gpa_hpa.png">
+<meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-memory/gpa_hpa2.png">
+<meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-memory/gpa_hpa3_shadow.png">
+<meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-memory/gpa_hpa4.png">
+<meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-memory/gpa_hpa5_ept.png">
+<meta property="og:updated_time" content="2019-01-03T03:24:28.489Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Yi颗烂樱桃">
-<meta name="twitter:description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+<meta name="twitter:title" content="KVM 虚拟化原理4--内存">
+<meta name="twitter:description" content="内存虚拟化简介前一章介绍了CPU虚拟化的内容，这一章介绍一下KVM的内存虚拟化原理。可以说内存是除了CPU外最重要的组件，Guest最终使用的还是宿主机的内存，所以内存虚拟化其实就是关于如何做Guest到宿主机物理内存之间的各种地址转换，如何转换会让转换效率更高呢，KVM经历了三代的内存虚拟化技术，大大加快了内存的访问速率。 传统的地址转换在保护模式下，普通的应用进程使用的都是自己的虚拟地址空间，">
+<meta name="twitter:image" content="http://www.owalle.com/2018/12/10/kvm-memory/logical_address.png">
 
 
 
@@ -127,13 +136,13 @@
 
 
 
-  <link rel="canonical" href="http://www.owalle.com/tags/kvm/">
+  <link rel="canonical" href="http://www.owalle.com/2018/12/10/kvm-memory/">
 
 
 
 
 
-  <title>标签: kvm | Yi颗烂樱桃</title>
+  <title>KVM 虚拟化原理4--内存 | Yi颗烂樱桃</title>
   
 
 
@@ -152,7 +161,7 @@
     
   
 
-  <div class="container sidebar-position-left ">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
@@ -298,52 +307,330 @@
           <div id="content" class="content">
             
 
-  
-  
-  
-  <div class="post-block tag">
+  <div id="posts" class="posts-expand">
+    
 
-    <div id="posts" class="posts-collapse">
-      <div class="collection-title">
-        <h2>kvm<small>标签</small>
-        </h2>
-      </div>
+  
 
-      
-        
+  
+  
+  
 
   <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-    <header class="post-header">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2018/12/10/kvm-memory/">
 
-      <h3 class="post-title">
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+
+    
+      <header class="post-header">
+
         
-            <a class="post-title-link" href="/2019/02/20/kvm-src-analysis/" itemprop="url">
-              
-                <span itemprop="name">KVM(Kernel-based Virtual Machine)源码分析</span>
-              
-            </a>
         
-      </h3>
+          <h2 class="post-title" itemprop="name headline">KVM 虚拟化原理4--内存</h2>
+        
 
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2019-02-20T23:42:57+08:00" content="2019-02-20">
-          02-20
-        </time>
-      </div>
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-12-10T23:28:02+08:00">
+                2018-12-10
+              </time>
+            
 
-    </header>
-  </article>
+            
 
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/12/10/kvm-memory/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2018/12/10/kvm-memory/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  2.3k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  8
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="内存虚拟化简介"><a href="#内存虚拟化简介" class="headerlink" title="内存虚拟化简介"></a>内存虚拟化简介</h2><p>前一章介绍了CPU虚拟化的内容，这一章介绍一下KVM的内存虚拟化原理。可以说内存是除了CPU外最重要的组件，Guest最终使用的还是宿主机的内存，所以内存虚拟化其实就是关于如何做Guest到宿主机物理内存之间的各种地址转换，如何转换会让转换效率更高呢，KVM经历了三代的内存虚拟化技术，大大加快了内存的访问速率。</p>
+<h2 id="传统的地址转换"><a href="#传统的地址转换" class="headerlink" title="传统的地址转换"></a>传统的地址转换</h2><p>在保护模式下，普通的应用进程使用的都是自己的虚拟地址空间，一个64位的机器上的每一个进程都可以访问0到2^64的地址范围，实际上内存并没有这么多，也不会给你这么多。对于进程而言，他拥有所有的内存，对内核而言，只分配了一小段内存给进程，待进程需要更多的进程的时候再分配给进程。<br>通常应用进程所使用的内存叫做虚拟地址，而内核所使用的是物理内存。内核负责为每个进程维护虚拟地址到物理内存的转换关系映射。<br>首先，逻辑地址需要转换为线性地址，然后由线性地址转换为物理地址。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">逻辑地址 ==&gt; 线性地址 ==&gt; 物理地址</span><br></pre></td></tr></table></figure>
+<p>逻辑地址和线性地址之间通过简单的偏移来完成。<br><img src="/2018/12/10/kvm-memory/logical_address.png" alt=""></p>
+<p>一个完整的逻辑地址 = [段选择符：段内偏移地址]，查找GDT或者LDT（通过寄存器gdtr，ldtr）找到描述符，通过段选择符(selector)前13位在段描述符做index，找到Base地址，Base+offset就是线性地址。</p>
+<p>为什么要这么做？据说是Intel为了保证兼容性。</p>
+<p>逻辑地址到线性地址的转换在虚拟化中没有太多的需要介绍的，这一层不存在实际的虚拟化操作，和传统方式一样，最重要的是线性地址到物理地址这一层的转换。</p>
+<p>传统的线性地址到物理地址的转换由CPU的页式内存管理，页式内存管理。<br>页式内存管理负责将线性地址转换到物理地址，一个线性地址被分五段描述，第一段为基地址，通过与当前CR3寄存器（CR3寄存器每个进程有一个，线程共享，当发生进程切换的时候，CR3被载入到对应的寄存器中，这也是各个进程的内存隔离的基础）做运算，得到页表的地址index，通过四次运算，最终得到一个大小为4K的页（有可能更大，比如设置了hugepages以后）。整个过程都是CPU完成，进程不需要参与其中，如果在查询中发现页已经存在，直接返回物理地址，如果页不存在，那么将产生一个缺页中断，内核负责处理缺页中断，并把页加载到页表中，中断返回后，CPU获取到页地址后继续进行运算。</p>
+<p><img src="/2018/12/10/kvm-memory/page.png" alt=""></p>
+<h2 id="KVM中的内存结构"><a href="#KVM中的内存结构" class="headerlink" title="KVM中的内存结构"></a>KVM中的内存结构</h2><p>由于qemu-kvm进程在宿主机上作为一个普通进程，那对于Guest而言，需要的转换过程就是这样。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Guest虚拟内存地址(GVA)</span><br><span class="line">          |</span><br><span class="line">    Guest线性地址 </span><br><span class="line">          |</span><br><span class="line">   Guest物理地址(GPA)</span><br><span class="line">          |             Guest</span><br><span class="line">   ------------------</span><br><span class="line">          |             HV</span><br><span class="line">    HV虚拟地址(HVA)</span><br><span class="line">          |</span><br><span class="line">      HV线性地址</span><br><span class="line">          |</span><br><span class="line">    HV物理地址(HPA)</span><br></pre></td></tr></table></figure>
+<p>What’s the fu*k ？这么多…<br>别着急，Guest虚拟地址到HV线性地址之间的转换和HV虚拟地址到线性地址的转换过程可以省略，这样看起来就更清晰一点。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Guest虚拟内存地址(GVA)</span><br><span class="line">          |</span><br><span class="line">   Guest物理地址(GPA)</span><br><span class="line">          |             Guest</span><br><span class="line">  ------------------</span><br><span class="line">          |             HV</span><br><span class="line">    HV虚拟地址(HVA)</span><br><span class="line">          |</span><br><span class="line">    HV物理地址(HPA)</span><br></pre></td></tr></table></figure>
+<p>前面也说到KVM通过不断的改进转换过程，让KVM的内存虚拟化更加的高效，我们从最初的软件虚拟化的方式介绍。</p>
+<h2 id="软件虚拟化方式实现"><a href="#软件虚拟化方式实现" class="headerlink" title="软件虚拟化方式实现"></a>软件虚拟化方式实现</h2><p>第一层转换，由GVA-&gt;GPA的转换和传统的转换关系一样，通过查找CR3然后进行页表查询，找到对应的GPA，GPA到HVA的关系由qemu-kvm负责维护，我们在<a href="http://www.cnblogs.com/Bozh/p/5753379.html" target="_blank" rel="noopener">第二章KVM启动过程</a>的demo里面就有介绍到怎样给KVM映射内存，通过mmap的方式把HV的内存映射给Guest。</p>
+<p><img src="/2018/12/10/kvm-memory/gpa_hpa.png" alt=""></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">struct kvm_userspace_memory_region region = &#123;</span><br><span class="line">    .slot = 0,</span><br><span class="line">    .guest_phys_addr = 0x1000,</span><br><span class="line">    .memory_size = 0x1000,</span><br><span class="line">    .userspace_addr = (uint64_t)mem,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>可以看到，qemu-kvm的kvm_userspace_memory_region结构体描述了guest的物理地址起始位置和内存大小，然后描述了Guest的物理内存在HV的映射<code>userspace_addr</code>，通过多个slot，可以把不连续的HV的虚拟地址空间映射给Guest的连续的物理地址空间。</p>
+<p><img src="/2018/12/10/kvm-memory/gpa_hpa2.png" alt=""></p>
+<p>软件模拟的虚拟化方式由qemu-kvm来负责维护GPA-&gt;HVA的转换，然后再经过一次HVA-&gt;HPA的方式，从过程上来看，这样的访问是很低效的，特别是在当GVA到GPA转换时候产生缺页中断，这时候产生一个异常Guest退出，HV捕获异常后计算出物理地址（分配新的内存给Guest），然后重新Entry。这个过程会可能导致频繁的Guest退出，且转换过程过长。于是KVM使用了一种叫做影子页表的技术。</p>
+<h2 id="影子页表的虚拟化方式"><a href="#影子页表的虚拟化方式" class="headerlink" title="影子页表的虚拟化方式"></a>影子页表的虚拟化方式</h2><p>影子页表的出现，就是为了减少地址转换带来的开销，直接把GVA转换到HVP的技术。在软件虚拟化的内存转换中，GVA到GPA的转换通过查询CR3寄存器来完成，CR3保存了Guest中的页表基地址，然后载入MMU来做地址转换。<br>在加入了影子页表的技术后，当访问到CR3寄存器的时候（可能是由于Guest进程后导致的），KVM捕获到这个操作，<a href="http://www.cnblogs.com/Bozh/p/5757274.html" target="_blank" rel="noopener">CPU虚拟化章节</a> EXIT_REASON_CR_ACCESS，qemu-kvm通过载入特俗的CR3和影子页表来欺骗Guest这个就是真实的CR3，后面的操作就和传统的访问内存的方式一致，当需要访问物理内存的时候，只会经过一层的影子页表的转换。</p>
+<p><img src="/2018/12/10/kvm-memory/gpa_hpa3_shadow.png" alt=""></p>
+<p>影子页表由qemu-kvm进程维护，实际上就是一个Guest的页表到宿主机页表的映射，每一级的页表的hash值对应到qemu-kvm中影子页表的一个目录。在初次GVA-&gt;HPA的转换时候，影子页表没有建立，此时Guest产生缺页中断，和传统的转换过程一样，经过两次转换(VA-&gt;PA)，然后影子页表记录GVA-&gt;GPA-&gt;HVA-&gt;HPA。这样产生GVA-&gt;GPA的直接关系，保存到影子页表中。</p>
+<p><img src="/2018/12/10/kvm-memory/gpa_hpa4.png" alt=""></p>
+<p>影子页表的引入，减少了GVA-&gt;HPA的转换过程，但是坏处在于qemu-kvm需要为Guest的每个进程维护一个影子页表，这将带来很大的内存开销，同时影子页表的建立是很耗时的，如果Guest进程过多，将导致频繁的影子页表的导入与导出，虽然用了cache技术，但是还是软件层面的，效率并不是最好，所以Intel和AMD在此基础上提供了硬件虚拟化技术。</p>
+<h2 id="EPT硬件加速的虚拟化方式"><a href="#EPT硬件加速的虚拟化方式" class="headerlink" title="EPT硬件加速的虚拟化方式"></a>EPT硬件加速的虚拟化方式</h2><p><img src="/2018/12/10/kvm-memory/gpa_hpa5_ept.png" alt=""><br>EPT(extended page table)可以看做一个硬件的影子页表，在Guest中通过增加EPT寄存器，当Guest产生了CR3和页表的访问的时候，由于对CR3中的页表地址的访问是GPA，当地址为空时候，也就是Page fault后，产生缺页异常，如果在软件模拟或者影子页表的虚拟化方式中，此时会有VM退出，qemu-kvm进程接管并获取到此异常。但是在EPT的虚拟化方式中，qemu-kvm忽略此异常，Guest并不退出，而是按照传统的缺页中断处理，在缺页中断处理的过程中会产生EXIT_REASON_EPT_VIOLATION，Guest退出，qemu-kvm捕获到异常后，分配物理地址并建立GVA-&gt;HPA的映射，并保存到EPT中，将EPT载入到MMU，下次转换时候直接查询根据CR3查询EPT表来完成GVA-&gt;HPA的转换。以后的转换都由硬件直接完成，大大提高了效率，且不需要为每个进程维护一套页表，减少了内存开销。<br>在笔者的测试中，Guest和HV的内存访问速率对比为3756MB/s对比4340MB/s。可以看到内存访问已经很接近宿主机的水平了。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>KVM内存的虚拟化就是一个将虚拟机的虚拟内存转换为宿主机物理内存的过程，Guest使用的依然是宿主机的物理内存，只是在这个过程中怎样减少转换带来的开销成为优化的主要点。<br>KVM经过软件模拟-&gt;影子页表-&gt;EPT的技术的进化，效率也越来越高。</p>
 
       
     </div>
+    
+    
+    
 
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="Yi颗烂樱桃 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.png" alt="Yi颗烂樱桃 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者：</strong>
+    Yi颗烂樱桃
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://www.owalle.com/2018/12/10/kvm-memory/" title="KVM 虚拟化原理4--内存">http://www.owalle.com/2018/12/10/kvm-memory/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>
+    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="external nofollow" target="_blank">CC BY-NC-ND 3.0</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/KVM/" rel="tag"># KVM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/12/10/kvm-cpu/" rel="next" title="KVM 虚拟化原理3--CPU">
+                <i class="fa fa-chevron-left"></i> KVM 虚拟化原理3--CPU
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/12/24/qemu-debug/" rel="prev" title="Debug QEMU with GDB">
+                Debug QEMU with GDB <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
   </div>
   
   
   
+  </article>
 
-  
+
+
+    <div class="post-spread">
+      
+        
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
+    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
+    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a class="bds_count" data-cmd="count"></a>
+  </div>
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "2",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "share": {
+        "bdSize": "16",
+        "bdStyle": "0"
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      }
+    }
+  </script>
+
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      
+    </div>
+  </div>
 
 
           </div>
@@ -351,6 +638,13 @@
 
 
           
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
 
         </div>
         
@@ -371,8 +665,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
             
@@ -440,6 +743,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#内存虚拟化简介"><span class="nav-number">1.</span> <span class="nav-text">内存虚拟化简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#传统的地址转换"><span class="nav-number">2.</span> <span class="nav-text">传统的地址转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#KVM中的内存结构"><span class="nav-number">3.</span> <span class="nav-text">KVM中的内存结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#软件虚拟化方式实现"><span class="nav-number">4.</span> <span class="nav-text">软件虚拟化方式实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#影子页表的虚拟化方式"><span class="nav-number">5.</span> <span class="nav-text">影子页表的虚拟化方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EPT硬件加速的虚拟化方式"><span class="nav-number">6.</span> <span class="nav-text">EPT硬件加速的虚拟化方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -621,6 +940,10 @@
   
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 
@@ -1032,26 +1355,6 @@
   
 
   
-  
-    <script type="text/x-mathjax-config">
-      MathJax.Hub.Config({
-        tex2jax: {
-          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
-          processEscapes: true,
-          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
-        }
-      });
-    </script>
-
-    <script type="text/x-mathjax-config">
-      MathJax.Hub.Queue(function() {
-        var all = MathJax.Hub.getAllJax(), i;
-        for (i=0; i < all.length; i += 1) {
-          all[i].SourceElement().parentNode.className += ' has-jax';
-        }
-      });
-    </script>
-    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
   
 
 
