@@ -146,3 +146,7 @@ tftp.efi 10.239.159.139 kernel_images/bzImage_current bzImage
 tftp.efi也能是download，并不能upload，这使得EFI直接并不能对server进行通知，需要借助OS。
 后面，可以增加application，实现类似Linux工具curl，或者patch tfpt让它可以上传文件，这样就可以双向通信了。
 
+## 附件
+EDKII是不是有点bug似乎，附上我build的efi shell 以及tftp，有需要的小伙伴可以直接点击下载
+64bit: [shell.efi](efi_x64/Shell.efi)  [tftp.efi](efi_x64/tftp.efi)
+32bit: [shell.efi](efi_ia32/Shell.efi)  [tftp.efi](efi_ia32/tftp.efi)
