@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://www.owalle.com/2019/05/12/sdm-8-2-memory-ordering/</loc>
+    
+    <lastmod>2019-05-13T16:56:31.034Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://www.owalle.com/2019/05/07/efi-shell-tftp/</loc>
     
     <lastmod>2019-05-07T06:49:47.750Z</lastmod>
