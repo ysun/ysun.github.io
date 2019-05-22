@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+<meta name="google-site-verification" content="MrnK1va2f2DY7TM-4onuV7g_G6yZyI3WkYbaykR0Ln0">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-minimal.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="ASM,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="GCC汇编语法Linux GCC(GNU, C Compiler)使用AT&amp;amp;T汇编语法。下面列一下AT&amp;amp;T 和Intel汇编语法中的不同：  源-目的 顺序AT&amp;amp;T中源和目的操作数的顺序相反。Intel语法中第一个操作数是目的，第二个是源。而AT&amp;amp;T语法中，第一个是源第二个操作数是目的。“Op-code dst src” —— Intel语法“Op-code src">
+<meta name="keywords" content="ASM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C&#x2F;C++ 中嵌入汇编总结">
+<meta property="og:url" content="http://www.owalle.com/2019/05/22/inline-assembly/index.html">
+<meta property="og:site_name" content="Yi颗烂樱桃">
+<meta property="og:description" content="GCC汇编语法Linux GCC(GNU, C Compiler)使用AT&amp;amp;T汇编语法。下面列一下AT&amp;amp;T 和Intel汇编语法中的不同：  源-目的 顺序AT&amp;amp;T中源和目的操作数的顺序相反。Intel语法中第一个操作数是目的，第二个是源。而AT&amp;amp;T语法中，第一个是源第二个操作数是目的。“Op-code dst src” —— Intel语法“Op-code src">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-22T07:09:55.758Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="C&#x2F;C++ 中嵌入汇编总结">
+<meta name="twitter:description" content="GCC汇编语法Linux GCC(GNU, C Compiler)使用AT&amp;amp;T汇编语法。下面列一下AT&amp;amp;T 和Intel汇编语法中的不同：  源-目的 顺序AT&amp;amp;T中源和目的操作数的顺序相反。Intel语法中第一个操作数是目的，第二个是源。而AT&amp;amp;T语法中，第一个是源第二个操作数是目的。“Op-code dst src” —— Intel语法“Op-code src">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.owalle.com/2019/05/22/inline-assembly/">
+
+
+
+
+
+  <title>C/C++ 中嵌入汇编总结 | Yi颗烂樱桃</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a rel="external nofollow" href="/" class="brand">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Yi颗烂樱桃</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">虚拟化相关技术</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a rel="external nofollow" href="/">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a rel="external nofollow" href="/archives/">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a rel="external nofollow" href="/categories/">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a rel="external nofollow" href="/tags/">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a rel="external nofollow" href="/about/">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-sitemap">
+          <a rel="external nofollow" href="/sitemap.xml">
+            
+              <i class="menu-item-icon fa fa-fw fa-sitemap"></i> <br>
+            
+            站点地图
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a rel="external nofollow" href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2019/05/22/inline-assembly/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">C/C++ 中嵌入汇编总结</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-22T09:03:48+08:00">
+                2019-05-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/ASM/" itemprop="url" rel="index">
+                    <span itemprop="name">ASM</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/05/22/inline-assembly/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/05/22/inline-assembly/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  4.1k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  18
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="GCC汇编语法"><a href="#GCC汇编语法" class="headerlink" title="GCC汇编语法"></a>GCC汇编语法</h2><p>Linux GCC(GNU, C Compiler)使用AT&amp;T汇编语法。下面列一下AT&amp;T 和Intel汇编语法中的不同：</p>
+<ol>
+<li><p>源-目的 顺序<br>AT&amp;T中源和目的操作数的顺序相反。Intel语法中第一个操作数是目的，第二个是源。而AT&amp;T语法中，第一个是源第二个操作数是目的。<br>“Op-code dst src” —— Intel语法<br>“Op-code src dst” —— AT&amp;T 语法</p>
+</li>
+<li><p>寄存器命名<br>AT&amp;T语法中，寄存器需要有‘%’前缀，例如eax需要写作%eax</p>
+</li>
+<li><p>立即数<br>AT&amp;T中立即数需要有‘$’前缀。如果是静态“C”变量，同样需要’$’前缀。<br>Intel语法中，16禁止需要’h’前缀，而AT&amp;T则需要‘0x’前缀。所以，对于16进制的立即数写作 ‘$0x1234’</p>
+</li>
+<li><p>操作数大小<br>在AT&amp;T语法中，内存操作数的大小取决于Op-code的后缀字母’b’’w’以及’l’，分别指代’字节(8bit) 字(16bit) 和长字(32bit)内存指针。而Intel语法使用前置限定符’byte ptr’ ‘word ptr’ 以及’dword prt’。</p>
+</li>
+</ol>
+<p>所以下面句等效：<br>Intel “mov al, byte ptr foo”<br>At&amp;T  “movb foo, %al”</p>
+<ol start="5">
+<li>内存操作符<br>在AT&amp;T中基址寄存器使用’()’，Intel中使用’[]’。 下面两句等效：<br>Intel “section: [base + index*scale + disp]”<br>AT&amp;T  “section: disp(base, index, scale)”<br>有一点需要技术，当disp/scale中使用常数的时候，这里不再需要”$”前缀。</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Intel 代码</th>
+<th>AT&amp;T 代码</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mov eax, 1</td>
+<td>movl $1, %eax</td>
+</tr>
+<tr>
+<td>mov ebx, 0ffh</td>
+<td>movl $0xff, %ebx</td>
+</tr>
+<tr>
+<td>int 80h</td>
+<td>int $0x80</td>
+</tr>
+<tr>
+<td>mov ebx, eax</td>
+<td>mov %eax, %ebx</td>
+</tr>
+<tr>
+<td>mov eax, [ecx]</td>
+<td>movl (%ecx), %eax</td>
+</tr>
+<tr>
+<td>mov eax, [ebx + 3]</td>
+<td>movl 3(%ebx), %eax</td>
+</tr>
+<tr>
+<td>mov eax, [ebx + 20h]</td>
+<td>movl 0x20(%ebx), %eax</td>
+</tr>
+<tr>
+<td>mov eax, [ebx + ecx]</td>
+<td>movl (%ebx,%ecx), %eax</td>
+</tr>
+<tr>
+<td>mov eax, [ebx + ecx*2h]</td>
+<td>movl (%ebx,%ecx,0x2), %eax</td>
+</tr>
+<tr>
+<td>mov eax, [ebx + ecx*4h-20h]</td>
+<td>movl -0x20(%ebx,%ecx,0x4), %eax</td>
+</tr>
+</tbody>
+</table>
+<h2 id="基本内联"><a href="#基本内联" class="headerlink" title="基本内联"></a>基本内联</h2><p>基本内联汇编的格式比较简单：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">asm(&quot;assembly code&quot;);</span><br></pre></td></tr></table></figure></p>
+<p>例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">asm(&quot;movl %ecx %eax&quot;);	//把ecx中的内容移动到eax中</span><br><span class="line">__asm__(&quot;movb %bh (%eax)&quot;) //把寄存器bh中的内容移动到eax指向的内存地址</span><br></pre></td></tr></table></figure></p>
+<p>这里asm() 和 <strong>asm()</strong> 都是有效的。另外，如果有多行汇编，需要添加’\n’以及’\t’到结尾，例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">__asm__ (&quot;movl %eax, %ebx\n\t&quot;</span><br><span class="line">         &quot;movl $56, %esi\n\t&quot;</span><br><span class="line">         &quot;movl %ecx, $label(%edx,%ebx,$4)\n\t&quot;</span><br><span class="line">         &quot;movb %ah, (%ebx)&quot;);</span><br></pre></td></tr></table></figure></p>
+<p>如果在代码中，更改过一些寄存器并从asm返回后，则会发生一些难以预料的事情。这是因为GCC不知道寄存器内容的变化，所致，特别是当编译器进行一些优化时。这就需要一些扩展功能的地方。下面来看下扩展的asm语法。</p>
+<h2 id="扩展的ASM"><a href="#扩展的ASM" class="headerlink" title="扩展的ASM"></a>扩展的ASM</h2><p>在基本内联汇编中，我们只有指令。但在扩展汇编中，我们可以是定操作。并且允许指定输入寄存器，输出寄存器以及改动的寄存器列表。但不强制使用寄存器。格式如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">asm ( assembler template </span><br><span class="line">    : output operands                  /* optional */</span><br><span class="line">    : input operands                   /* optional */</span><br><span class="line">    : list of clobbered registers      /* optional */</span><br><span class="line">    );</span><br></pre></td></tr></table></figure></p>
+<p>如果没有输出操作符，但有输入操作，也必须保留两个冒号，例如:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">asm (&quot;cld\n\t&quot;	//多行指令</span><br><span class="line">     &quot;rep\n\t&quot;</span><br><span class="line">     &quot;stosl&quot;</span><br><span class="line">     : /* 没有输出寄存器 */</span><br><span class="line">     : &quot;c&quot; (count), &quot;a&quot; (fill_value), &quot;D&quot; (dest)</span><br><span class="line">     : &quot;%ecx&quot;, &quot;%edi&quot; </span><br><span class="line">     );</span><br></pre></td></tr></table></figure></p>
+<p>上段代码意思是，把fill_value变量中的值往edi指向的内存地址写入count次。也就是说，eax和edi中的内容不再有效。再来看下面的例子：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">int a=10, b;</span><br><span class="line">asm (&quot;movl %1, %%eax; </span><br><span class="line">      movl %%eax, %0;&quot;</span><br><span class="line">     :&quot;=r&quot;(b)        /* output */</span><br><span class="line">     :&quot;r&quot;(a)         /* input */</span><br><span class="line">     :&quot;%eax&quot;         /* clobbered register */</span><br><span class="line">     );</span><br></pre></td></tr></table></figure></p>
+<p>这段代码意思是，把变量a的值赋值给b。</p>
+<ul>
+<li>‘b’是输出操作符，0%引用它，并且’a’是输入操作符，1%引用它。</li>
+<li>‘r’是操作符的限定符。这里’r’告诉GCC可以使用任意一个寄存器来存储操作符。’=’是输出操作符的限定符，并且是只写的。</li>
+<li>在寄存器之前有两个’%’号。用来帮助GCC区别操作符还是寄存器。操作符只有一个’%’前缀。</li>
+<li>改动的寄存器%eax列在第三个冒号在后，告诉GCC %eax的值在汇编中有改动，所以GCC不会再用这个寄存器存储其他的值。</li>
+</ul>
+<p>当asm结束时，’b’会反应更新过的数据，因为他被指定为输出操作符。换句话说，在汇编中改变’b’的值，会被反映到汇编之外。</p>
+<h3 id="编译器模板"><a href="#编译器模板" class="headerlink" title="编译器模板"></a>编译器模板</h3><h3 id="操作数"><a href="#操作数" class="headerlink" title="操作数"></a>操作数</h3><p>每个 操作数都必须包含在“”之内。对于输出操作数，双引号（“”）中会多一个限定符，用来决定限定符地址的模式。<br>如果有多个操作数，他们使用逗号（，）隔开。<br>每个操作数都可以通过数字来引用，按照顺序一次命名。输入和输出操作数依次命名，第一个输出的操作数记作0，后面依次增加。<br>输出操作数必须是长类型，输入操作数没有这个限制。扩展汇编最常用来调用机器指令本身，跟编译器无关。如果输出表达式不是一个直接地址，例如一个位阈，限定符必须是寄存器。此事，GCC会使用寄存器作为内联汇编的输出，并且把寄存器的值存储到输出里。<br>综上，原始输出操作数必须是“只写”的；GCC假定在指令结束之前，数值都在这些操作数中，并且不需要生成。扩展汇编也支持读写操作数。<br>来看几个例子：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">asm (&quot;leal (%1,%1,4), %0&quot;</span><br><span class="line">     : &quot;=r&quot; (five_times_x)</span><br><span class="line">     : &quot;r&quot; (x) </span><br><span class="line">     );</span><br></pre></td></tr></table></figure></p>
+<p>这个例子中，输入是’x’，并且没有指定寄存器。GCC会自己选择一个。再同样给输出选择选择一个寄存器。如果我们想要输入输出使用同一个寄存器，可以告诉GCC我们希望那种读写的操作数，比如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">asm (&quot;leal (%0,%0,4), %0&quot;</span><br><span class="line">     : &quot;=r&quot; (five_times_x)</span><br><span class="line">     : &quot;0&quot; (x) </span><br><span class="line">     );</span><br></pre></td></tr></table></figure></p>
+<p>此时，输入输出操作数会是同一个寄存器。但我们并不知道是具体那一个。如果想明确指定某一个寄存器，也有方法，比如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">asm (&quot;leal (%%ecx,%%ecx,4), %%ecx&quot;</span><br><span class="line">     : &quot;=c&quot; (x)</span><br><span class="line">     : &quot;c&quot; (x) </span><br><span class="line">     );</span><br></pre></td></tr></table></figure></p>
+<p>以上三个例子，并没有指定任何改动寄存器列表，为什么？强两个例子，GCC决定使用哪个寄存器，它会知道寄存器发生的变化。在最后一个例子中，我们也没有指定变化寄存器，因为GCC知道值最终保存到x中，在汇编之外，它知道ecx的值了，所以没有必要列出变化寄存器列表(clobber list)。</p>
+<h3 id="变化寄存器列表"><a href="#变化寄存器列表" class="headerlink" title="变化寄存器列表"></a>变化寄存器列表</h3><p>有些指令会改变硬件寄存器，因此必须明确指出这些改动过的寄存器，将其列在第三个’:’之后。这是为了告诉GCC汇编使用并修改了那些寄存器。所以，GCC会知道之前被加载到这些寄存器的值已经无效了。同时没有必要列出放在输入和输出操作数中的寄存器，以内GCC知道内联已经使用了他们。需要明确指出的是那些没有明确指出的隐式使用的寄存器，那些没有列在输入和输出操作数中的寄存器。<br>如果指令修改了内存，需要在clobber list中添加”memory”。这样通知GCC内存缓存应该失效了。同时必须添加’volatile’关键字，如果内存修改并没有列在输入和输出操作数中时。<br>我们多次可以读写更改的寄存器，参考下面的例子，意思是调用子程序_foo，并且通过eax 和 ecx传递两个参数给他。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">asm (&quot;movl %0,%%eax;</span><br><span class="line">      movl %1,%%ecx;</span><br><span class="line">      call _foo&quot;</span><br><span class="line">     : /* no outputs */</span><br><span class="line">     : &quot;g&quot; (from), &quot;g&quot; (to)</span><br><span class="line">     : &quot;eax&quot;, &quot;ecx&quot;</span><br><span class="line">     );</span><br></pre></td></tr></table></figure></p>
+<h3 id="Volatile-关键字"><a href="#Volatile-关键字" class="headerlink" title="Volatile 关键字"></a>Volatile 关键字</h3><p>如果熟悉内核源码，我们会经常看到volatile或者<strong>volatile</strong>关键字在 asm或者<strong>asm</strong>之后。<br>如果内联汇编需要在它原来所在的位置处被执行，例如不被移到循环的外面或者不被优化掉，在asm 和 （）之间放一个volatile，像这样：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">asm volatile ( ... : ... : ... : ...);</span><br></pre></td></tr></table></figure></p>
+<p>如果我们添加的汇编语言仅仅是为了计算并且没有任何边际效应，最好不要使用volatile关键字，因为volatile会妨碍代码优化。</p>
+<h2 id="关于限定符"><a href="#关于限定符" class="headerlink" title="关于限定符"></a>关于限定符</h2><p>前面的例子中我们已经使用了很多限定符，但还没有具体讲限定符的作用。限定符可以规定操作数是否在寄存器中，什么样的寄存器；以及操作数是指向内存以及内存地址类型；操作数是否是立即数，和数字的范围。</p>
+<h3 id="常用限定符"><a href="#常用限定符" class="headerlink" title="常用限定符"></a>常用限定符</h3><p>来看下常用的限定符。</p>
+<ol>
+<li>寄存器操作数限定符 ‘r’<br>当使用这个限定符时，操作数被存储在通用寄存器中（General Purpose Registers, GPR)。举例说明：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">asm (&quot;movl %%eax, %0\n&quot; :&quot;=r&quot;(myval));</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>变量myval被存储到及粗糙那其中，寄存器eax中的值被copy到那个寄存器中，并且myval的值会被从寄存器更新到内存中。因为限定符’r’，gcc会把变量保存到任何一个通用寄存器中。如果需要明确指定某一个寄存器，需要使用相对应的限定符，如下表：</p>
+<table>
+<thead>
+<tr>
+<th>r</th>
+<th>GPRs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a</td>
+<td>%eax, %ax, %al</td>
+</tr>
+<tr>
+<td>b</td>
+<td>%ebx, %bx, %bl</td>
+</tr>
+<tr>
+<td>c</td>
+<td>%ecx, %cx, %cl</td>
+</tr>
+<tr>
+<td>d</td>
+<td>%edx, %dx, %dl</td>
+</tr>
+<tr>
+<td>S</td>
+<td>%esi, %si</td>
+</tr>
+<tr>
+<td>D</td>
+<td>%edi, %di</td>
+</tr>
+</tbody>
+</table>
+<ol start="2">
+<li><p>内存操作数限定符 ‘m’<br>当操作数在内存中，任何关于操作数的操作都直接访问内存地址。相反，寄存器操作数是先把数据存储到寄存器中，在写回到内存地址中。但寄存器限定符只有当指令明确需要或者明显加速处理，才会存储到寄存器中。当一个C变量需要在内联汇编更新的时候，内存限定符会更方便，并且，我们并不是真的需要用寄存器来存储值。例如存储IDTR的值到loc中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">asm(&quot;sidt %0\n&quot; : :&quot;m&quot;(loc));</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>匹配限定符(Digit)<br>很多情况下，一个变量就可以组输入也可以做输出操作数，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">asm (&quot;incl %0&quot; :&quot;=a&quot;(var):&quot;0&quot;(var));</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>来看一个简单的例子，寄存器eax及用作输入同时用作输出操作数。变量var作为输入，传值给eax，并且在完成自增后，又更新到eax中。“0”这里指代同一个限定符，第0个，也就是输出变量。也就是输出变量var只会被存到eax中。通常下列情况可以这样使用：</p>
+<ul>
+<li>当变量作为输入，并且协会到同一个变量中。</li>
+<li>没必要把输入和输出分开的时候。<br>匹配限定符最重要的作用是高效的使用寄存器。<br>其他限定符：<br>“m” : A memory operand is allowed, with any kind of address that the machine supports in general.<br>“o” : A memory operand is allowed, but only if the address is offsettable. ie, adding a small offset to the address gives a valid address.<br>“V” : A memory operand that is not offsettable. In other words, anything that would fit the <code>m’ constraint but not the</code>o’constraint.<br>“i” : An immediate integer operand (one with constant value) is allowed. This includes symbolic constants whose values will be known only at assembly time.<br>“n” : An immediate integer operand with a known numeric value is allowed. Many systems cannot support assembly-time constants for operands less than a word wide. Constraints for these operands should use ’n’ rather than ’i’.</li>
+</ul>
+<p>下面是X86特有的限定符：<br>“r” : Register operand constraint, look table given above.<br>“q” : Registers a, b, c or d.<br>“I” : Constant in range 0 to 31 (for 32-bit shifts).<br>“J” : Constant in range 0 to 63 (for 64-bit shifts).<br>“K” : 0xff.<br>“L” : 0xffff.<br>“M” : 0, 1, 2, or 3 (shifts for lea instruction).<br>“N” : Constant in range 0 to 255 (for out instruction).<br>“f” : Floating point register<br>“t” : First (top of stack) floating point register<br>“u” : Second floating point register<br>“A” : Specifies the ‘a’ or ‘d’ registers. This is primarily useful for 64-bit integer values intended to be returned with the ‘d’ register holding the most significant bits and the ‘a’ register holding the least significant bits.</p>
+<h3 id="限定修饰符"><a href="#限定修饰符" class="headerlink" title="限定修饰符"></a>限定修饰符</h3><ol>
+<li>‘=’ 意思是操作数是“只写”的，之前的值会被输出值覆盖掉。</li>
+<li>‘&amp;’ 意思是输入操作数在本条指令完成之前，被修改。但这个操作数可能没有列在输入操作数列表或者是内存的一部分。如果输入仅仅用于早起结果的输入时，输入操作数可以被看做earlyclobber操作数</li>
+</ol>
+<h2 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h2><p>First we start with a simple example. We’ll write a program to add two numbers.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"> int main(void)</span><br><span class="line">&#123;</span><br><span class="line">        int foo = 10, bar = 15;</span><br><span class="line">        __asm__ __volatile__(&quot;addl  %%ebx,%%eax&quot;</span><br><span class="line">                             :&quot;=a&quot;(foo)</span><br><span class="line">                             :&quot;a&quot;(foo), &quot;b&quot;(bar)</span><br><span class="line">                             );</span><br><span class="line">        printf(&quot;foo+bar=%d\n&quot;, foo);</span><br><span class="line">        return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Here we insist GCC to store foo in %eax, bar in %ebx and we also want the result in %eax. The ’=’ sign shows that it is an output register. Now we can add an integer to a variable in some other way.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">__asm__ __volatile__(</span><br><span class="line">                    &quot;   lock       ;\n&quot;</span><br><span class="line">                    &quot;   addl %1,%0 ;\n&quot;</span><br><span class="line">                    : &quot;=m&quot;  (my_var)</span><br><span class="line">                    : &quot;ir&quot;  (my_int), &quot;m&quot; (my_var)</span><br><span class="line">                    :                                 /* no clobber-list */</span><br><span class="line">                    );</span><br></pre></td></tr></table></figure>
+<p>This is an atomic addition. We can remove the instruction ’lock’ to remove the atomicity. In the output field, “=m” says that my_var is an output and it is in memory. Similarly, “ir” says that, my_int is an integer and should reside in some register (recall the table we saw above). No registers are in the clobber list.</p>
+<p>Now we’ll perform some action on some registers/variables and compare the value.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">__asm__ __volatile__(  &quot;decl %0; sete %1&quot;</span><br><span class="line">                    : &quot;=m&quot; (my_var), &quot;=q&quot; (cond)</span><br><span class="line">                    : &quot;m&quot; (my_var) </span><br><span class="line">                    : &quot;memory&quot;</span><br><span class="line">                    );</span><br></pre></td></tr></table></figure>
+<p>Here, the value of my_var is decremented by one and if the resulting value is 0 then, the variable cond is set. We can add atomicity by adding an instruction “lock;\n\t” as the first instruction in assembler template.</p>
+<p>In a similar way we can use “incl %0” instead of “decl %0”, so as to increment my_var.</p>
+<p>Points to note here are that (i) my_var is a variable residing in memory. (ii) cond is in any of the registers eax, ebx, ecx and edx. The constraint “=q” guarantees it. (iii) And we can see that memory is there in the clobber list. ie, the code is changing the contents of memory.</p>
+<p>How to set/clear a bit in a register? As next recipe, we are going to see it.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">__asm__ __volatile__(   &quot;btsl %1,%0&quot;</span><br><span class="line">                     : &quot;=m&quot; (ADDR)</span><br><span class="line">                     : &quot;Ir&quot; (pos)</span><br><span class="line">                     : &quot;cc&quot;</span><br><span class="line">                     );</span><br></pre></td></tr></table></figure>
+<p>Here, the bit at the position ’pos’ of variable at ADDR ( a memory variable ) is set to 1 We can use ’btrl’ for ’btsl’ to clear the bit. The constraint “Ir” of pos says that, pos is in a register, and it’s value ranges from 0-31 (x86 dependant constraint). ie, we can set/clear any bit from 0th to 31st of the variable at ADDR. As the condition codes will be changed, we are adding “cc” to clobberlist.</p>
+<p>Now we look at some more complicated but useful function. String copy.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"> static inline char * strcpy(char * dest,const char *src)</span><br><span class="line">&#123;</span><br><span class="line">int d0, d1, d2;</span><br><span class="line">__asm__ __volatile__(  &quot;1:\tlodsb\n\t&quot;</span><br><span class="line">                       &quot;stosb\n\t&quot;</span><br><span class="line">                       &quot;testb %%al,%%al\n\t&quot;</span><br><span class="line">                       &quot;jne 1b&quot;</span><br><span class="line">                     : &quot;=&amp;S&quot; (d0), &quot;=&amp;D&quot; (d1), &quot;=&amp;a&quot; (d2)</span><br><span class="line">                     : &quot;0&quot; (src),&quot;1&quot; (dest) </span><br><span class="line">                     : &quot;memory&quot;);</span><br><span class="line">return dest;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>The source address is stored in esi, destination in edi, and then starts the copy, when we reach at 0, copying is complete. Constraints “&amp;S”, “&amp;D”, “&amp;a” say that the registers esi, edi and eax are early clobber registers, ie, their contents will change before the completion of the function. Here also it’s clear that why memory is in clobberlist.</p>
+<p>We can see a similar function which moves a block of double words. Notice that the function is declared as a macro.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"> #define mov_blk(src, dest, numwords) \</span><br><span class="line">__asm__ __volatile__ (                                          \</span><br><span class="line">                       &quot;cld\n\t&quot;                                \</span><br><span class="line">                       &quot;rep\n\t&quot;                                \</span><br><span class="line">                       &quot;movsl&quot;                                  \</span><br><span class="line">                       :                                        \</span><br><span class="line">                       : &quot;S&quot; (src), &quot;D&quot; (dest), &quot;c&quot; (numwords)  \</span><br><span class="line">                       : &quot;%ecx&quot;, &quot;%esi&quot;, &quot;%edi&quot;                 \</span><br><span class="line">                       )</span><br></pre></td></tr></table></figure></p>
+<p>Here we have no outputs, so the changes that happen to the contents of the registers ecx, esi and edi are side effects of the block movement. So we have to add them to the clobber list.</p>
+<p>In Linux, system calls are implemented using GCC inline assembly. Let us look how a system call is implemented. All the system calls are written as macros (linux/unistd.h). For example, a system call with three arguments is defined as a macro as shown below.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"> #define _syscall3(type,name,type1,arg1,type2,arg2,type3,arg3) \</span><br><span class="line">type name(type1 arg1,type2 arg2,type3 arg3) \</span><br><span class="line">&#123; \</span><br><span class="line">long __res; \</span><br><span class="line">__asm__ volatile (  &quot;int $0x80&quot; \</span><br><span class="line">                  : &quot;=a&quot; (__res) \</span><br><span class="line">                  : &quot;0&quot; (__NR_##name),&quot;b&quot; ((long)(arg1)),&quot;c&quot; ((long)(arg2)), \</span><br><span class="line">                    &quot;d&quot; ((long)(arg3))); \</span><br><span class="line">__syscall_return(type,__res); \</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>Whenever a system call with three arguments is made, the macro shown above is used to make the call. The syscall number is placed in eax, then each parameters in ebx, ecx, edx. And finally “int 0x80” is the instruction which makes the system call work. The return value can be collected from eax.</p>
+<p>Every system calls are implemented in a similar way. Exit is a single parameter syscall and let’s see how it’s code will look like. It is as shown below.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"> &#123;</span><br><span class="line">        asm(&quot;movl $1,%%eax;         /* SYS_exit is 1 */</span><br><span class="line">             xorl %%ebx,%%ebx;      /* Argument is in ebx, it is 0 */</span><br><span class="line">             int  $0x80&quot;            /* Enter kernel mode */</span><br><span class="line">             );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>The number of exit is “1” and here, it’s parameter is 0. So we arrange eax to contain 1 and ebx to contain 0 and by int $0x80, the exit(0) is executed. This is how exit works. </p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="Yi颗烂樱桃 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.png" alt="Yi颗烂樱桃 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者：</strong>
+    Yi颗烂樱桃
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://www.owalle.com/2019/05/22/inline-assembly/" title="C/C++ 中嵌入汇编总结">http://www.owalle.com/2019/05/22/inline-assembly/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>
+    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="external nofollow" target="_blank">CC BY-NC-ND 3.0</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/ASM/" rel="tag"># ASM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/12/sdm-8-2-memory-ordering/" rel="next" title="SMD Chapter 8.2 内存存取顺序">
+                <i class="fa fa-chevron-left"></i> SMD Chapter 8.2 内存存取顺序
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
+    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
+    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a class="bds_count" data-cmd="count"></a>
+  </div>
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "2",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "share": {
+        "bdSize": "16",
+        "bdStyle": "0"
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      }
+    }
+  </script>
+
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="Yi颗烂樱桃">
+            
+              <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+            <div class="cc-license motion-element" itemprop="license">
+              <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" class="cc-opacity" target="_blank">
+                <img src="/images/cc-by-nc-nd.svg" alt="Creative Commons">
+              </a>
+            </div>
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#GCC汇编语法"><span class="nav-number">1.</span> <span class="nav-text">GCC汇编语法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本内联"><span class="nav-number">2.</span> <span class="nav-text">基本内联</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#扩展的ASM"><span class="nav-number">3.</span> <span class="nav-text">扩展的ASM</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#编译器模板"><span class="nav-number">3.1.</span> <span class="nav-text">编译器模板</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#操作数"><span class="nav-number">3.2.</span> <span class="nav-text">操作数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#变化寄存器列表"><span class="nav-number">3.3.</span> <span class="nav-text">变化寄存器列表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Volatile-关键字"><span class="nav-number">3.4.</span> <span class="nav-text">Volatile 关键字</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于限定符"><span class="nav-number">4.</span> <span class="nav-text">关于限定符</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#常用限定符"><span class="nav-number">4.1.</span> <span class="nav-text">常用限定符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#限定修饰符"><span class="nav-number">4.2.</span> <span class="nav-text">限定修饰符</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实例"><span class="nav-number">5.</span> <span class="nav-text">实例</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yi颗烂樱桃</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">57.1k</span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+  
+  <script type="text/javascript" color="129,216,208" opacity="0.5" zindex="-2" count="50" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three.min.js"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three-waves.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kity.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kityminder.core.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/mindmap.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: true,
+        notify: false,
+        appId: 'sIDOr6ptvMjLBmxig1vHlYsG-gzGzoHsz',
+        appKey: 'c1R9jtqasnufksgJUCE3eWo5',
+        placeholder: '亲，你不想说点什么吗？？ :D',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+</body>
+</html>
