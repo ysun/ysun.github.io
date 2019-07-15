@@ -479,7 +479,7 @@
 <p>当系统死掉了，并且需要更新kernel的时候，只需要覆盖tftp server上的bzimage_current或者改变其软连接的指向，然后重启系统，就可以一次性更新kernel。</p>
 <h2 id="Todo"><a href="#Todo" class="headerlink" title="Todo"></a>Todo</h2><p>目前EFI shell能做的事情相比Linux shell还相差甚远，没有太多现成的application可以直接使用。<br>tftp.efi也能是download，并不能upload，这使得EFI直接并不能对server进行通知，需要借助OS。<br>后面，可以增加application，实现类似Linux工具curl，或者patch tfpt让它可以上传文件，这样就可以双向通信了。</p>
 <h2 id="附件"><a href="#附件" class="headerlink" title="附件"></a>附件</h2><p>EDKII是不是有点bug似乎，附上我build的efi shell 以及tftp，有需要的小伙伴可以直接点击下载<br>64bit: <a href="efi_x64/Shell.efi">shell.efi</a>  <a href="efi_x64/tftp.efi">tftp.efi</a><br>32bit: <a href="efi_ia32/Shell.efi">shell.efi</a>  <a href="efi_ia32/tftp.efi">tftp.efi</a></p>
-<p><script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">st=>start: 系统启动
+<p><script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.8/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.11.3/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">st=>start: 系统启动
 op1=>operation: 启动small size的kernel + ramfs
 op2=>operation: 初始化网络并获取IP地址
 op3=>operation: 从服务器上获取可用的kernel image列表
@@ -697,7 +697,7 @@ st->op1->op2->op3->op4->op5->e</textarea><textarea id="flowchart-0-options" styl
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-count">19</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -708,7 +708,7 @@ st->op1->op2->op3->op4->op5->e</textarea><textarea id="flowchart-0-options" styl
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">7</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -719,7 +719,7 @@ st->op1->op2->op3->op4->op5->e</textarea><textarea id="flowchart-0-options" styl
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-count">9</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -792,7 +792,7 @@ st->op1->op2->op3->op4->op5->e</textarea><textarea id="flowchart-0-options" styl
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">58.3k</span>
+    <span title="Site words total count">59.7k</span>
   
 </div>
 

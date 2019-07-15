@@ -535,7 +535,7 @@
 <h5 id="object-property-parse"><a href="#object-property-parse" class="headerlink" title="object_property_parse"></a>object_property_parse</h5><p>在用一个string设置不知道类型的属性的值时，使用 object_property_parse：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">void object_property_parse(Object *obj, const char *string,</span><br><span class="line">                           const char *name, Error **errp)</span><br><span class="line">&#123;</span><br><span class="line">    Visitor *v = string_input_visitor_new(string);</span><br><span class="line">    object_property_set(obj, v, name, errp);</span><br><span class="line">    visit_free(v);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>它会创建一个 Visitor 并将值设置到里面，这里定义了string转其他类型属性的函数：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">v-&gt;visitor.type = VISITOR_INPUT;</span><br><span class="line">v-&gt;visitor.type_int64 = parse_type_int64;</span><br><span class="line">v-&gt;visitor.type_uint64 = parse_type_uint64;</span><br><span class="line">v-&gt;visitor.type_size = parse_type_size;</span><br><span class="line">v-&gt;visitor.type_bool = parse_type_bool;</span><br><span class="line">v-&gt;visitor.type_str = parse_type_str;</span><br><span class="line">v-&gt;visitor.type_number = parse_type_number;</span><br></pre></td></tr></table></figure></p>
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>如此一来，根据 TypeInfo 创建了 TypeImpl ，然后根据 TypeImpl 创建了对应的 ObjectClass ，再根据 TypeImpl 创建了对应的 Object ， ObjectClass 和 Object 都有自己的 Property，关系如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">                TypeImpl</span><br><span class="line">                class      -&gt;  ObjectClass(AccelClass)    Object(AccelState)</span><br><span class="line">                           &lt;-       type            &lt;-         class</span><br><span class="line">TypeImpl  &lt;-  parent_type    properties(GHashTable)     properties(GHashTable)</span><br></pre></td></tr></table></figure></p>
-<p><script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">op1=>operation: type_init(kvm_type_init)
+<p><script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.8/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.11.3/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">op1=>operation: type_init(kvm_type_init)
 op2=>operation: module_init(function, MODULE_INIT_QOM)
 op3=>operation: register_module_init(function, type)
 op1(right)->op2(right)->op3</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script><textarea id="flowchart-1-code" style="display: none">op1=>operation: kvm_type_init
@@ -759,7 +759,7 @@ op1(right)->op2(right)->op3(right)->op4(right)->op5</textarea><textarea id="flow
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-count">19</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -770,7 +770,7 @@ op1(right)->op2(right)->op3(right)->op4(right)->op5</textarea><textarea id="flow
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">7</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -781,7 +781,7 @@ op1(right)->op2(right)->op3(right)->op4(right)->op5</textarea><textarea id="flow
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-count">9</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -854,7 +854,7 @@ op1(right)->op2(right)->op3(right)->op4(right)->op5</textarea><textarea id="flow
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">58.3k</span>
+    <span title="Site words total count">59.7k</span>
   
 </div>
 
