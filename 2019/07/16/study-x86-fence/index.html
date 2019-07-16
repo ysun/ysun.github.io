@@ -76,7 +76,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT">
+  <meta name="keywords" content="x86 KVM QEMU,">
 
 
 
@@ -87,21 +87,22 @@
 
 
 
-<meta name="description" content="23.1 概述本章介绍虚拟机体系结构的基础知识和虚拟机扩展的概述(VMX),支持多个软件环境的处理器硬件虚拟化。关于VMX指令的信息参考英特尔®64和IA-32架构软件开发人员手册中的第2B卷。其他关于VMX和系统编程参考SDM 第3B卷 23.2虚拟机器结构虚拟机扩展为IA-32处理器上的虚拟机定义了处理器级支持。两个重要支持的软件类别：  虚拟机监视器(VMM)VMM充当主机，可以完全控制处理">
-<meta name="keywords" content="KVM Linux Kernel Qemu">
+<meta name="description" content="前面的一篇文章大概翻译了下SDM的8.2章节SMD Chapter 8.2 内存存取顺序，希望读者已经跟我一样，对X86 CPU的内存的存储顺序有些了解了。那么我们的系列教程就从内存存储的乱序开始吧，本文我们会重现一个CPU store-read操作的重排序，并且观察到MFENCE是如何工作的，以保证执行顺序的正确。 回顾SDM8.2.3.4的内容intel-64存取顺序重排允许加载操作重排序到不">
+<meta name="keywords" content="x86 KVM QEMU">
 <meta property="og:type" content="article">
-<meta property="og:title" content="英特尔®64和IA-32架构软件开发人员手册(Intel SDM)">
-<meta property="og:url" content="http://www.owalle.com/2019/01/29/Intel-SDM/index.html">
+<meta property="og:title" content="利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令">
+<meta property="og:url" content="http://www.owalle.com/2019/07/16/study-x86-fence/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="23.1 概述本章介绍虚拟机体系结构的基础知识和虚拟机扩展的概述(VMX),支持多个软件环境的处理器硬件虚拟化。关于VMX指令的信息参考英特尔®64和IA-32架构软件开发人员手册中的第2B卷。其他关于VMX和系统编程参考SDM 第3B卷 23.2虚拟机器结构虚拟机扩展为IA-32处理器上的虚拟机定义了处理器级支持。两个重要支持的软件类别：  虚拟机监视器(VMM)VMM充当主机，可以完全控制处理">
+<meta property="og:description" content="前面的一篇文章大概翻译了下SDM的8.2章节SMD Chapter 8.2 内存存取顺序，希望读者已经跟我一样，对X86 CPU的内存的存储顺序有些了解了。那么我们的系列教程就从内存存储的乱序开始吧，本文我们会重现一个CPU store-read操作的重排序，并且观察到MFENCE是如何工作的，以保证执行顺序的正确。 回顾SDM8.2.3.4的内容intel-64存取顺序重排允许加载操作重排序到不">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://www.owalle.com/2019/01/29/Intel-SDM/figure23-1.png">
-<meta property="og:image" content="http://www.owalle.com/2019/01/29/Intel-SDM/figure24-1.png">
-<meta property="og:updated_time" content="2019-02-20T15:39:43.614Z">
+<meta property="og:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/memory_order.svg">
+<meta property="og:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/fence_no.png">
+<meta property="og:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/fence_added.png">
+<meta property="og:updated_time" content="2019-07-16T15:31:57.749Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="英特尔®64和IA-32架构软件开发人员手册(Intel SDM)">
-<meta name="twitter:description" content="23.1 概述本章介绍虚拟机体系结构的基础知识和虚拟机扩展的概述(VMX),支持多个软件环境的处理器硬件虚拟化。关于VMX指令的信息参考英特尔®64和IA-32架构软件开发人员手册中的第2B卷。其他关于VMX和系统编程参考SDM 第3B卷 23.2虚拟机器结构虚拟机扩展为IA-32处理器上的虚拟机定义了处理器级支持。两个重要支持的软件类别：  虚拟机监视器(VMM)VMM充当主机，可以完全控制处理">
-<meta name="twitter:image" content="http://www.owalle.com/2019/01/29/Intel-SDM/figure23-1.png">
+<meta name="twitter:title" content="利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令">
+<meta name="twitter:description" content="前面的一篇文章大概翻译了下SDM的8.2章节SMD Chapter 8.2 内存存取顺序，希望读者已经跟我一样，对X86 CPU的内存的存储顺序有些了解了。那么我们的系列教程就从内存存储的乱序开始吧，本文我们会重现一个CPU store-read操作的重排序，并且观察到MFENCE是如何工作的，以保证执行顺序的正确。 回顾SDM8.2.3.4的内容intel-64存取顺序重排允许加载操作重排序到不">
+<meta name="twitter:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/memory_order.svg">
 
 
 
@@ -131,13 +132,13 @@
 
 
 
-  <link rel="canonical" href="http://www.owalle.com/2019/01/29/Intel-SDM/">
+  <link rel="canonical" href="http://www.owalle.com/2019/07/16/study-x86-fence/">
 
 
 
 
 
-  <title>英特尔®64和IA-32架构软件开发人员手册(Intel SDM) | Yi颗烂樱桃</title>
+  <title>利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令 | Yi颗烂樱桃</title>
   
 
 
@@ -316,7 +317,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2019/01/29/Intel-SDM/">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2019/07/16/study-x86-fence/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Yi颗烂樱桃">
@@ -333,7 +334,7 @@
 
         
         
-          <h2 class="post-title" itemprop="name headline">英特尔®64和IA-32架构软件开发人员手册(Intel SDM)</h2>
+          <h2 class="post-title" itemprop="name headline">利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令</h2>
         
 
         <div class="post-meta">
@@ -345,8 +346,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-29T14:05:12+08:00">
-                2019-01-29
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-16T21:28:40+08:00">
+                2019-07-16
               </time>
             
 
@@ -356,6 +357,28 @@
           </span>
 
           
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/X86/" itemprop="url" rel="index">
+                    <span itemprop="name">X86</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
 
           
             
@@ -364,8 +387,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2019/01/29/Intel-SDM/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2019/01/29/Intel-SDM/" itemprop="commentCount"></span>
+                <a href="/2019/07/16/study-x86-fence/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/07/16/study-x86-fence/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -392,7 +415,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  3.2k
+                  1.3k
                 </span>
               
 
@@ -408,7 +431,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  11
+                  5
                 </span>
               
             </div>
@@ -429,79 +452,53 @@
       
 
       
-        <h3 id="23-1-概述"><a href="#23-1-概述" class="headerlink" title="23.1 概述"></a>23.1 概述</h3><p>本章介绍虚拟机体系结构的基础知识和虚拟机扩展的概述(VMX),支持多个软件环境的处理器硬件虚拟化。<br>关于VMX指令的信息参考英特尔®64和IA-32架构软件开发人员手册中的第2B卷。其他关于VMX和系统编程参考SDM 第3B卷</p>
-<h3 id="23-2虚拟机器结构"><a href="#23-2虚拟机器结构" class="headerlink" title="23.2虚拟机器结构"></a>23.2虚拟机器结构</h3><p>虚拟机扩展为IA-32处理器上的虚拟机定义了处理器级支持。两个重要支持的软件类别：</p>
-<ul>
-<li><p>虚拟机监视器(VMM)<br>VMM充当主机，可以完全控制处理器和其他处理器平台硬件。 VMM使用虚拟的抽象来呈现客户软件(参见下一段)<br>处理器并允许它直接在逻辑处理器上执行。 VMM能够保留选择性控制处理器资源，物理内存，中断管理和I / O。</p>
-</li>
-<li><p>Guest- 每个虚拟机(VM)<br>是一个支持堆栈组成的客户软件环境,操作系统(OS)和应用程序软件。每个都独立于其他虚拟机运行在物理的处理器上，内存，存储器，图形和I / O的相同接口上使用平台。软件堆栈就像在没有VMM的平台上运行一样。软件执行中虚拟机必须以降低的权限运行，以便VMM可以保留对平台资源的控制。</p>
-</li>
-</ul>
-<h3 id="23-3-VMX操作简介"><a href="#23-3-VMX操作简介" class="headerlink" title="23.3 VMX操作简介"></a>23.3 VMX操作简介</h3><p>虚拟化的处理器支持由称为VMX操作的处理器操作形式提供。有两种VMX操作：VMX root和VMX non-root操作。通常，VMM运行在VMX root模式下，同时将guest 软件运行在non-root模式下。<br>VMX root操作和VMX non-root操作的转换称为VMX转换。有两种VMX转换:</p>
-<ul>
-<li>从VMX root过渡到VMX non-root模式称为VM entry； </li>
-<li>从VMX not-root操作到VMX root的转换成为VM exit。<br>VMX root操作中的处理器行为与VMX操作之外的处理器行为非常相似。主要区别是一组新指令(VMX指令)（见第23.8节）。<br>VMX non-root操作中的处理器行为受到限制和修改，以便于虚拟化。那些指令（包括新的VMCALL指令）和事件会导致VM EXIT的发生，而不仅仅是他们原来的操作。由于这些VM Exit取代了普通行为，因此VMX non-root操作中的软件功能是有限制的。正是这种限制允许VMM保持对处理器资源的控制。<br>并不存在用于通知guest“是否处于VMX non-root”的寄存器。这一事实可以防止guest软件察觉它正在虚拟机中运行。<br>因为VMX操作对(CPL)Level 0做了限制，guest的软件可以在最初设计的权限级别运行。这样就可以简化VMM的开发。</li>
-</ul>
-<h3 id="23-4-VMM软件的生命周期"><a href="#23-4-VMM软件的生命周期" class="headerlink" title="23.4 VMM软件的生命周期"></a>23.4 VMM软件的生命周期</h3><p>图23-1说明了VMM及其客户软件的生命周期以及它们之间的交互。以下项目总结了生命周期：<br><img src="/2019/01/29/Intel-SDM/figure23-1.png" alt=""></p>
-<ul>
-<li>软件通过执行VMXON指令进入VMX操作</li>
-<li>使用VM entry，VMM可以执行guest，一次一个。</li>
-<li>VMM通过使用VMLAUNCH和VMRESUME指令干预虚拟机。通过VM EXIT，VMM重新获得控制权。</li>
-<li>VM移交控制权到VMM指定的入口点。VMM可以采取适当的措施使得VM exit发生，然后可以使用VM entry返回到虚拟机。</li>
-<li>最终，VMM可以通过执行VMXOFF自行决定关闭并离开VMX操作。</li>
-</ul>
-<h3 id="23-5虚拟机控制结构"><a href="#23-5虚拟机控制结构" class="headerlink" title="23.5虚拟机控制结构"></a>23.5虚拟机控制结构</h3><p>VMX non-root的操作以及VMX转换由名为“虚拟机控制”(VMCS)的数据结构控制。<br>通过VMCS指针(每个逻辑CPU一个)来管理对VMCS的访问。VMCS指针的值是64位地址。读取和写入VMCS指针使用指令VMPTRST和VMPTRLD。并且VMM使用VMREAD，VMWRITE和VMCLEAR指令来配置VMCS。<br>VMM可以为其支持的每个虚拟机使用不同的VMCS。对于具有多个的虚拟机在逻辑处理器（虚拟处理器）中，VMM可以为每个虚拟处理器使用不同的VMCS。</p>
-<h3 id="23-6-发现对VMX的支持"><a href="#23-6-发现对VMX的支持" class="headerlink" title="23.6 发现对VMX的支持"></a>23.6 发现对VMX的支持</h3><p>在系统软件进入VMX操作之前，它必须检查处理器中是否存在VMX支持。系统软件可以使用CPUID确定处理器是否支持VMX操作。如果<code>CPUID.1：ECX.VMX [bit 5] = 1</code>那么当前平台支持VMX操作。请参见第3章“指令集参考，A-L”英特尔®64和IA-32架构软件开发人员手册，第2A卷。<br>VMX体系结构旨在实现可扩展性，以便VMX操作中的未来处理器可以支持VMX体系结构的第一代实现中不存在的其他功能。使用一组VMX功能MSR向软件报告可扩展VMX功能的可用性（参见附录A，“VMX功能”)。</p>
-<h3 id="23-7启用和进入VMX操作"><a href="#23-7启用和进入VMX操作" class="headerlink" title="23.7启用和进入VMX操作"></a>23.7启用和进入VMX操作</h3><p>在系统软件进入VMX操作之前，它通过设置<code>CR4.VMXE [bit 13] = 1</code> VMX操作来启用VMX。然后通过执行VMXON指令进入。当’CR4.VMXE = 0’时，如果执行指令VMXON会导致无效操作码异常（#UD)；一旦执行过VMX操作，就无法清除CR4.VMXE（参见第23.8节）。系统软件通过执行VMXOFF指令离开VMX操作。执行VMXOFF后，可以在VMX操作之外清除CR4.VMXE。<br>VMXON也由IA32_FEATURE_CONTROL MSR（MSR地址3AH）控制。该MSR清零重置逻辑处理器时MSR的相关位是：</p>
-<ul>
-<li>位0是锁定位。如果该位清零，则VMXON会导致general-protection异常。如果设置了锁定位，WRMSR到此MSR会导致general-protection异常;在上电复位之前，不能修改MSR。系统BIOS可以使用此位为BIOS提供设置选项以禁用对VMX的支持。在平台中启用VMX支持，BIOS必须设置位1或者位2或两者（见下文）以及锁定位。</li>
-<li>位1在SMX操作中启用VMXON。如果该位清零，则在SMX操作中执行VMXON会导致general-protection expection。尝试在不支持两个VMX的逻辑处理器上设置此位操作（参见第23.6节）和SMX操作（参见英特尔®中的第6章“安全模式扩展参考”第2D卷）导致general-proction异常。</li>
-<li>位2在SMX操作之外启用VMXON。如果该位清零，则在SMX外部执行VMXON操作会导致general-proction异常。尝试在没有的逻辑处理器上设置此位支持VMX操作（参见第23.6节）导致general-proction异常。</li>
-</ul>
-<p>在执行VMXON之前，软件应该分配一个逻辑上自然对齐的4 KB内存区域,处理器可用于支持VMX操作.1该区域称为VMXON region。VMXON zone的地址区域（VMXON指针）在VMXON的操作数中提供。第24节</p>
-<h3 id="23-8-VMX操作限制"><a href="#23-8-VMX操作限制" class="headerlink" title="23.8 VMX操作限制"></a>23.8 VMX操作限制</h3><p>（作者：限制还有很有一些的，暂且不一一列举了吧，这里挑1-2点）</p>
-<ul>
-<li>当逻辑处理器在VMX root操作时，中断信号是被block的。但当在VMX non-root模式的时候，不会被block，相反中断信号会触发VM exit。</li>
-</ul>
-<h3 id="24-1-虚拟机控制结构-VMCS"><a href="#24-1-虚拟机控制结构-VMCS" class="headerlink" title="24.1 虚拟机控制结构(VMCS)"></a>24.1 虚拟机控制结构(VMCS)</h3><p>逻辑处理器在VMX操作中使用”虚拟机控制结构”（VMCS）。这些管理VMX进出非root与root操作（VM entry和VM exit）以及处理器在VMX non-root时的行为。这个结构由新指令VMCLEAR，VMPTRLD，VMREAD, VMWRITE操纵。<br>VMM可以为其支持的每个虚拟机使用不同的VMCS。对于具有多个的虚拟机在逻辑处理器（虚拟处理器）中，VMM可以为每个虚拟处理器使用不同的VMCS。<br>逻辑处理器将存储器中的区域与每个VMCS相关联。该区域称为VMCS region。软件使用区域的64位物理地址（VMCS指针）引用特定VMCS。 VMCS指针必须在4 KB边界上对齐（位11：0必须为零）。这些指针不能设置超出理器的物理地址宽度。<br>逻辑处理器可以维护多个活动的VMCS。处理器通过维护内存中活跃VMCS的状态来优化VMX操作。在任何给定时间，最多一个活动VMCS的数量是当前VMCS。 （本文档经常使用术语“VMCS”来指代当前VMCS。）VMLAUNCH，VMREAD，VMRESUME和VMWRITE指令仅对当前操作VMCS。<br>以下各项描述了逻辑处理器如何确定哪些VMCS处于活动状态以及哪些VMCS处于当前状态：</p>
-<ul>
-<li>VMPTRLD指令的内存操作数是VMCS的地址。执行完指令后VMCS在逻辑处理器上既是活动的和也是当前的。任何其他活动的VMCS都不是当前VMCS。</li>
-<li>VMCS中的VMCS链接指针字段（参见第24.4.2节）本身就是VMCS的地址。如果VM entry正确执行了，并且“VMCS shadow”VM执行控制（VMCS）的1设置成功，那么VMCS链接指针字段引用的字符在逻辑处理器上变为活动状态。当前VMCS不会改变。</li>
-<li>VMCLEAR指令的内存操作数也是VMCS的地址。执行完毕后指令，VMCS在逻辑处理器上既不是活动的也不是当前的。如果VMCS已经开启逻辑处理器，逻辑处理器不再具有当前的VMCS。</li>
-</ul>
-<p>VMPTRST指令将逻辑处理器的当前VMCS的地址存储到指定的存储器位置（如果没有当前的VMCS，则存储值FFFFFFFF_FFFFFFFFH）。<br>VMCS的启动状态确定哪个VM-entry指令应该与该VMCS一起使用：VMLAUNCH指令需要VMCS，其启动状态为“清除”; VMRESUME指令需要VMCS，其发射状态是“发射”。逻辑处理器在相应的VMCS中维护VMCS的启动状态区域。以下各项描述了逻辑处理器如何管理VMCS的启动状态：</p>
-<ul>
-<li>如果当前VMCS的启动状态为“clear”，则VMLAUNCH指令的成功执行会发生变化发射状态为“launched”。</li>
-<li>VMCLEAR指令的内存操作数是VMCS的地址。执行完指令后VMCS的启动状态是“clear”。</li>
-<li>没有其他方法可以修改VMCS的启动状态（无法使用VMWRITE进行修改）也没有直接的方法来发现它（它无法使用VMREAD读取）</li>
-</ul>
-<p>图24-1说明了VMCS的不同状态。它使用“X”表示VMCS，使用“Y”表示任何其他VMCS。因此：“VMPTRLD X”总是使得VMCS变为当前和活动状态; “VMPTRLD Y”让X不再是当前状态（因为它使Y变为当前状态）;如果X是当前的并且其启动状态时，则VMLAUNCH的会将X变为“launched”; VMCLEAR X总是使X处于非活动状态而不是当前状态，并使其启动状态“clear”。<br>该图未示出相对于这些参数不修改VMCS状态的操作（例如，当X已经是当前时执行VMPTRLD X）。请注意，VMCLEAR X使X“处于非活动状态，非当前状态，并且clear。即使X的当前状态未定义（例如，即使X尚未初始化）。见24.11.3节。<br>由于影子VMCS（请参阅第24.10节）不能用于VM条目，因此影子VMCS的启动状态为没有意义。图24-1未说明可以使影子VMCS处于活动状态的所有方式。<br><img src="/2019/01/29/Intel-SDM/figure24-1.png" alt=""></p>
-<h3 id="24-2-VMCS-Region的格式"><a href="#24-2-VMCS-Region的格式" class="headerlink" title="24.2 VMCS Region的格式"></a>24.2 VMCS Region的格式</h3><p>VMCS的格式包含了4K，VMCS的格式如表24-1</p>
+        <p>前面的一篇文章大概翻译了下SDM的8.2章节<a href="/2019/05/12/sdm-8-2-memory-ordering/" title="SMD Chapter 8.2 内存存取顺序">SMD Chapter 8.2 内存存取顺序</a>，希望读者已经跟我一样，对X86 CPU的内存的存储顺序有些了解了。那么我们的系列教程就从内存存储的乱序开始吧，本文我们会重现一个CPU store-read操作的重排序，并且观察到MFENCE是如何工作的，以保证执行顺序的正确。</p>
+<h2 id="回顾SDM8-2-3-4的内容"><a href="#回顾SDM8-2-3-4的内容" class="headerlink" title="回顾SDM8.2.3.4的内容"></a>回顾SDM8.2.3.4的内容</h2><p>intel-64存取顺序重排允许<strong>加载操作</strong>重排序到<strong>不同地址</strong>的存储之前，但<strong>不</strong>允许重排序到<strong>同一个</strong>地址的存储之前。</p>
 <table>
 <thead>
 <tr>
-<th>byte offside</th>
-<th>内容</th>
+<th>处理器0</th>
+<th>处理器1</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>0</td>
-<td>0~30位 VMCS保留，识别符<br>31位: shadow-VMCS标识位</td>
+<td>mov [x],1</td>
+<td>mov [y],1</td>
 </tr>
 <tr>
-<td>4</td>
-<td>VMCS终止位</td>
+<td>mov r1 [y]</td>
+<td>mov r2,[x]</td>
 </tr>
 <tr>
-<td>8</td>
-<td>VMCS 数据</td>
+<td>初始值 x=y=0</td>
+</tr>
+<tr>
+<td>r1 = 0 并且 r2 = 0 允许</td>
 </tr>
 </tbody>
 </table>
-<p>VMCS区域的前4个字节包含位30：0的VMCS修订标识符。维护的处理器不同格式的VMCS数据（见下文）使用不同的VMCS修订标识符。位31：shadow-VMCS指标（参见第24.10节）</p>
-<p>在将该区域用于VMCS之前，软件应将VMCS标识符写入VMCS区域。该VMCS标识符永远不会被处理器写入;如果VMPTRLD的操作数引用VMCS区域的标识符与处理器正在使用的VMCS不同，则VMPTRLD会失败。 （如果是影子VMCS，并且处理器不支持shadow-VMCS，那么VMPTRLD也会失败）软件可以通过读取VMX相关MSR IA32_VMX_BASIC来检查处理器VMCS标识符。<br>软件应根据VMCS是否为普通还是shadow-vmcs来设置或者清楚shadow-VMCS标识符.不支持“VMCS阴影”VM执行控件的1设置。软件可以通过读取VMX功能MSR IA32_VMX_PROCBASED_CTLS2来检查是否支持。<br>VMCS区域的接下来的4个字节用于VMX中止指示符。这些位的内容没有控制处理器。当VMX中止发生时，逻辑处理器将非零值写入这些位。软件也可以写入此字段。<br>VMCS区域的其余部分用于VMCS数据（控制VMX non-root操作以及VMX转换）。这些数据的格式是特定的。写回可缓存内存中的VMCS区域和相关结构（在第24.11.4节中列举）。未来实现可以允许或要求不同的存储器类型。软件应参考VMX功能MSR<br>IA32_VMX_BASIC（见附录A.1）</p>
-<p>未完待续…… </p>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><p>下面我们就来实现上面这段逻辑：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br></pre></td><td class="code"><pre><span class="line">#include &quot;asm/spinlock.h&quot;</span><br><span class="line">#include &quot;atomic.h&quot;</span><br><span class="line"></span><br><span class="line">#define USE_CPU_FENCE  0</span><br><span class="line">#define MAX_RUNNING_CPU 3</span><br><span class="line">#define NOP()       do &#123; asm volatile (&quot;nop\n\t&quot; :::&quot;memory&quot;); &#125; while(0)</span><br><span class="line"></span><br><span class="line">void ap_main();</span><br><span class="line">void test1();</span><br><span class="line">void test2();</span><br><span class="line">void (*test_cases[MAX_RUNNING_CPU])() = &#123; NULL, test1, test2 &#125;;</span><br><span class="line"></span><br><span class="line">atomic_t begin_sem1;</span><br><span class="line">atomic_t begin_sem2;</span><br><span class="line">atomic_t end_sem;</span><br><span class="line"></span><br><span class="line">int X, Y;</span><br><span class="line">int r1, r2;</span><br><span class="line">int id;</span><br><span class="line"></span><br><span class="line">int logical_processor_arbitration() &#123;</span><br><span class="line">    int id;</span><br><span class="line"></span><br><span class="line">    static int __booting_id = 1;    // share with cpus_booted; AP from 1, 0 is BP</span><br><span class="line">    static struct spinlock cpu_id_lock = &#123;0&#125;;</span><br><span class="line"></span><br><span class="line">    spin_lock(&amp;cpu_id_lock);</span><br><span class="line">        id = __booting_id;</span><br><span class="line">        ++__booting_id;</span><br><span class="line">    spin_unlock(&amp;cpu_id_lock);</span><br><span class="line"></span><br><span class="line">    return id;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main(int ac, char **av)</span><br><span class="line">&#123;</span><br><span class="line">	setup_idt();</span><br><span class="line"></span><br><span class="line">	int detected = 0;</span><br><span class="line">	atomic_set(&amp;begin_sem1, 0);</span><br><span class="line">	atomic_set(&amp;begin_sem2, 0);</span><br><span class="line">	atomic_set(&amp;end_sem, 0);</span><br><span class="line"></span><br><span class="line">	id = 0;</span><br><span class="line"></span><br><span class="line">	for (int i = 1; ; ++i) &#123;</span><br><span class="line">		X = Y = 0;</span><br><span class="line">		r1 = r2 = 1;</span><br><span class="line"></span><br><span class="line">		atomic_inc(&amp;begin_sem1);</span><br><span class="line">		atomic_inc(&amp;begin_sem2);</span><br><span class="line"></span><br><span class="line">		while(atomic_read(&amp;end_sem) != 2) NOP();</span><br><span class="line"></span><br><span class="line">		atomic_set(&amp;end_sem, 0);</span><br><span class="line"></span><br><span class="line">		if (r1 == 0 &amp;&amp; r2 == 0) &#123;</span><br><span class="line">			detected++;</span><br><span class="line">			printf(&quot;%d reorders detected after %d iterations\n&quot;, detected, i);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		if( i % 10000 == 0) printf(&quot;BSP: times %d\n&quot;, i);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	while(1) &#123; NOP(); &#125;</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void ap_main() &#123;</span><br><span class="line">	int local_id = logical_processor_arbitration();</span><br><span class="line"></span><br><span class="line">	while(1)</span><br><span class="line">		test_cases[local_id]();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void test1() &#123;</span><br><span class="line">	while(atomic_read(&amp;begin_sem1) != 1) NOP();</span><br><span class="line">	atomic_dec(&amp;begin_sem1);</span><br><span class="line"></span><br><span class="line">	asm volatile(</span><br><span class="line">			&quot;xor %0, %0\n\t                 &quot;</span><br><span class="line">			&quot;movl $1, %1\n\t                &quot;</span><br><span class="line">#if USE_CPU_FENCE</span><br><span class="line">			&quot;mfence\n\t                  &quot;</span><br><span class="line">#endif</span><br><span class="line">			&quot;movl %2, %0\n\t                &quot;</span><br><span class="line">			: &quot;=r&quot;(r1), &quot;=m&quot; (X)</span><br><span class="line">			: &quot;m&quot;(Y)</span><br><span class="line">			: &quot;memory&quot;);</span><br><span class="line"></span><br><span class="line">	atomic_inc(&amp;end_sem);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void test2() &#123;</span><br><span class="line">	while(atomic_read(&amp;begin_sem2) != 1) NOP();</span><br><span class="line">	atomic_dec(&amp;begin_sem2);</span><br><span class="line"></span><br><span class="line">	asm volatile(</span><br><span class="line">			&quot;xor %0, %0\n\t                 &quot;</span><br><span class="line">			&quot;movl $1, %1\n\t                &quot;</span><br><span class="line">#if USE_CPU_FENCE</span><br><span class="line">			&quot;mfence\n\t                  &quot;</span><br><span class="line">#endif</span><br><span class="line">			&quot;movl %2, %0\n\t                &quot;</span><br><span class="line">			: &quot;=r&quot;(r2), &quot;=m&quot; (Y)</span><br><span class="line">			: &quot;m&quot;(X)</span><br><span class="line">			: &quot;memory&quot;);</span><br><span class="line"></span><br><span class="line">	atomic_inc(&amp;end_sem);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h3><p>读代码难免有点枯燥，我们把流程图画一下就一目了然了：</p>
+<p><img src="/2019/07/16/study-x86-fence/memory_order.svg" alt=""></p>
+<ol>
+<li><p>上面这个例子中一共涉及到了三个逻辑CPU(core)。BSP（processor1）就是上电后第一个执行指令的逻辑CPU，负责另外两个AP（processor2 processor3)的同步工作。两个AP负责分别运行两段测试代码。</p>
+</li>
+<li><p>程序一开始，两个AP（processor2和processor3)忙等待BSP发来的同步信号（begin_sem1和begin_sem2)。BSP在进行了必要的初始化操作之后，使用原子操作（atomic_inc)分别将上述两个信号 +1。两个AP等到各自的信号之后，立即清除该信号，然后准备测试。</p>
+</li>
+<li><p>所以，我们可以认为processor2和processor3几乎是同步运行的。也就是test1和test2代码块可以认为是同时运行。此事processor1在忙等待两个AP的测试完成end_sem == 2。</p>
+</li>
+<li><p>test1 和 test2的两段汇编很简单，严格按照前面的表各种所述。如果没有重排序的发生，那么两个寄存器变量中r1 和 r2中的值都应该是1。但如果我们发现某次test1和test2测试结束后，r1和r2的值同时为0的时候，那么就说明发生了重排序，test1和test2中的两个store操作，也就是<code>movl %2, %0</code>这句重排到了<code>movl $1, %1</code>这句之前，而且是两个processor同时发生这样的重排序。</p>
+</li>
+<li><p>processor1在end_sem == 2的时候，意味着两个AP都已完成，此时processor1检测是否r1 == r2 == 0。</p>
+</li>
+<li><p>通过改变宏定义USE_CPU_FENCE  的值来重现重排序，以及引入MFENCE来防止重排序。</p>
+</li>
+</ol>
+<h3 id="执行结果"><a href="#执行结果" class="headerlink" title="执行结果"></a>执行结果</h3><p>下面两个图就是义USE_CPU_FENCE=0和USE_CPU_FENCE=1两次不同的运行结果。<br><img src="/2019/07/16/study-x86-fence/fence_no.png" alt=""><br><img src="/2019/07/16/study-x86-fence/fence_added.png" alt=""><br>从打印的日志可以容易的看出图一发生了重排序，图二中大概200w次测试没有发生重排序。需要指出的是这里200w次循环执行时间不超过1秒钟，非常快。</p>
+<h2 id="LFENCE-和-SFENCE"><a href="#LFENCE-和-SFENCE" class="headerlink" title="LFENCE 和 SFENCE"></a>LFENCE 和 SFENCE</h2><p>既然说到FNECE了，咱就得讲完另外两种LFENE和SFENCE。SDM里面讲LFENCE是保证load-load操作不被重排序，SFENCE是保证store-store不被重排序。<br>这里我利用RDTSC指令实现了LFENCE组织CPU指令的重排序，这里不列举了，大概意思是，在一个逻辑CPU上，利用两次rdtsc指令之间插入LFENCE来观察循环的周期的长短来判断LFENCE的作用。只放个链接在这里吧<a href="https://github.com/ysun/acrn-unit-test/blob/memory_ordering_LFENCE/guest/x86/memory_order.c" target="_blank" rel="noopener">memory_ordering_lfence.c</a></p>
+<p>但对于SFENCE，我按照SDM 8.2.2所述内容并没有重现MOVNTI指令的store-store重排序，所以没能确认SFENCE的作用。<br><em>（SDM8.2.2 Writes to memory are not reordered with other writes, with the following exceptions:<br>— streaming stores (writes) executed with the non-temporal move instructions (MOVNTI, MOVNTQ,MOVNTDQ, MOVNTPS, and MOVNTPD)</em><br>我的MOVNTI和SFENCE的测试代码在这里<a href="https://github.com/ysun/acrn-unit-test/blob/memory_ordering_SFENCE/guest/x86/memory_order.c" target="_blank" rel="noopener">memory_ordering_sfence.c</a>，<strong>幻想着某位大牛可以回复我一下！！！</strong></p>
 
       
     </div>
@@ -551,7 +548,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://www.owalle.com/2019/01/29/Intel-SDM/" title="英特尔®64和IA-32架构软件开发人员手册(Intel SDM)">http://www.owalle.com/2019/01/29/Intel-SDM/</a>
+    <a href="http://www.owalle.com/2019/07/16/study-x86-fence/" title="利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令">http://www.owalle.com/2019/07/16/study-x86-fence/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>
@@ -564,6 +561,12 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/x86-KVM-QEMU/" rel="tag"># x86 KVM QEMU</a>
+          
+        </div>
+      
 
       
       
@@ -573,8 +576,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/12/26/qemu-qom/" rel="next" title="利用QOM(Qemu Object Model)创建虚拟设备">
-                <i class="fa fa-chevron-left"></i> 利用QOM(Qemu Object Model)创建虚拟设备
+              <a href="/2019/07/12/study-x86-using-qemu/" rel="next" title="利用虚拟机(QEMU)学习X86指令集0">
+                <i class="fa fa-chevron-left"></i> 利用虚拟机(QEMU)学习X86指令集0
               </a>
             
           </div>
@@ -582,10 +585,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/02/20/kvm-src-analysis/" rel="prev" title="KVM(Kernel-based Virtual Machine)源码分析">
-                KVM(Kernel-based Virtual Machine)源码分析 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -766,7 +765,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#23-1-概述"><span class="nav-number">1.</span> <span class="nav-text">23.1 概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-2虚拟机器结构"><span class="nav-number">2.</span> <span class="nav-text">23.2虚拟机器结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-3-VMX操作简介"><span class="nav-number">3.</span> <span class="nav-text">23.3 VMX操作简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-4-VMM软件的生命周期"><span class="nav-number">4.</span> <span class="nav-text">23.4 VMM软件的生命周期</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-5虚拟机控制结构"><span class="nav-number">5.</span> <span class="nav-text">23.5虚拟机控制结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-6-发现对VMX的支持"><span class="nav-number">6.</span> <span class="nav-text">23.6 发现对VMX的支持</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-7启用和进入VMX操作"><span class="nav-number">7.</span> <span class="nav-text">23.7启用和进入VMX操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-8-VMX操作限制"><span class="nav-number">8.</span> <span class="nav-text">23.8 VMX操作限制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#24-1-虚拟机控制结构-VMCS"><span class="nav-number">9.</span> <span class="nav-text">24.1 虚拟机控制结构(VMCS)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#24-2-VMCS-Region的格式"><span class="nav-number">10.</span> <span class="nav-text">24.2 VMCS Region的格式</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#回顾SDM8-2-3-4的内容"><span class="nav-number">1.</span> <span class="nav-text">回顾SDM8.2.3.4的内容</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#代码实现"><span class="nav-number">1.1.</span> <span class="nav-text">代码实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#源码分析"><span class="nav-number">1.2.</span> <span class="nav-text">源码分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#执行结果"><span class="nav-number">1.3.</span> <span class="nav-text">执行结果</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LFENCE-和-SFENCE"><span class="nav-number">2.</span> <span class="nav-text">LFENCE 和 SFENCE</span></a></li></ol></div>
             
 
           </div>
