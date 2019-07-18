@@ -87,21 +87,21 @@
 
 
 
-<meta name="description" content="前面的一篇文章大概翻译了下SDM的8.2章节SMD Chapter 8.2 内存存取顺序，希望读者已经跟我一样，对X86 CPU的内存的存储顺序有些了解了。那么我们的系列教程就从内存存储的乱序开始吧，本文我们会重现一个CPU store-read操作的重排序，并且观察到MFENCE是如何工作的，以保证执行顺序的正确。 回顾SDM8.2.3.4的内容intel-64存取顺序重排允许加载操作重排序到不">
+<meta name="description" content="浅谈“内存读写重排序”在我们编写的 C/C++代码时，以及它被在 CPU 上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序（又叫“程序顺序”）会被重新排列。这个现象会在两个地方引入，编译时候（编译器）和运行时（处理器）,目的都是为了使代码运行的更快。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起介绍。   X86的内存读写顺序模型弱">
 <meta name="keywords" content="x86 KVM QEMU">
 <meta property="og:type" content="article">
 <meta property="og:title" content="利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令">
 <meta property="og:url" content="http://www.owalle.com/2019/07/16/study-x86-fence/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="前面的一篇文章大概翻译了下SDM的8.2章节SMD Chapter 8.2 内存存取顺序，希望读者已经跟我一样，对X86 CPU的内存的存储顺序有些了解了。那么我们的系列教程就从内存存储的乱序开始吧，本文我们会重现一个CPU store-read操作的重排序，并且观察到MFENCE是如何工作的，以保证执行顺序的正确。 回顾SDM8.2.3.4的内容intel-64存取顺序重排允许加载操作重排序到不">
+<meta property="og:description" content="浅谈“内存读写重排序”在我们编写的 C/C++代码时，以及它被在 CPU 上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序（又叫“程序顺序”）会被重新排列。这个现象会在两个地方引入，编译时候（编译器）和运行时（处理器）,目的都是为了使代码运行的更快。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起介绍。   X86的内存读写顺序模型弱">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/memory_order.svg">
 <meta property="og:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/fence_no.png">
 <meta property="og:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/fence_added.png">
-<meta property="og:updated_time" content="2019-07-16T15:31:57.749Z">
+<meta property="og:updated_time" content="2019-07-18T17:32:52.037Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令">
-<meta name="twitter:description" content="前面的一篇文章大概翻译了下SDM的8.2章节SMD Chapter 8.2 内存存取顺序，希望读者已经跟我一样，对X86 CPU的内存的存储顺序有些了解了。那么我们的系列教程就从内存存储的乱序开始吧，本文我们会重现一个CPU store-read操作的重排序，并且观察到MFENCE是如何工作的，以保证执行顺序的正确。 回顾SDM8.2.3.4的内容intel-64存取顺序重排允许加载操作重排序到不">
+<meta name="twitter:description" content="浅谈“内存读写重排序”在我们编写的 C/C++代码时，以及它被在 CPU 上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序（又叫“程序顺序”）会被重新排列。这个现象会在两个地方引入，编译时候（编译器）和运行时（处理器）,目的都是为了使代码运行的更快。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起介绍。   X86的内存读写顺序模型弱">
 <meta name="twitter:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/memory_order.svg">
 
 
@@ -415,7 +415,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  1.3k
+                  2.3k
                 </span>
               
 
@@ -431,7 +431,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  5
+                  9
                 </span>
               
             </div>
@@ -452,8 +452,28 @@
       
 
       
-        <p>前面的一篇文章大概翻译了下SDM的8.2章节<a href="/2019/05/12/sdm-8-2-memory-ordering/" title="SMD Chapter 8.2 内存存取顺序">SMD Chapter 8.2 内存存取顺序</a>，希望读者已经跟我一样，对X86 CPU的内存的存储顺序有些了解了。那么我们的系列教程就从内存存储的乱序开始吧，本文我们会重现一个CPU store-read操作的重排序，并且观察到MFENCE是如何工作的，以保证执行顺序的正确。</p>
-<h2 id="回顾SDM8-2-3-4的内容"><a href="#回顾SDM8-2-3-4的内容" class="headerlink" title="回顾SDM8.2.3.4的内容"></a>回顾SDM8.2.3.4的内容</h2><p>intel-64存取顺序重排允许<strong>加载操作</strong>重排序到<strong>不同地址</strong>的存储之前，但<strong>不</strong>允许重排序到<strong>同一个</strong>地址的存储之前。</p>
+        <h2 id="浅谈“内存读写重排序”"><a href="#浅谈“内存读写重排序”" class="headerlink" title="浅谈“内存读写重排序”"></a>浅谈“内存读写重排序”</h2><p>在我们编写的 C/C++代码时，以及它被在 CPU 上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序（又叫“程序顺序”）会被重新排列。这个现象会在两个地方引入，编译时候（编译器）和运行时（处理器）,目的都是为了使代码运行的更快。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起介绍。</p>
+<div id="flowchart-0" class="flow-chart"></div>
+
+<h3 id="X86的内存读写顺序模型"><a href="#X86的内存读写顺序模型" class="headerlink" title="X86的内存读写顺序模型"></a>X86的内存读写顺序模型</h3><h4 id="弱顺序模型"><a href="#弱顺序模型" class="headerlink" title="弱顺序模型"></a>弱顺序模型</h4><p>弱顺序模型中，可能会出现四种内存重排序 (Load-Load, Store-Store, Load-Store 和 Store-Load)。任意读（load)和写（store）操作能与任何的其他的 load 或 store 操作重排序，只要它能保证原来程序的行为。采用弱顺序模型的处理器可以称为“weakly-order”或者”weak ordering”。<br>对于C/C++的编译器gcc（因为我只用过gcc:p)，都可以呈现弱顺序模型，稍后我们看下例子。</p>
+<h4 id="强顺序模型"><a href="#强顺序模型" class="headerlink" title="强顺序模型"></a>强顺序模型</h4><p>强顺序模型和弱顺序模型的界限可能不一定有一个确切的标准。但从SDM 8.2章开头可以看到奔腾4之后的X86处理器大概属于强顺序类型：<br><em>To allow performance optimization of instruction execution, the IA-32 architecture allows departures from strongordering model called processor ordering in Pentium 4, Intel Xeon, and P6 family processors</em></p>
+<p>继续读SDM8.2 可以发现如下约定：</p>
+<ol>
+<li>Reads are not reordered with other reads. （任何‘读-读’之间不可重排序）<br>这就意味着前述弱顺序模型中的重排序中的load-load禁止。</li>
+<li>Writes are not reordered with older reads. (‘写’不可向前重排到‘读’之前）<br>这就意味着弱顺序模型中的load-store被禁止。</li>
+<li>Writes to memory are not reordered with other writes, with the following exceptions:… （‘写’与‘写’之间不可以重排序，但除了如下例外。例外的部分我们暂时忽略吧）<br>这就意味着弱顺序模型中的store-store是被禁止的</li>
+<li>Reads may be reordered with older writes to different locations but not with older writes to the same location. （‘读’可以向前重排序到不同内存位置的‘写’之前）<br>这就明确的说明4种弱顺序模型中的store-load是<strong>被允许的!</strong></li>
+</ol>
+<h4 id="顺序一致"><a href="#顺序一致" class="headerlink" title="顺序一致"></a>顺序一致</h4><p>即所有运行时内存访问的顺序跟程序顺序一模一样。现如今都是多核系统，可能很难找到可以成为顺序一致（Sequential consistency）的CPU了。如果真要追溯可能是386时代。</p>
+<h2 id="编译时内存顺序重排序"><a href="#编译时内存顺序重排序" class="headerlink" title="编译时内存顺序重排序"></a>编译时内存顺序重排序</h2><p>直接看代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">int a, b;</span><br><span class="line">void test() &#123;</span><br><span class="line">    a = b;</span><br><span class="line">    b = 1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>写了一个.c 文件，里面仅仅包含了上面这几行，然后我们用gcc把它翻译成汇编语言：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$gcc -S -O0 test.c -o test1.s</span><br><span class="line"></span><br><span class="line">movl    b(%rip), %eax</span><br><span class="line">movl    %eax, a(%rip)</span><br><span class="line">movl    $1, b(%rip)</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$gcc -S -O2 test.c -o test2.s</span><br><span class="line"></span><br><span class="line">movl    b(%rip), %eax</span><br><span class="line">movl    $1, b(%rip)</span><br><span class="line">movl    %eax, a(%rip)</span><br></pre></td></tr></table></figure>
+<p>通过这个例子可以明显的感受到gcc的弱顺序模型：-O0的时候，顺序跟我们预期的程序顺序是一致的；但当使用-O2优化是，test函数的最后一句跟变量b赋值明显已经被向前重拍到了变量a的存储之前！<br>但我们需要知道的是，这样的重排序，对于单线程的硬件来说，重排序并不会影响程序最后的执行结果。但是对于多线程来说，如果有另外的线程实时的读取变量a的值的话，很可能会得到错误的结果。</p>
+<h3 id="如何阻止编译器的重排序？"><a href="#如何阻止编译器的重排序？" class="headerlink" title="如何阻止编译器的重排序？"></a>如何阻止编译器的重排序？</h3><p>前辈们习惯的用法是这样的：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">int a, b;</span><br><span class="line">void test() &#123;</span><br><span class="line">    a = b;</span><br><span class="line">    asm volatile(&quot;&quot; ::: &quot;memory&quot;);</span><br><span class="line">    b = 1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>加了嵌入式汇编<code>asm volatile(&quot;&quot; ::: &quot;memory&quot;);</code>后的test.c再无论怎么优化，都会得到跟-O0一样的汇编结果。</p>
+<h2 id="CPU运行时重排序"><a href="#CPU运行时重排序" class="headerlink" title="CPU运行时重排序"></a>CPU运行时重排序</h2><p>前面的一篇文章大概翻译了下SDM的8.2章节<a href="/2019/05/12/sdm-8-2-memory-ordering/" title="SMD Chapter 8.2 内存存取顺序">SMD Chapter 8.2 内存存取顺序</a>，本节我们会重现一个CPU store-read操作的重排序，并且观察到MFENCE是如何工作的，以保证执行顺序的正确。</p>
+<h3 id="回顾SDM8-2-3-4的内容"><a href="#回顾SDM8-2-3-4的内容" class="headerlink" title="回顾SDM8.2.3.4的内容"></a>回顾SDM8.2.3.4的内容</h3><p>intel-64存取顺序重排允许<strong>加载操作</strong>重排序到<strong>不同地址</strong>的存储之前，但<strong>不</strong>允许重排序到<strong>同一个</strong>地址的存储之前。</p>
 <table>
 <thead>
 <tr>
@@ -497,8 +517,17 @@
 </li>
 </ol>
 <h3 id="执行结果"><a href="#执行结果" class="headerlink" title="执行结果"></a>执行结果</h3><p>下面两个图就是义USE_CPU_FENCE=0和USE_CPU_FENCE=1两次不同的运行结果。<br><img src="/2019/07/16/study-x86-fence/fence_no.png" alt=""><br><img src="/2019/07/16/study-x86-fence/fence_added.png" alt=""><br>从打印的日志可以容易的看出图一发生了重排序，图二中大概200w次测试没有发生重排序。需要指出的是这里200w次循环执行时间不超过1秒钟，非常快。</p>
-<h2 id="LFENCE-和-SFENCE"><a href="#LFENCE-和-SFENCE" class="headerlink" title="LFENCE 和 SFENCE"></a>LFENCE 和 SFENCE</h2><p>既然说到FNECE了，咱就得讲完另外两种LFENE和SFENCE。SDM里面讲LFENCE是保证load-load操作不被重排序，SFENCE是保证store-store不被重排序。<br>这里我利用RDTSC指令实现了LFENCE组织CPU指令的重排序，这里不列举了，大概意思是，在一个逻辑CPU上，利用两次rdtsc指令之间插入LFENCE来观察循环的周期的长短来判断LFENCE的作用。只放个链接在这里吧<a href="https://github.com/ysun/acrn-unit-test/blob/memory_ordering_LFENCE/guest/x86/memory_order.c" target="_blank" rel="noopener">memory_ordering_lfence.c</a></p>
-<p>但对于SFENCE，我按照SDM 8.2.2所述内容并没有重现MOVNTI指令的store-store重排序，所以没能确认SFENCE的作用。<br><em>（SDM8.2.2 Writes to memory are not reordered with other writes, with the following exceptions:<br>— streaming stores (writes) executed with the non-temporal move instructions (MOVNTI, MOVNTQ,MOVNTDQ, MOVNTPS, and MOVNTPD)</em><br>我的MOVNTI和SFENCE的测试代码在这里<a href="https://github.com/ysun/acrn-unit-test/blob/memory_ordering_SFENCE/guest/x86/memory_order.c" target="_blank" rel="noopener">memory_ordering_sfence.c</a>，<strong>幻想着某位大牛可以回复我一下！！！</strong></p>
+<h2 id="LFENCE-和-SFENCE"><a href="#LFENCE-和-SFENCE" class="headerlink" title="LFENCE 和 SFENCE"></a>LFENCE 和 SFENCE</h2><p>既然说到FNECE了，咱就得讲完另外两种LFENE和SFENCE。SDM里面讲LFENCE是保证load-load操作不被重排序，SFENCE是保证store-store不被重排序，就是前面在说SDM8.2里面列举了禁止的弱顺序模型中的store-store我们省略掉的部分。<br><em>Writes to memory are not reordered with other writes, with the following exceptions:<br>— streaming stores (writes) executed with the non-temporal move instructions (MOVNTI, MOVNTQ,<br>MOVNTDQ, MOVNTPS, and MOVNTPD); and<br>— string operations (see Section 8.2.4.1)</em></p>
+<p>这里我利用RDTSC指令实现了LFENCE组织CPU指令的重排序，这里不列举了，大概意思是，在一个逻辑CPU上，利用两次rdtsc指令之间插入LFENCE来观察循环的周期的长短来判断LFENCE的作用。只放个链接在这里吧<a href="https://github.com/ysun/acrn-unit-test/blob/memory_ordering_LFENCE/guest/x86/memory_order.c" target="_blank" rel="noopener">memory_ordering_lfence.c</a></p>
+<p>但对于SFENCE，我按照SDM 8.2.2所述内容并没有重现MOVNTI指令的store-store重排序，所以没能确认SFENCE的作用。<br>我的MOVNTI和SFENCE的测试代码在这里<a href="https://github.com/ysun/acrn-unit-test/blob/memory_ordering_SFENCE/guest/x86/memory_order.c" target="_blank" rel="noopener">memory_ordering_sfence.c</a>，<strong>幻想着某位大牛可以回复我一下！！！</strong></p>
+<p><script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.8/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.11.3/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">c_code=>operation: C 语言
+asm_code=>operation: 汇编语言
+cpu_instruction=>operation: CPU执行序列
+
+compiler_reorder=>inputoutput: 编译器重排序
+cpu_reorder=>inputoutput: 处理器重排序
+
+c_code(right)->compiler_reorder(right)->asm_code(right)->cpu_reorder(right)->cpu_instruction</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script></p>
 
       
     </div>
@@ -765,7 +794,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#回顾SDM8-2-3-4的内容"><span class="nav-number">1.</span> <span class="nav-text">回顾SDM8.2.3.4的内容</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#代码实现"><span class="nav-number">1.1.</span> <span class="nav-text">代码实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#源码分析"><span class="nav-number">1.2.</span> <span class="nav-text">源码分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#执行结果"><span class="nav-number">1.3.</span> <span class="nav-text">执行结果</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LFENCE-和-SFENCE"><span class="nav-number">2.</span> <span class="nav-text">LFENCE 和 SFENCE</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#浅谈“内存读写重排序”"><span class="nav-number">1.</span> <span class="nav-text">浅谈“内存读写重排序”</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#X86的内存读写顺序模型"><span class="nav-number">1.1.</span> <span class="nav-text">X86的内存读写顺序模型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#弱顺序模型"><span class="nav-number">1.1.1.</span> <span class="nav-text">弱顺序模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#强顺序模型"><span class="nav-number">1.1.2.</span> <span class="nav-text">强顺序模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#顺序一致"><span class="nav-number">1.1.3.</span> <span class="nav-text">顺序一致</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译时内存顺序重排序"><span class="nav-number">2.</span> <span class="nav-text">编译时内存顺序重排序</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如何阻止编译器的重排序？"><span class="nav-number">2.1.</span> <span class="nav-text">如何阻止编译器的重排序？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU运行时重排序"><span class="nav-number">3.</span> <span class="nav-text">CPU运行时重排序</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#回顾SDM8-2-3-4的内容"><span class="nav-number">3.1.</span> <span class="nav-text">回顾SDM8.2.3.4的内容</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#代码实现"><span class="nav-number">3.2.</span> <span class="nav-text">代码实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#源码分析"><span class="nav-number">3.3.</span> <span class="nav-text">源码分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#执行结果"><span class="nav-number">3.4.</span> <span class="nav-text">执行结果</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LFENCE-和-SFENCE"><span class="nav-number">4.</span> <span class="nav-text">LFENCE 和 SFENCE</span></a></li></ol></div>
             
 
           </div>
@@ -799,7 +828,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">61k</span>
+    <span title="Site words total count">62.1k</span>
   
 </div>
 
