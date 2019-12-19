@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+<meta name="google-site-verification" content="MrnK1va2f2DY7TM-4onuV7g_G6yZyI3WkYbaykR0Ln0">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-minimal.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="x86 KVM QEMU,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="浅谈“内存读写重排序”在我们编写C/C++代码时，以及它在CPU上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序(又叫“程序顺序”, program ordering)会被重新排列。这个现象会在两个地方引入，编译时候由编译器引入；以及运行时由处理器引入。目的都是为了”使代码运行的更快”。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起">
+<meta name="keywords" content="x86 KVM QEMU">
+<meta property="og:type" content="article">
+<meta property="og:title" content="利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令">
+<meta property="og:url" content="http://www.owalle.com/2019/07/16/study-x86-fence/index.html">
+<meta property="og:site_name" content="Yi颗烂樱桃">
+<meta property="og:description" content="浅谈“内存读写重排序”在我们编写C/C++代码时，以及它在CPU上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序(又叫“程序顺序”, program ordering)会被重新排列。这个现象会在两个地方引入，编译时候由编译器引入；以及运行时由处理器引入。目的都是为了”使代码运行的更快”。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/weak-strong-table.png">
+<meta property="og:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/memory_order.png">
+<meta property="og:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/fence_no.png">
+<meta property="og:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/fence_added.png">
+<meta property="og:updated_time" content="2019-07-20T15:16:46.401Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令">
+<meta name="twitter:description" content="浅谈“内存读写重排序”在我们编写C/C++代码时，以及它在CPU上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序(又叫“程序顺序”, program ordering)会被重新排列。这个现象会在两个地方引入，编译时候由编译器引入；以及运行时由处理器引入。目的都是为了”使代码运行的更快”。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起">
+<meta name="twitter:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/weak-strong-table.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.owalle.com/2019/07/16/study-x86-fence/">
+
+
+
+
+
+  <title>利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令 | Yi颗烂樱桃</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a rel="external nofollow" href="/" class="brand">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Yi颗烂樱桃</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">虚拟化相关技术</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a rel="external nofollow" href="/">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a rel="external nofollow" href="/archives/">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a rel="external nofollow" href="/categories/">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a rel="external nofollow" href="/tags/">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a rel="external nofollow" href="/about/">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-sitemap">
+          <a rel="external nofollow" href="/sitemap.xml">
+            
+              <i class="menu-item-icon fa fa-fw fa-sitemap"></i> <br>
+            
+            站点地图
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a rel="external nofollow" href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2019/07/16/study-x86-fence/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-16T21:28:40+08:00">
+                2019-07-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/X86/" itemprop="url" rel="index">
+                    <span itemprop="name">X86</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/07/16/study-x86-fence/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/07/16/study-x86-fence/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  2.4k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  10
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="浅谈“内存读写重排序”"><a href="#浅谈“内存读写重排序”" class="headerlink" title="浅谈“内存读写重排序”"></a>浅谈“内存读写重排序”</h2><p>在我们编写C/C++代码时，以及它在CPU上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序(又叫“程序顺序”, program ordering)会被重新排列。这个现象会在两个地方引入，编译时候由编译器引入；以及运行时由处理器引入。目的都是为了”使代码运行的更快”。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起介绍。</p>
+<div id="flowchart-0" class="flow-chart"></div>
+
+<h3 id="X86的内存读写顺序模型"><a href="#X86的内存读写顺序模型" class="headerlink" title="X86的内存读写顺序模型"></a>X86的内存读写顺序模型</h3><p>按照内存访问重排序发生情况的多少，大概划分为下面三种“顺序模型”。</p>
+<h4 id="弱顺序模型"><a href="#弱顺序模型" class="headerlink" title="弱顺序模型"></a>弱顺序模型</h4><p>弱顺序模型中，可能会出现四种内存重排序(Load-Load, Store-Store, Load-Store 和 Store-Load)。任意读(load)操作和写(store)操作都有可能与其他读写操作重排序，只要它能保证原来程序的行为。采用弱顺序模型的处理器可以称为“weakly-order”或者”weak ordering”。<br>对于C/C++的编译器gcc(因为我只用过gcc:p)，都可以呈现弱顺序模型，稍后我们看下例子。</p>
+<h4 id="强顺序模型"><a href="#强顺序模型" class="headerlink" title="强顺序模型"></a>强顺序模型</h4><p>强顺序模型和弱顺序模型的界限可能不一定有确切的标准，但从SDM 8.2章开头可以看到，奔腾4之后的X86处理器大概属于强顺序类型：<br><em>To allow performance optimization of instruction execution, the IA-32 architecture allows departures from strongordering model called processor ordering in Pentium 4, Intel Xeon, and P6 family processors</em><br>继续读SDM8.2 可以发现如下约定：</p>
+<ol>
+<li>Reads are not reordered with other reads. (任何‘读-读’之间不可重排序)<br>这就意味着前述弱顺序模型中的重排序中的”load-load”禁止。</li>
+<li>Writes are not reordered with older reads. (‘写’不可向前重排到‘读’之前)<br>这就意味着弱顺序模型中的”load-store”被禁止。</li>
+<li>Writes to memory are not reordered with other writes, with the following exceptions:… (‘写’与‘写’之间不可以重排序，但除了如下例外。<em>例外的部分我们暂时忽略</em>)<br>这就意味着弱顺序模型中的大部分”store-store”是被禁止的，例外情况文末会提到。</li>
+<li>Reads may be reordered with older writes to different locations but not with older writes to the same location. (‘读’可以向前重排序到不同内存位置的‘写’之前)<br>这就明确的说明4种弱顺序模型中的store-load是<strong>被允许的!</strong>。这也是我们后面实例的重要依据。</li>
+</ol>
+<h4 id="顺序一致"><a href="#顺序一致" class="headerlink" title="顺序一致"></a>顺序一致</h4><p>所有运行时内存访问的顺序跟程序顺序一模一样。现如今都是多核系统，可能很难找到可以成为顺序一致(Sequential consistency)的CPU了。如果真要追溯可能是386时代。</p>
+<p><img src="/2019/07/16/study-x86-fence/weak-strong-table.png" alt=""></p>
+<h2 id="编译时内存顺序重排序"><a href="#编译时内存顺序重排序" class="headerlink" title="编译时内存顺序重排序"></a>编译时内存顺序重排序</h2><p>我们先通过下面这个最简单的实例，体验编译器如何进行内存访问的重排序的，直接看代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">int a, b;</span><br><span class="line">void test() &#123;</span><br><span class="line">    a = b;</span><br><span class="line">    b = 1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>写了一个.c 文件，里面仅仅包含了上面这几行，然后我们用gcc把它翻译成汇编语言：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$gcc -S -O0 test.c -o test1.s</span><br><span class="line"></span><br><span class="line">movl    b(%rip), %eax</span><br><span class="line">movl    %eax, a(%rip)</span><br><span class="line">movl    $1, b(%rip)</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$gcc -S -O2 test.c -o test2.s</span><br><span class="line"></span><br><span class="line">movl    b(%rip), %eax</span><br><span class="line">movl    $1, b(%rip)	&lt;--- 被提前了!!</span><br><span class="line">movl    %eax, a(%rip)</span><br></pre></td></tr></table></figure>
+<p>通过这个例子可以明显的感受到gcc的弱顺序模型：-O0的时候，顺序跟我们预期的程序顺序是一致的；但当使用-O2优化时，test函数的最后一句的变量b赋值明显已经被<strong>向前重排</strong>到了变量a的存储之前！<br>但我们需要知道的是，这样的重排序，对于单线程的硬件来说，重排序并不会影响程序最后的执行结果。但是对于多线程来说，如果有另外的线程实时的读取变量a的值的话，很可能会得到错误的结果。</p>
+<h3 id="如何阻止编译器的重排序？"><a href="#如何阻止编译器的重排序？" class="headerlink" title="如何阻止编译器的重排序？"></a>如何阻止编译器的重排序？</h3><p>前辈们习惯的用法是这样的：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">int a, b;</span><br><span class="line">void test() &#123;</span><br><span class="line">    a = b;</span><br><span class="line">    asm volatile(&quot;&quot; ::: &quot;memory&quot;);</span><br><span class="line">    b = 1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>加了嵌入式汇编<code>asm volatile(&quot;&quot; ::: &quot;memory&quot;);</code>后的test.c再无论怎么优化，都会得到跟-O0一样的汇编结果。</p>
+<h2 id="CPU运行时重排序"><a href="#CPU运行时重排序" class="headerlink" title="CPU运行时重排序"></a>CPU运行时重排序</h2><p>前面的一篇文章大概翻译了下SDM的8.2章节<a href="/2019/05/12/sdm-8-2-memory-ordering/" title="SMD Chapter 8.2 内存存取顺序">SMD Chapter 8.2 内存存取顺序</a>，我们按照SDM8.2.3.4的描述，重现一个store-read操作的重排序，并且观察MFENCE是如何工作的，以保证执行顺序的正确。</p>
+<h3 id="回顾SDM8-2-3-4的内容"><a href="#回顾SDM8-2-3-4的内容" class="headerlink" title="回顾SDM8.2.3.4的内容"></a>回顾SDM8.2.3.4的内容</h3><p>intel-64存取顺序重排允许<strong>加载操作</strong>重排序到<strong>不同地址</strong>的存储之前，但<strong>不</strong>允许重排序到<strong>同一个</strong>地址的存储之前。</p>
+<table>
+<thead>
+<tr>
+<th>处理器0</th>
+<th>处理器1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mov [x],1</td>
+<td>mov [y],1</td>
+</tr>
+<tr>
+<td>mov r1 [y]</td>
+<td>mov r2,[x]</td>
+</tr>
+<tr>
+<td>初始值 x=y=0</td>
+</tr>
+<tr>
+<td>r1 = 0 并且 r2 = 0 允许</td>
+</tr>
+</tbody>
+</table>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><p>下面我们就来实现上面这段逻辑：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line">#define USE_CPU_FENCE  0</span><br><span class="line"></span><br><span class="line">atomic_t begin_sem1;</span><br><span class="line">atomic_t begin_sem2;</span><br><span class="line">atomic_t end_sem;</span><br><span class="line"></span><br><span class="line">int X, Y;</span><br><span class="line">int r1, r2;</span><br><span class="line"></span><br><span class="line">int main(int ac, char **av) &#123;</span><br><span class="line"></span><br><span class="line">	int detected = 0;</span><br><span class="line">	atomic_set(&amp;begin_sem1, 0);</span><br><span class="line">	atomic_set(&amp;begin_sem2, 0);</span><br><span class="line">	atomic_set(&amp;end_sem, 0);</span><br><span class="line"></span><br><span class="line">	id = 0;</span><br><span class="line"></span><br><span class="line">	for (int i = 1; ; ++i) &#123;</span><br><span class="line">		X = Y = 0;</span><br><span class="line">		r1 = r2 = 1;</span><br><span class="line">		atomic_inc(&amp;begin_sem1);</span><br><span class="line">		atomic_inc(&amp;begin_sem2);</span><br><span class="line"></span><br><span class="line">		while(atomic_read(&amp;end_sem) != 2) NOP();</span><br><span class="line"></span><br><span class="line">		atomic_set(&amp;end_sem, 0);</span><br><span class="line"></span><br><span class="line">		if (r1 == 0 &amp;&amp; r2 == 0) &#123;</span><br><span class="line">			detected++;</span><br><span class="line">			printf(&quot;%d reorders detected after %d iterations\n&quot;, detected, i);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		if( i % 10000 == 0) printf(&quot;BSP: times %d\n&quot;, i);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	while(1) &#123; NOP(); &#125;</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void test1() &#123;</span><br><span class="line">	while(atomic_read(&amp;begin_sem1) != 1) NOP();</span><br><span class="line">	atomic_dec(&amp;begin_sem1);</span><br><span class="line"></span><br><span class="line">	asm volatile(</span><br><span class="line">			&quot;xor %0, %0\n\t                 &quot;</span><br><span class="line">			&quot;movl $1, %1\n\t                &quot;</span><br><span class="line">#if USE_CPU_FENCE</span><br><span class="line">			&quot;mfence\n\t                     &quot;</span><br><span class="line">#endif</span><br><span class="line">			&quot;movl %2, %0\n\t                &quot;</span><br><span class="line">			: &quot;=r&quot;(r1), &quot;=m&quot; (X)</span><br><span class="line">			: &quot;m&quot;(Y)</span><br><span class="line">			: &quot;memory&quot;);</span><br><span class="line"></span><br><span class="line">	atomic_inc(&amp;end_sem);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void test2() &#123;</span><br><span class="line">	while(atomic_read(&amp;begin_sem2) != 1) NOP();</span><br><span class="line">	atomic_dec(&amp;begin_sem2);</span><br><span class="line"></span><br><span class="line">	asm volatile(</span><br><span class="line">			&quot;xor %0, %0\n\t                 &quot;</span><br><span class="line">			&quot;movl $1, %1\n\t                &quot;</span><br><span class="line">#if USE_CPU_FENCE</span><br><span class="line">			&quot;mfence\n\t                     &quot;</span><br><span class="line">#endif</span><br><span class="line">			&quot;movl %2, %0\n\t                &quot;</span><br><span class="line">			: &quot;=r&quot;(r2), &quot;=m&quot; (Y)</span><br><span class="line">			: &quot;m&quot;(X)</span><br><span class="line">			: &quot;memory&quot;);</span><br><span class="line"></span><br><span class="line">	atomic_inc(&amp;end_sem);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>完整的可编译的code可以到github上clone:<br><code>git clone -b memory_ordering https://github.com/ysun/acrn-unit-test.git</code><br>在<code>guest</code>文件夹里执行<code>make unit file=memory_order</code>就可以执行了。</p>
+<h3 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h3><p>读代码难免有点枯燥，我们把流程图画一下就一目了然了：</p>
+<p><img src="/2019/07/16/study-x86-fence/memory_order.png" alt=""></p>
+<ol>
+<li><p>上面这个例子中一共涉及到了三个逻辑CPU(core)。BSP(processor1)就是上电后第一个执行指令的逻辑CPU，负责另外两个AP(processor2和processor3)的同步工作。两个AP负责分别运行两段测试代码<code>test1</code>和<code>test2</code>。</p>
+</li>
+<li><p>程序一开始，两个AP(processor2和processor3)忙等待BSP发来的同步信号(begin_sem1和begin_sem2)。BSP在进行了必要的初始化操作之后，使用原子操作(atomic_inc)分别将上述两个信号 +1。两个AP等到各自的信号之后，立即清除该信号，然后准备测试。</p>
+</li>
+<li><p>所以，我们可以认为processor2和processor3几乎是同步运行的。也就是test1和test2代码块可以认为是同时运行。此时processor1在忙等待两个AP的测试完成end_sem == 2。</p>
+</li>
+<li><p>test1和test2的两段汇编很简单，严格按照前面的表各种所述。如果没有重排序的发生，那么两个寄存器变量中r1和r2中的值都应该是1。但如果我们发现某次test1和test2测试结束后，r1和r2的值同时为0的时候，那么就说明发生了重排序，test1和test2中的两个store操作，也就是<code>movl %2, %0</code>这句重排到了<code>movl $1, %1</code>这句之前，而且是两个processor同时发生这样的重排序。</p>
+</li>
+<li><p>processor1在end_sem == 2的时候，意味着两个AP都已完成，此时processor1检测是否r1 == r2 == 0。</p>
+</li>
+<li><p>通过改变宏定义USE_CPU_FENCE  的值来重现重排序，以及引入MFENCE来防止重排序。</p>
+</li>
+</ol>
+<h3 id="执行结果"><a href="#执行结果" class="headerlink" title="执行结果"></a>执行结果</h3><p>下面两个图就是义USE_CPU_FENCE=0和USE_CPU_FENCE=1两次不同的运行结果。<br><img src="/2019/07/16/study-x86-fence/fence_no.png" alt=""><br><img src="/2019/07/16/study-x86-fence/fence_added.png" alt=""><br>从打印的日志可以容易的看出图一发生了重排序，图二中大概200w次测试没有发生重排序。需要指出的是这里200w次循环执行时间不超过1秒钟，非常快。</p>
+<h2 id="LFENCE-和-SFENCE"><a href="#LFENCE-和-SFENCE" class="headerlink" title="LFENCE 和 SFENCE"></a>LFENCE 和 SFENCE</h2><p>既然说到FNECE了，咱就得讲完另外两种LFENE和SFENCE。SDM里面讲LFENCE是保证load-load操作不被重排序，SFENCE是保证store-store不被重排序，就是前面在说SDM8.2里面列举了禁止的弱顺序模型中的store-store我们省略掉的部分。<br><em>Writes to memory are not reordered with other writes, with the following exceptions:<br>— streaming stores (writes) executed with the non-temporal move instructions (MOVNTI, MOVNTQ,<br>MOVNTDQ, MOVNTPS, and MOVNTPD); and<br>— string operations (see Section 8.2.4.1)</em></p>
+<p>这里我利用RDTSC指令实现了LFENCE组织CPU指令的重排序，这里不列举了，大概意思是，在一个逻辑CPU上，利用两次rdtsc指令之间插入LFENCE来观察循环的周期的长短来判断LFENCE的作用。只放个链接在这里吧<a href="https://github.com/ysun/acrn-unit-test/blob/memory_ordering_LFENCE/guest/x86/memory_order.c" target="_blank" rel="noopener">memory_ordering_lfence.c</a></p>
+<p>但对于SFENCE，我按照SDM 8.2.2所述内容并没有重现MOVNTI指令的store-store重排序，所以没能确认SFENCE的作用。<br>我的MOVNTI和SFENCE的测试代码在这里<a href="https://github.com/ysun/acrn-unit-test/blob/memory_ordering_SFENCE/guest/x86/memory_order.c" target="_blank" rel="noopener">memory_ordering_sfence.c</a>，<strong>幻想着某位大牛可以回复我一下！！！</strong></p>
+<p>参考文档：<br><a href="https://preshing.com/20120930/weak-vs-strong-memory-models/" target="_blank" rel="noopener">https://preshing.com/20120930/weak-vs-strong-memory-models/</a><br><a href="https://preshing.com/20120515/memory-reordering-caught-in-the-act/" target="_blank" rel="noopener">https://preshing.com/20120515/memory-reordering-caught-in-the-act/</a><br><a href="http://dreamrunner.org/blog/2014/06/28/qian-tan-memory-reordering/" target="_blank" rel="noopener">http://dreamrunner.org/blog/2014/06/28/qian-tan-memory-reordering/</a></p>
+<p><script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.8/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.11.3/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">c_code=>operation: C 语言
+asm_code=>operation: 汇编语言
+cpu_instruction=>operation: CPU执行序列
+
+compiler_reorder=>inputoutput: 编译器重排序
+cpu_reorder=>inputoutput: 处理器重排序
+
+c_code(right)->compiler_reorder(right)->asm_code(right)->cpu_reorder(right)->cpu_instruction</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="Yi颗烂樱桃 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.png" alt="Yi颗烂樱桃 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者：</strong>
+    Yi颗烂樱桃
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://www.owalle.com/2019/07/16/study-x86-fence/" title="利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令">http://www.owalle.com/2019/07/16/study-x86-fence/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>
+    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="external nofollow" target="_blank">CC BY-NC-ND 3.0</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/x86-KVM-QEMU/" rel="tag"># x86 KVM QEMU</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/12/study-x86-using-qemu/" rel="next" title="利用虚拟机(QEMU)学习X86指令集0">
+                <i class="fa fa-chevron-left"></i> 利用虚拟机(QEMU)学习X86指令集0
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
+    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
+    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a class="bds_count" data-cmd="count"></a>
+  </div>
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "2",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "share": {
+        "bdSize": "16",
+        "bdStyle": "0"
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      }
+    }
+  </script>
+
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="Yi颗烂樱桃">
+            
+              <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+            <div class="cc-license motion-element" itemprop="license">
+              <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" class="cc-opacity" target="_blank">
+                <img src="/images/cc-by-nc-nd.svg" alt="Creative Commons">
+              </a>
+            </div>
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#浅谈“内存读写重排序”"><span class="nav-number">1.</span> <span class="nav-text">浅谈“内存读写重排序”</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#X86的内存读写顺序模型"><span class="nav-number">1.1.</span> <span class="nav-text">X86的内存读写顺序模型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#弱顺序模型"><span class="nav-number">1.1.1.</span> <span class="nav-text">弱顺序模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#强顺序模型"><span class="nav-number">1.1.2.</span> <span class="nav-text">强顺序模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#顺序一致"><span class="nav-number">1.1.3.</span> <span class="nav-text">顺序一致</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译时内存顺序重排序"><span class="nav-number">2.</span> <span class="nav-text">编译时内存顺序重排序</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如何阻止编译器的重排序？"><span class="nav-number">2.1.</span> <span class="nav-text">如何阻止编译器的重排序？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU运行时重排序"><span class="nav-number">3.</span> <span class="nav-text">CPU运行时重排序</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#回顾SDM8-2-3-4的内容"><span class="nav-number">3.1.</span> <span class="nav-text">回顾SDM8.2.3.4的内容</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#代码实现"><span class="nav-number">3.2.</span> <span class="nav-text">代码实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#源码分析"><span class="nav-number">3.3.</span> <span class="nav-text">源码分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#执行结果"><span class="nav-number">3.4.</span> <span class="nav-text">执行结果</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LFENCE-和-SFENCE"><span class="nav-number">4.</span> <span class="nav-text">LFENCE 和 SFENCE</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yi颗烂樱桃</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">62.7k</span>
+
+  <span class="post-meta-divider">|</span>
+  
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  <span class="site-uv">
+    <i class="fa fa-user"></i>
+    <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    
+  </span>
+
+
+
+  <span class="site-pv">
+    <i class="fa fa-eye"></i>
+    <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    
+  </span>
+
+</div>
+
+<div align="center">
+	<img style="display:inline-block;" src="images/icp.png"> 
+	<a href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备13030765号-8</a>
+
+	<img style="display:inline-block;" src="images/beian.png"> 
+	<a href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备13030765号-8</a>
+	<a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202004052">沪公网安备 31011202004052号</a>
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+  
+  <script type="text/javascript" color="129,216,208" opacity="0.5" zindex="-2" count="50" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three.min.js"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three-waves.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kity.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kityminder.core.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/mindmap.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: true,
+        notify: false,
+        appId: 'sIDOr6ptvMjLBmxig1vHlYsG-gzGzoHsz',
+        appKey: 'c1R9jtqasnufksgJUCE3eWo5',
+        placeholder: '亲，你不想说点什么吗？？ :D',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+</body>
+</html>

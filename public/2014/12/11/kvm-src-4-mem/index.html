@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="代码版本：https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git v3.16.37 在虚拟机的创建与运行中pc_init_pci负责(“KVM源代码分析2:虚拟机的创建与运行”)，内存初始化也是在这里完成的，还是一步步从qemu说起，在vl.c的main函数中有ram_size参数，由qemu入参标识QEMU_">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-12-11T03:27:01.008Z">
+<meta property="og:updated_time" content="2019-01-03T03:23:42.941Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="KVM源代码分析4:内存虚拟化">
 <meta name="twitter:description" content="代码版本：https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git v3.16.37 在虚拟机的创建与运行中pc_init_pci负责(“KVM源代码分析2:虚拟机的创建与运行”)，内存初始化也是在这里完成的，还是一步步从qemu说起，在vl.c的main函数中有ram_size参数，由qemu入参标识QEMU_">
@@ -976,7 +976,7 @@ static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-count">20</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -987,7 +987,7 @@ static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-count">7</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -998,7 +998,7 @@ static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-count">10</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -1041,7 +1041,7 @@ static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2019</span>
   <span class="with-love">
     <i class="fa fa-snowflake-o"></i>
   </span>
@@ -1055,8 +1055,36 @@ static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">26.2k</span>
+    <span title="Site words total count">62.7k</span>
+
+  <span class="post-meta-divider">|</span>
   
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  <span class="site-uv">
+    <i class="fa fa-user"></i>
+    <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    
+  </span>
+
+
+
+  <span class="site-pv">
+    <i class="fa fa-eye"></i>
+    <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    
+  </span>
+
+</div>
+
+<div align="center">
+	<img style="display:inline-block;" src="images/icp.png"> 
+	<a href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备13030765号-8</a>
+
+	<img style="display:inline-block;" src="images/beian.png"> 
+	<a href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备13030765号-8</a>
+	<a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202004052">沪公网安备 31011202004052号</a>
 </div>
 
 
@@ -1068,26 +1096,6 @@ static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
 
 
         
-<div class="busuanzi-count">
-  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
-
-  
-    <span class="site-uv">
-      <i class="fa fa-user"></i>
-      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
-      
-    </span>
-  
-
-  
-    <span class="site-pv">
-      <i class="fa fa-eye"></i>
-      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
-      
-    </span>
-  
-</div>
-
 
 
 
@@ -1195,6 +1203,12 @@ static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
   <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
 
   <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kity.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kityminder.core.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/mindmap.js?v=5.1.4"></script>
 
 
 
