@@ -76,7 +76,7 @@
 
 
 
-  <meta name="keywords" content="KVM,">
+  <meta name="keywords" content="KVM QEMU,">
 
 
 
@@ -87,22 +87,18 @@
 
 
 
-<meta name="description" content="原文链接：http://oenhan.com/kvm-src-2-vm-run 前段时间挖了一个坑，KVM源代码分析1:基本工作原理，准备写一下kvm的代码机制，结果一直没时间填土，现在还一下旧账，争取能温故而知新。 基本原理里面提到kvm虚拟化由用户态程序Qemu和内核态驱动kvm配合完成，qemu负责HOST用户态层面进程管理，IO处理等，KVM负责把qemu的部分指令在硬件上直接实现，从虚拟">
-<meta name="keywords" content="KVM">
+<meta name="description" content="为什么这么做？ 系统完成一次重启的时间太久。 越来越频繁的安全相关的紧急的升级，包括Firmware/microcode/OS/VMM/QEMU。 运行中断给“云”服务提供商带来不好的用户体验。  目前已有的类似方案 Live patch在线补丁； 虚拟机热迁移；  这里暂且不评价各个方案的优劣，仅仅是想提供一个选择3！ 重点是，简单快捷，包教包会。 方案的工作流程 运行QEMU创建VM，在VM中">
+<meta name="keywords" content="KVM QEMU">
 <meta property="og:type" content="article">
-<meta property="og:title" content="KVM源代码分析2:虚拟机的创建与运行">
-<meta property="og:url" content="http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/index.html">
+<meta property="og:title" content="利用虚拟机(QEMU)实现宿主机快速重启">
+<meta property="og:url" content="http://www.owalle.com/2019/12/18/fast-restart/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="原文链接：http://oenhan.com/kvm-src-2-vm-run 前段时间挖了一个坑，KVM源代码分析1:基本工作原理，准备写一下kvm的代码机制，结果一直没时间填土，现在还一下旧账，争取能温故而知新。 基本原理里面提到kvm虚拟化由用户态程序Qemu和内核态驱动kvm配合完成，qemu负责HOST用户态层面进程管理，IO处理等，KVM负责把qemu的部分指令在硬件上直接实现，从虚拟">
+<meta property="og:description" content="为什么这么做？ 系统完成一次重启的时间太久。 越来越频繁的安全相关的紧急的升级，包括Firmware/microcode/OS/VMM/QEMU。 运行中断给“云”服务提供商带来不好的用户体验。  目前已有的类似方案 Live patch在线补丁； 虚拟机热迁移；  这里暂且不评价各个方案的优劣，仅仅是想提供一个选择3！ 重点是，简单快捷，包教包会。 方案的工作流程 运行QEMU创建VM，在VM中">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/qemu_create_kvm_vm-1.png">
-<meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/qemu_module_init-1.png">
-<meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/qemu_memory_module-1.bmp">
-<meta property="og:updated_time" content="2018-12-11T07:04:43.120Z">
+<meta property="og:updated_time" content="2019-12-22T06:20:09.041Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="KVM源代码分析2:虚拟机的创建与运行">
-<meta name="twitter:description" content="原文链接：http://oenhan.com/kvm-src-2-vm-run 前段时间挖了一个坑，KVM源代码分析1:基本工作原理，准备写一下kvm的代码机制，结果一直没时间填土，现在还一下旧账，争取能温故而知新。 基本原理里面提到kvm虚拟化由用户态程序Qemu和内核态驱动kvm配合完成，qemu负责HOST用户态层面进程管理，IO处理等，KVM负责把qemu的部分指令在硬件上直接实现，从虚拟">
-<meta name="twitter:image" content="http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/qemu_create_kvm_vm-1.png">
+<meta name="twitter:title" content="利用虚拟机(QEMU)实现宿主机快速重启">
+<meta name="twitter:description" content="为什么这么做？ 系统完成一次重启的时间太久。 越来越频繁的安全相关的紧急的升级，包括Firmware/microcode/OS/VMM/QEMU。 运行中断给“云”服务提供商带来不好的用户体验。  目前已有的类似方案 Live patch在线补丁； 虚拟机热迁移；  这里暂且不评价各个方案的优劣，仅仅是想提供一个选择3！ 重点是，简单快捷，包教包会。 方案的工作流程 运行QEMU创建VM，在VM中">
 
 
 
@@ -132,13 +128,13 @@
 
 
 
-  <link rel="canonical" href="http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/">
+  <link rel="canonical" href="http://www.owalle.com/2019/12/18/fast-restart/">
 
 
 
 
 
-  <title>KVM源代码分析2:虚拟机的创建与运行 | Yi颗烂樱桃</title>
+  <title>利用虚拟机(QEMU)实现宿主机快速重启 | Yi颗烂樱桃</title>
   
 
 
@@ -317,7 +313,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2019/12/18/fast-restart/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Yi颗烂樱桃">
@@ -334,7 +330,7 @@
 
         
         
-          <h2 class="post-title" itemprop="name headline">KVM源代码分析2:虚拟机的创建与运行</h2>
+          <h2 class="post-title" itemprop="name headline">利用虚拟机(QEMU)实现宿主机快速重启</h2>
         
 
         <div class="post-meta">
@@ -346,8 +342,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2014-12-11T09:38:35+08:00">
-                2014-12-11
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-12-18T21:28:40+08:00">
+                2019-12-18
               </time>
             
 
@@ -369,8 +365,8 @@
               
               
                 <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM</span>
+                  <a href="/categories/QEMU/" itemprop="url" rel="index">
+                    <span itemprop="name">QEMU</span>
                   </a>
                 </span>
 
@@ -387,8 +383,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2014/12/11/kvm-src-2-vm-run/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2014/12/11/kvm-src-2-vm-run/" itemprop="commentCount"></span>
+                <a href="/2019/12/18/fast-restart/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/12/18/fast-restart/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -415,7 +411,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  3.2k
+                  1.7k
                 </span>
               
 
@@ -431,7 +427,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  13
+                  7
                 </span>
               
             </div>
@@ -452,266 +448,100 @@
       
 
       
-        <p>原文链接：<a href="http://oenhan.com/kvm-src-2-vm-run" target="_blank" rel="noopener">http://oenhan.com/kvm-src-2-vm-run</a></p>
-<p>前段时间挖了一个坑，<a href="http://www.oenhan.com/kvm-src-1" target="_blank" rel="noopener">KVM源代码分析1:基本工作原理</a>，准备写一下kvm的代码机制，结果一直没时间填土，现在还一下旧账，争取能温故而知新。 基本原理里面提到kvm虚拟化由用户态程序Qemu和<a href="http://www.oenhan.com/size-512-slab-kmalloc" title="从size-512内存泄露看slab分配" target="_blank" rel="noopener">内核态驱动</a>kvm配合完成，qemu负责HOST用户态层面进程管理，IO处理等，KVM负责把qemu的部分指令在硬件上直接实现，从<a href="http://www.oenhan.com/sort-optimal-solution" title="比较排序的最优解" target="_blank" rel="noopener">虚拟机</a>的创建和运行上看，qemu的代码占了流程上的主要部分。下面的代码主要主要针对与qemu，KVM部分另外开篇再说。</p>
-<p>代码：</p>
-<p>QEMU：git://git.qemu.org/qemu.git v2.4.0</p>
-<p>KVM：<a href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git" target="_blank" rel="noopener">https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git</a> v4.2</p>
-<p>QEMU和KVM是通过IOCTL进行配合的，直接抓住这个线看有kvm_ioctl、kvm_vm_ioctl、kvm_vcpu_ioctl、kvm_device_ioctl等，他们还都在一个C文件里面。</p>
-<p>使用kvm_ioctl很少了，直接看调用的代码，有KVM_GET_VCPU_MMAP_SIZE，KVM_CHECK_EXTENSION，KVM_GET_API_VERSION，KVM_CREATE_VM，KVM_GET_SUPPORTED_CPUID等等，需要记住只有KVM_CREATE_VM。</p>
-<p>而调用kvm_vm_ioctl的函数真是海了去了，需要看的是KVM_SET_USER_MEMORY_REGION，KVM_CREATE_VCPU，KVM_CREATE_DEVICE。</p>
-<p>所有寄存器的交换信息都是通过kvm_vcpu_ioctl，需要记住的操作只有，KVM_RUN。</p>
-<p>所有看QEMU和KVM的配合流程如下：</p>
-<p><img src="/2014/12/11/kvm-src-2-vm-run/qemu_create_kvm_vm-1.png" alt=""></p>
-<p>接下来参考上图分析qemu代码流程： 从vl.c代码的main函数开始。 atexit(qemu_run_exit_notifiers)注册了qemu的退出<a href="http://www.oenhan.com/5w2h" title="5W2H:技术活动逻辑方法" target="_blank" rel="noopener">处理函数</a>，后面在具体看qemu_run_exit_notifiers函数。 module_call_init则开始初始化qemu的各个模块，陆陆续续的有以下参数：</p>
-<pre class="lang:c decode:1 hljs cpp">
-typedef enum {
-    MODULE_INIT_BLOCK,
-    MODULE_INIT_MACHINE,
-    MODULE_INIT_QAPI,
-    MODULE_INIT_QOM,
-    MODULE_INIT_MAX
-} module_init_type;
-</pre>
+        <h2 id="为什么这么做？"><a href="#为什么这么做？" class="headerlink" title="为什么这么做？"></a>为什么这么做？</h2><ol>
+<li>系统完成一次重启的时间太久。</li>
+<li>越来越频繁的安全相关的紧急的升级，包括Firmware/microcode/OS/VMM/QEMU。</li>
+<li>运行中断给“云”服务提供商带来不好的用户体验。</li>
+</ol>
+<h2 id="目前已有的类似方案"><a href="#目前已有的类似方案" class="headerlink" title="目前已有的类似方案"></a>目前已有的类似方案</h2><ol>
+<li>Live patch在线补丁；</li>
+<li>虚拟机热迁移；</li>
+</ol>
+<p>这里暂且不评价各个方案的优劣，仅仅是想提供一个选择3！ 重点是，简单快捷，包教包会。</p>
+<h2 id="方案的工作流程"><a href="#方案的工作流程" class="headerlink" title="方案的工作流程"></a>方案的工作流程</h2><ol>
+<li>运行QEMU创建VM，在VM中进行任何操作。</li>
+<li>将现有的虚拟机（VM）保存（Snapshot）到内存（pmem）中。</li>
+<li>退出qemu，并且可以使用kexec软重启系统，同时可以升级内核、QEMU、Microcode 等。</li>
+<li>重新运行QEMU，恢复VM使其继续执行。</li>
+</ol>
+<div id="flowchart-0" class="flow-chart"></div>
 
-<p>最开始初始化的MODULE_INIT_QOM，QOM是qemu实现的一种<a href="http://www.oenhan.com/ext3-jbd-journal" title="journal block device代码分析" target="_blank" rel="noopener">模拟设备</a>，具体可以参考<a href="http://wiki.qemu.org/Features/QOM，代码下面的不远处就MODULE_INIT_MACHINE的初始化，这两条语句放到一起看，直接说一下module_call_init的机制。" target="_blank" rel="noopener">http://wiki.qemu.org/Features/QOM，代码下面的不远处就MODULE_INIT_MACHINE的初始化，这两条语句放到一起看，直接说一下module_call_init的机制。</a> module_call_init实际设计的一个函数链表，ModuleTypeList ，链表关系如下图<br><img src="/2014/12/11/kvm-src-2-vm-run/qemu_module_init-1.png" alt=""></p>
-<p>它把相关的函数注册到对应的数组链表上，通过执行init项目完成所有设备的初始化。module_call_init就是执行e-&gt;init()完成功能的，而e-&gt;init是什么时候通过register_module_init注册到ModuleTypeList上的ModuleEntry，是module_init注册的，而调用module_init的有</p>
-<pre class="lang:c decode:1 hljs cpp">
-\#define block_init(function) module_init(function, MODULE_INIT_BLOCK)
-\#define machine_init(function) module_init(function, MODULE_INIT_MACHINE)
-\#define qapi_init(function) module_init(function, MODULE_INIT_QAPI)
-\#define type_init(function) module_init(function, MODULE_INIT_QOM)
-</pre>
+<h3 id="内核准备"><a href="#内核准备" class="headerlink" title="内核准备"></a>内核准备</h3><h4 id="编译内核"><a href="#编译内核" class="headerlink" title="编译内核"></a>编译内核</h4><p>大概率需要重新编译一个内核，确保所有的所需kernel config都打开。<br>主要是三类内核Configure： NVDIMM，DAX和PMEM相关的都打开吧。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">CONFIG_X86_PMEM_LEGACY_DEVICE=y</span><br><span class="line">CONFIG_X86_PMEM_LEGACY=m</span><br><span class="line">CONFIG_BLK_DEV_PMEM=m</span><br><span class="line">CONFIG_ARCH_HAS_PMEM_API=y</span><br><span class="line"></span><br><span class="line">CONFIG_DAX_DRIVER=y</span><br><span class="line">CONFIG_DAX=y</span><br><span class="line">CONFIG_DEV_DAX=y</span><br><span class="line">CONFIG_DEV_DAX_PMEM=m</span><br><span class="line">CONFIG_DEV_DAX_KMEM=m</span><br><span class="line">CONFIG_DEV_DAX_PMEM_COMPAT=m</span><br><span class="line">CONFIG_FS_DAX=y</span><br><span class="line">CONFIG_FS_DAX_PMD=y</span><br><span class="line"></span><br><span class="line">CONFIG_LIBNVDIMM=m</span><br><span class="line">CONFIG_NVDIMM_PFN=y</span><br><span class="line">CONFIG_NVDIMM_DAX=y</span><br><span class="line">CONFIG_NVDIMM_KEYS=y</span><br></pre></td></tr></table></figure></p>
+<h4 id="内核参数"><a href="#内核参数" class="headerlink" title="内核参数"></a>内核参数</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">memmap=2G!4G</span><br></pre></td></tr></table></figure>
+<p>含义是，需要在内存中4G的位置开始，预留2G的内存空间。<a href="https://docs.pmem.io/persistent-memory/getting-started-guide/creating-development-environments/linux-environments/linux-memmap" target="_blank" rel="noopener">了解更详细的memmap用法及含义</a>。</p>
+<h3 id="QEMU准备"><a href="#QEMU准备" class="headerlink" title="QEMU准备"></a>QEMU准备</h3><h4 id="下载QEMU"><a href="#下载QEMU" class="headerlink" title="下载QEMU"></a>下载QEMU</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone git://git.qemu.org/qemu.git</span><br></pre></td></tr></table></figure>
+<p>其中包含了几个子模块，会在编译过程中下载。但是如果在墙内的网络环境中，通常这会失败，下面是墙内的步骤：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git clone git://git.qemu.org/qemu.git</span><br><span class="line">cd qemu</span><br><span class="line">git submodule init</span><br><span class="line">git submodule update --recursive</span><br></pre></td></tr></table></figure></p>
+<p>如果在<code>git submodule update</code>的过程中出现某个module下载失败，需要手动下载到相应的目录里，路径通常在错误日志中会提到<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git clone http://git.qemu.org/git/seabios.git/  roms/seabios</span><br><span class="line">git submodule update --recursive</span><br></pre></td></tr></table></figure></p>
+<p>直到这样的状态就可以放心编译QEMU了：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">git submodule status --recursive</span><br><span class="line">65cc4d2748a2c2e6f27f1cf39e07a5dbabd80ebf dtc (v1.4.0)</span><br><span class="line">87eea99e443b389c978cf37efc52788bf03a0ee0 pixman (pixman-0.32.6)</span><br><span class="line">b4c93802a5b2c72f096649c497ec9ff5708e4456 roms/SLOF (qemu-slof-20141202-63-gb4c9380)</span><br><span class="line">4e03af8ec2d497e725566a91fd5c19dd604c18a6 roms/ipxe (v1.0.0-2016-g4e03af8)</span><br><span class="line">3caee1794ac3f742315823d8447d21f33ce019e9 roms/openbios (3caee17)</span><br><span class="line">c559da7c8eec5e45ef1f67978827af6f0b9546f5 roms/openhackware (heads/master)</span><br><span class="line">c87a92639b28ac42bc8f6c67443543b405dc479b roms/qemu-palcode (heads/master)</span><br><span class="line">33fbe13a3e2a01e0ba1087a8feed801a0451db21 roms/seabios (rel-1.8.2)</span><br><span class="line">23d474943dcd55d0550a3d20b3d30e9040a4f15b roms/sgabios (heads/master)</span><br><span class="line">2072e7262965bb48d7fffb1e283101e6ed8b21a8 roms/u-boot (v2014.07-rc1-79-g2072e72)</span><br><span class="line">19ea12c230ded95928ecaef0db47a82231c2e485 roms/vgabios (heads/master)</span><br></pre></td></tr></table></figure></p>
+<h4 id="编译QEMU"><a href="#编译QEMU" class="headerlink" title="编译QEMU"></a>编译QEMU</h4><p>QEMU的编译并没有什么特别的，参数都可以“顾名思义” :)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./configure --target-list=x86_64-softmmu --enable-kvm --enable-libpmem --enable-vnc --enable-gtk --disable-werror</span><br><span class="line"></span><br><span class="line">make</span><br></pre></td></tr></table></figure></p>
+<h3 id="具体步骤"><a href="#具体步骤" class="headerlink" title="具体步骤"></a>具体步骤</h3><p>可以通过DAX设备（DAX device）或者DAX文件（DAX file)两种方式来达到同样的效果。</p>
+<h4 id="方法一：DEV-device实现方法"><a href="#方法一：DEV-device实现方法" class="headerlink" title="方法一：DEV device实现方法"></a>方法一：DEV device实现方法</h4><p>使用<code>/dev/dax0.0</code>作为vNVDIMM的后端（backend）</p>
+<ol>
+<li>创建虚拟机<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">        --enable-kvm \</span><br><span class="line">   	-M q35 \</span><br><span class="line">        -m 2G -smp 1 \</span><br><span class="line">        -hda ubuntu-1904.qcow2 \</span><br><span class="line">        -object memory-backend-file,id=dimm0,size=4g,mem-path=/dev/dax0.0,share=on,pmem=on,align=2M \</span><br><span class="line">        -numa node,memdev=dimm0,cpus=0 \</span><br><span class="line">        -monitor stdio \</span><br><span class="line">        -vnc :7</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>两点说明：</p>
+<ul>
+<li><p><code>-object memory-backend-file,id=dimm0,size=4g,mem-path=/dev/dax0.0,share=on,pmem=on,align=2M</code>意思是：</p>
+<ul>
+<li>创建一个容量为<code>4g</code>的后端存储设备，设备节点路径是<code>/dev/dax0.0</code>，所以对这个虚拟NVDIMMM设备（vNDVIMM）设备的访问，都会走到<code>/dev/dax0.0</code></li>
+<li><code>share=on</code> 控制虚拟机写操作的可见性。如果share=on，那么虚拟机对这个存储设备的“写”操作会提交到设备上，同时，如果有其他虚拟机使用同一个存储设备，上面的“写”操作同样会被“看”到。如果share=off,那么虚拟机的“写”操作不会被提交到存储设备，也因此其他虚拟机无法“看“到此虚拟机”写“的内容。</li>
+<li><code>pmem=on</code> 同时需要满足QEMU编译的时候，打开了libpmem支持（–enable-libpmem）, 此时QEMU会保证虚拟机的对vNVDIMM设备的“写”操作的“持续性”；但如果这时候QEMU并没有enable libpmep，虚拟机会创建失败并且提示”lack of libpmem support”。</li>
+<li><code>align=2M</code> DAX设备需要2M对齐。</li>
+</ul>
+</li>
+<li><p><code>-numa node,memdev=dimm0,cpus=0</code> 意思是：<br>描述虚拟机的numa结构，这里主要是为了使用上一步创建的vNVDIMM作为虚拟机的内存。<br><a href="https://docs.pmem.io/persistent-memory/getting-started-guide/creating-development-environments/virtualization/qemu" target="_blank" rel="noopener">了解更详细的vNVDIMM用法及含义</a>。</p>
+</li>
+</ul>
+<p>这样虚拟机就创建好了，登录虚拟机（通过vncview :7）做点你想要做的事情。</p>
+<ol start="2">
+<li><p>保存虚拟机现场<br>在QEMU console中输入HMP命令，并且退出QEMU</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(qemu) migrate_set_capability x-ignore-shared on	//设置QEMU在保存VM的时候，忽略share=on的那些内存。这里指代不保存VM的pmem。</span><br><span class="line">(qemu) stop						//停止虚拟机</span><br><span class="line">(qemu) savevm s0					//保存虚拟机snapshot为s0</span><br><span class="line">(qemu) q						//退出QEMU</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>升级操作系统<br>这个时候，可以对宿主机为所欲为，比如更新QEMU，更新microcode，安装新kernel，kexec软重启。<br>kexec的使用方法:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kernel_image=&quot;/boot/vmlinuz-`uname -r`&quot;   </span><br><span class="line">initrd_image=&quot;/boot/initrd.img-`uname -r`&quot;</span><br><span class="line">sudo kexec -l $kernel_image --reuse-cmdline --initrd=$initrd_image</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>重启QEMU，恢复虚拟机现场</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">        --enable-kvm \</span><br><span class="line">        -M q35 \</span><br><span class="line">        -m 4G -smp 1 \</span><br><span class="line">        -hda $IMAGE_PATH/ubuntu-1904.qcow2 \</span><br><span class="line">        -object memory-backend-file,id=dimm0,size=4g,mem-path=/dev/dax0.0,share=on,pmem=on,align=2M \</span><br><span class="line">        -numa node,memdev=dimm0,cpus=0 \</span><br><span class="line">        -S \</span><br><span class="line">        -monitor stdio \</span><br><span class="line">        -vnc :7</span><br></pre></td></tr></table></figure>
+<p>在QEMU console中输入HMP命令，重新加载snapshot s0</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">(qemu) stop</span><br><span class="line">(qemu) loadvm s0</span><br><span class="line">(qemu) c</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h4 id="方法二：DAX-file实现方法"><a href="#方法二：DAX-file实现方法" class="headerlink" title="方法二：DAX file实现方法"></a>方法二：DAX file实现方法</h4><p>使用DAX file实现时，是用一个支持文件（支持影射为pmem）作为后端。“写”操作的“持续性”是“宿主机”的内核来支持（v4.15之后）。</p>
+<ol start="0">
+<li><p>创建虚拟机前的准备工作</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkfs.ext4 -b 4096 -E stride=512 -F /dev/pmem0		//格式化pmem设备</span><br><span class="line">mount -t ext4 -o dax /dev/pmem0 /dax			//把pmem设备mount到一个目录，支持DAX</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建虚拟机</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">	--enable-kvm \</span><br><span class="line">	-M q35 \</span><br><span class="line">	-m 4G -smp 1 \</span><br><span class="line">	-hda $IMAGE_PATH/ubuntu-1904.qcow2 \</span><br><span class="line">	-enable-dax -mem-path /dax \</span><br><span class="line">	-device vfio-pci,host=81:00.0,romfile= \</span><br><span class="line">	-monitor stdio \</span><br><span class="line">	-vnc :7</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li><code>-mem-path /dax</code> ：为虚拟机分配内存，使用一个临时创建的文件路径。这里是指之前mount的pmem0设备</li>
+<li><code>-enable-dax</code>： 正在努力upstream…… :p</li>
+</ul>
+<ol start="2">
+<li><p>保存虚拟机现场<br>在QEMU console中输入HMP命令，并且退出QEMU</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(qemu) migrate_set_capability x-ignore-shared on	//设置QEMU在保存VM的时候，忽略share=on的那些内存。这里指代不保存VM的pmem。</span><br><span class="line">(qemu) stop						//停止虚拟机</span><br><span class="line">(qemu) savevm s0 -dax-no-save				//保存虚拟机snapshot为s0</span><br><span class="line">(qemu) q						//退出QEMU</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>升级操作系统<br>这个时候，可以对宿主机为所欲为，比如更新QEMU，更新microcode，安装新kernel，kexec软重启。<br>kexec的使用方法:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kernel_image=&quot;/boot/vmlinuz-`uname -r`&quot;   </span><br><span class="line">initrd_image=&quot;/boot/initrd.img-`uname -r`&quot;</span><br><span class="line">sudo kexec -l $kernel_image --reuse-cmdline --initrd=$initrd_image</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>重启QEMU，恢复虚拟机现场</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">	--enable-kvm \</span><br><span class="line">	-M q35 \</span><br><span class="line">	-m 4G -smp 1 \</span><br><span class="line">	-hda $IMAGE_PATH/ubuntu-1904.qcow2 \</span><br><span class="line">	-enable-dax -mem-path /dax \</span><br><span class="line">	-loadvm s0,mode=dax \</span><br><span class="line">	-device vfio-pci,host=81:00.0,romfile= \</span><br><span class="line">	-monitor stdio \</span><br><span class="line">	-vnc :7</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li><code>-loadvm</code> 正在努力upstream…… :p</li>
+</ul>
+<p>至此，虚拟机又可以接着之前的地方呼啸的跑下去了。效果看下面的视频吧：</p>
+<p><iframe height="360" width="640" src="http://player.youku.com/embed/XNDQ3MTkyMTYzNg==" frameborder="0" 'allowfullscreen'=""></iframe><br><a href="http://v.youku.com/v_show/id_XNDQ3MTkyMTYzNg==.html?spm=a2h3j.8428770.3416059.1" target="_blank" rel="noopener">快速启动演示</a></p>
+<p><script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.8/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.11.3/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">step1=>operation: 创建虚拟机。
+step2=>operation: 保存虚拟机到pmem。
+step3=>operation: 退出QEMU、更新kernel、Microcode等升级。
+step4=>operation: 重新运行QEMU，恢复VM使其继续执行。
 
-<p>那么执行machine_init则是挂到了MODULE_INIT_MACHINE，type_init则将函数挂载了MODULE_INIT_QOM。那么排查一下是，我们只关注PC的注册，那么就是machine_init(pc_machine_init_##suffix)，源自DEFINE_PC_MACHINE(suffix, namestr, initfn, optsfn)宏，而DEFINE_I440FX_MACHINE有</p>
-<pre class="lang:c decode:1 hljs cpp">
-\#define DEFINE_I440FX_MACHINE(suffix, name, compatfn, optionfn)staticvoid pc_init_\##suffix(MachineState *machine)
-    {
-        void (*compat)(MachineState *m) = (compatfn);
-        if (compat) {
-            compat(machine);
-        }
-        pc_init1(machine);
-    }
-    DEFINE_PC_MACHINE(suffix, name, pc_init_\##suffix, optionfn)
-
-\#define DEFINE_PC_MACHINE(suffix, namestr, initfn, optsfn)
-    static void pc_machine_\##suffix##_class_init(ObjectClass *oc, void *data)
-    {
-        MachineClass *mc = MACHINE_CLASS(oc);
-        optsfn(mc);
-        mc->name = namestr;
-        mc->init = initfn;
-    }
-    static const TypeInfo pc_machine_type_\##suffix = {
-        .name       = namestr TYPE_MACHINE_SUFFIX,
-        .parent     = TYPE_PC_MACHINE,
-        .class_init = pc_machine_\##suffix##_class_init,
-    };
-    static void pc_machine_init_\##suffix(void)
-    {
-        type_register(&pc_machine_type_\##suffix);
-    }
-    machine_init(pc_machine_init_\##suffix)
-</pre>
-
-<p>DEFINE_PC_MACHINE注册的函数pc_init_##suffix在DEFINE_I440FX_MACHINE中定义，怎么组合都无关，pc_init1(machine)函数一定要执行，本质就是pc_init1赋值给了mc-&gt;init，其他爱看不看吧。<br>而module_init的宏是</p>
-<pre class="lang:c decode:1 hljs cpp">
-\#define module_init(function, type)static void __attribute__((constructor)) do_qemu_init_ \## function(void)
-{
-    register_dso_module_init(function, type);
-}
-\#else
-/* This should not be used directly.  Use block_init etc. instead.  */
-\#define module_init(function, type)
-static void __attribute__((constructor)) do_qemu_init_ \## function(void)
-{
-    register_module_init(function, type);
-}
-</pre>
-
-<p>它前面的修饰是<strong>attribute</strong>((constructor)),这个导致machine_init或者type_init等会在main()之前就被执行。所有type_init(kvm_type_init）-&gt; kvm_accel_type -&gt; kvm_accel_class_init -&gt; kvm_init依次完成了函数注册，所有说module_call_init(MODULE_INIT_QOM)函数已经完成了kvm_init的执行，所有这样就清楚KVM调用关系了。<br>如此就先去看kvm_init函数，前面主要干了一件事，填充KVMState *s结构体，然后通过kvm_ioctl(s, KVM_GET_API_VERSION, 0)判断内核KVM驱动和当前QEMU版本是否兼容，下面则是执行kvm_ioctl(s, KVM_CREATE_VM, type)进行虚拟机的创建活动，创建了KVM虚拟机，获取虚拟机<a href="http://www.oenhan.com/kernel-deadlock-check" title="Linux内核死锁检测机制" target="_blank" rel="noopener">句柄</a>。具体KVM_CREATE_VM在内核态做了什么，ioctl的工作等另外再说，现在假定KVM_CREATE_VM所代表的虚拟机创建成功，下面通过检查kvm_check_extension结果填充KVMState，kvm_arch_init初始化KVMState，其中有IDENTITY_MAP_ADDR，TSS_ADDR，NR_MMU_PAGES等，cpu_register_phys_memory_client注册qemu对<a href="http://www.oenhan.com/size-512-slab-kmalloc" title="从size-512内存泄露看slab分配" target="_blank" rel="noopener">内存管理</a>的函数集，kvm_create_irqchip创建kvm中断管理内容，通过kvm_vm_ioctl(s, KVM_CREATE_IRQCHIP)实现，具体内核态的工作内容后面分析。到此kvm_init的工作就完成了，最主要的工作就是创建的虚拟机。</p>
-<p>这样绕了这么大圈，重新回到vl.c上面来，前面刚说了module_call_init(MODULE_INIT_MACHINE)本质就是把pc_init1赋值给了mc-&gt;init，然后machine_class = find_default_machine()，如此可以看到machine_class的init函数一定会执行pc_init1。</p>
-<p>下面涉及对OPT入参的解析过程略过不提。 qemu准备<a href="http://www.oenhan.com/cgroups-src-1" title="Cgroups源码分析1:基本概念与框架" target="_blank" rel="noopener">模拟的机器</a>的类型从下面语句获得:</p>
-<pre class="lang:c decode:1 hljs nginx">
-current_machine = MACHINE(object_new(object_class_get_name(
-                          OBJECT_CLASS(machine_class))));
-</pre>
-
-<p>machine_class则是通过入参传入的</p>
-<pre class="lang:c decode:1 hljs bash">
-case QEMU_OPTION_machine:
-                olist = qemu_find_opts("machine");
-                opts = qemu_opts_parse_noisily(olist, optarg, true);
-                if (!opts) {
-                    exit(1);
-                }
-                break;
-</pre>
-
-<p>man qemu</p>
-<pre class="lang:shell decode:1 hljs sql">
-       -machine [type=]name[,prop=value[,...]]
-           Select the emulated machine by name.
-           Use "-machine help" to list available machines
-</pre>
-
-<p>下面有cpu_exec_init_all就是执行了qemu的内存结构体的初始化而已，cpudef_init则提供了VCPU的不同型号的模拟，qemu_set_log设置日志输出，kvm对外的日志是从这里配置的。中间的乱七八糟的就忽略掉即可，然后直接到了machine_class-&gt;init(current_machine)函数，其实就是执行了pc_init1。暂且记下来，先看下面的，cpu_synchronize_all_post_init就是内核和qemu数据不一致同步一下。下面的函数没有重要的了，只有vm_start()函数需要记一下，后面会用到。</p>
-<p>现在进入pc_init1函数：</p>
-<p>在pc_init1中重点看两个函数，pc_cpus_init和pc_memory_init，顾名思义，CPU和内存的初始化，中断，vga等函数的初始化先忽略掉，先看这两个。<br>pc_cpus_init入参是cpu_model，前面说过这是具体的CPU模型，所有X86的CPU模型都在builtin_x86_defs中定义，取其中一个看看</p>
-<pre class="lang:c decode:1 hljs objectivec">
-    {
-        .name = "SandyBridge",
-        .level = 0xd,
-        .vendor = CPUID_VENDOR_INTEL,
-        .family = 6,
-        .model = 42,
-        .stepping = 1,
-        .features[FEAT_1_EDX] =
-            CPUID_VME | CPUID_SSE2 | CPUID_SSE | CPUID_FXSR | CPUID_MMX |
-            CPUID_CLFLUSH | CPUID_PSE36 | CPUID_PAT | CPUID_CMOV | CPUID_MCA |
-            CPUID_PGE | CPUID_MTRR | CPUID_SEP | CPUID_APIC | CPUID_CX8 |
-            CPUID_MCE | CPUID_PAE | CPUID_MSR | CPUID_TSC | CPUID_PSE |
-            CPUID_DE | CPUID_FP87,
-        .features[FEAT_1_ECX] =
-            CPUID_EXT_AVX | CPUID_EXT_XSAVE | CPUID_EXT_AES |
-            CPUID_EXT_TSC_DEADLINE_TIMER | CPUID_EXT_POPCNT |
-            CPUID_EXT_X2APIC | CPUID_EXT_SSE42 | CPUID_EXT_SSE41 |
-            CPUID_EXT_CX16 | CPUID_EXT_SSSE3 | CPUID_EXT_PCLMULQDQ |
-            CPUID_EXT_SSE3,
-        .features[FEAT_8000_0001_EDX] =
-            CPUID_EXT2_LM | CPUID_EXT2_RDTSCP | CPUID_EXT2_NX |
-            CPUID_EXT2_SYSCALL,
-        .features[FEAT_8000_0001_ECX] =
-            CPUID_EXT3_LAHF_LM,
-        .features[FEAT_XSAVE] =
-            CPUID_XSAVE_XSAVEOPT,
-        .features[FEAT_6_EAX] =
-            CPUID_6_EAX_ARAT,
-        .xlevel = 0x80000008,
-        .model_id = "Intel Xeon E312xx (Sandy Bridge)",
-    },
-</pre>
-
-<p>你可以cat一个本地的/proc/cpuinfo，builtin_x86_defs定义的就是这些参数。<br>然后是for循环中针对每个CPU初始化，即pc_new_cpu，直接进入cpu_x86_create函数，<br>主要就是把CPUX86State填充了一下，涉及到CPUID和其他的feature。下面是x86_cpu_realize，即唤醒CPU，重点是qemu_init_vcpu，MCE忽略掉，走到qemu_kvm_start_vcpu，qemu创建VCPU，如下：</p>
-<pre class="lang:c decode:1 hljs php">
-//创建VPU对于的qemu线程，线程函数是qemu_kvm_cpu_thread_fn
-    qemu_thread_create(cpu->thread, thread_name, qemu_kvm_cpu_thread_fn,
-                       cpu, QEMU_THREAD_JOINABLE);
-    //如果线程没有创建成功，则一直在此处循环阻塞。说明多核vcpu的创建是顺序的
-    while (!cpu->created) {
-        qemu_cond_wait(&qemu_cpu_cond, &qemu_global_mutex);
-    }
-</pre>
-
-<p>线程创建完成，具体任务支线提，回到主流程上，qemu_init_vcpu执行完成后，下面就是cpu_reset，此处的作用是什么呢？答案是无用，本质是一个空函数，它的主要功能就是CPUClass的reset函数，reset在cpu_class_init里面注册的，注册的是cpu_common_reset，这是一个空函数，没有任何作用。cpu_class_init则是被cpu_type_info即TYPE_CPU使用，而cpu_type_info则由type_init(cpu_register_types)完成，type_init则是前面提到的和machine_init对应的注册关系。根据下句完成工作</p>
-<pre class="lang:c decode:1 hljs cpp">
-\#define type_init(function) module_init(function, MODULE_INIT_QOM)
-</pre>
-
-<p>从上面看，pc_cpus_init函数过程已经理顺了，下面看一下，vcpu所在的线程对应的qemu_kvm_cpu_thread_fn中：</p>
-<pre class="lang:c decode:1 hljs objectivec">
-//初始化VCPU
-    r = kvm_init_vcpu(env);
-//初始化KVM中断
-    qemu_kvm_init_cpu_signals(env);
-
-//标志VCPU创建完成，和上面判断是对应的
-    cpu->created = true;
-    qemu_cond_signal(&qemu_cpu_cond);
-    while (1) {
-        if (cpu_can_run(env)) {
-          //CPU进入执行状态
-            r = kvm_cpu_exec(env);
-            if (r == EXCP_DEBUG) {
-                cpu_handle_guest_debug(env);
-            }
-        }
-        qemu_kvm_wait_io_event(env);
-    }
-</pre>
-
-<p>CPU进入执行状态的时候我们看到其他的VCPU包括内存可能还没有初始化，关键是此处有一个开关，qemu_cpu_cond,打开这个开关才能进入到CPU执行状态，谁来打开这个开关，后面再说。先看kvm_init_vcpu，通过kvm_vm_ioctl，KVM_CREATE_VCPU创建VCPU，用KVM_GET_VCPU_MMAP_SIZE获取env-&gt;kvm_run对应的内存映射，kvm_arch_init_vcpu则填充对应的kvm_arch内容，具体内核部分，后面单独写。kvm_init_vcpu就是获取了vcpu，将相关内容填充了env。<br>qemu_kvm_init_cpu_signals则是将中断组合掩码传递给kvm_set_signal_mask，最终给内核KVM_SET_SIGNAL_MASK。kvm_cpu_exec此时还在阻塞过程中，先挂起来，看<a href="http://www.oenhan.com/size-512-slab-kmalloc" title="从size-512内存泄露看slab分配" target="_blank" rel="noopener">内存的初始化</a>。<br>内存初始化函数是pc_memory_init,memory_region_init_ram传入了高端内存和低端内存的值，memory_region_init负责填充mr，重点在qemu_ram_alloc，即qemu_ram_alloc_from_ptr，首先有RAMBlock，ram_list，那就直接借助find_ram_offset函数一起看一下qemu的内存分布模型。<br><img src="/2014/12/11/kvm-src-2-vm-run/qemu_memory_module-1.bmp" alt=""></p>
-<p>qemu模拟了普通内存分布模型，内存的线性也是分块被使用的，每个块称为RAMBlock，由ram_list统领，RAMBlock.offset则是区块的线性地址，即相对于开始的偏移位，RAMBlock.length(size)则是区块的大小，find_ram_offset则是在线性区间内找到没有使用的一段空间，可以完全容纳新申请的ramblock length大小，代码就是进行了所有区块的遍历，找到满足新申请length的最小区间，把ramblock安插进去即可，返回的offset即是新分配区间的开始地址。<br>而RAMBlock的物理则是在RAMBlock.host,由kvm_vmalloc(size)分配真正物理内存，内部qemu_vmalloc使用qemu_memalign页<a href="http://www.oenhan.com/ubuntu-debuginfo-package" title="ubuntu下载debuginfo deb进行调试" target="_blank" rel="noopener">对齐分配</a>内存。后续的都是对RAMBlock的插入等处理。<br>从上面看，memory_region_init_ram已经将qemu内存模型和实际的物理内存初始化了。<br>vmstate_register_ram_global这个函数则是负责将前面提到的ramlist中的ramblock和memory region的初始地址对应一下，将mr-&gt;name填充到ramblock的idstr里面，就是让二者有确定的对应关系，如此mr就有了物理内存使用。<br>后面则是subregion的处理，memory_region_init_alias初始化，其中将ram传递给mr-&gt;owner确定了隶属关系，memory_region_add_subregion则是大头，memory_region_add_subregion_common前面的判断忽略，QTAILQ_INSERT_TAIL(&amp;mr-&gt;subregions, subregion, subregions_link)就是插入了链表而已，主要内容在memory_region_transaction_commit。<br>memory_region_transaction_commit中引入了新的结构address_spaces（AS），注释里面提到“AddressSpace: describes a mapping of addresses to #MemoryRegion objects”，就是内存地址的映射关系，因为内存有不同的应用类型，address_spaces以链表形式存在，commit函数则是对所有AS执行address_space_update_topology，先看AS在哪里注册的，就是前面提到的kvm_init里面，执行memory_listener_register，注册了address_space_memory和address_space_io两个，涉及的另外一个结构体则是MemoryListener，有kvm_memory_listener和kvm_io_listener，就是用于监控内存映射关系发生变化之后执行回调函数。<br>下面进入到address_space_update_topology函数，FlatView则是“Flattened global view of current active memory hierarchy”，address_space_get_flatview直接获取当前的，generate_memory_topology则根据前面已经变化的mr重新生成FlatView,然后通过address_space_update_topology_pass比较，简单说address_space_update_topology_pass就是两个FlatView逐条的FlatRange进行对比，以后一个FlatView为准，如果前面FlatView的FlatRange和后面的不一样，则对前面的FlatView的这条FlatRange进行处理，差别就是3种情况，如代码：</p>
-<pre class="lang:c decode:1 hljs php">
-while (iold < old_view->nr || inew < new_view->nr) {
-        if (iold < old_view->nr) {
-            frold = &old_view->ranges[iold];
-        } else {
-            frold = NULL;
-        }
-        if (inew < new_view->nr) {
-            frnew = &new_view->ranges[inew];
-        } else {
-            frnew = NULL;
-        }
-
-        if (frold
-            && (!frnew
-                || int128_lt(frold->addr.start, frnew->addr.start)
-                || (int128_eq(frold->addr.start, frnew->addr.start)
-                    && !flatrange_equal(frold, frnew)))) {
-            /* In old but not in new, or in both but attributes changed. */
-
-            if (!adding) { //这个判断代码添加的无用，可以直接删除,
-                //address_space_update_topology里面的两个pass也可以删除一个
-                MEMORY_LISTENER_UPDATE_REGION(frold, as, Reverse, region_del);
-            }
-
-            ++iold;
-        } else if (frold && frnew && flatrange_equal(frold, frnew)) {
-            /* In both and unchanged (except logging may have changed) */
-
-            if (adding) {
-                MEMORY_LISTENER_UPDATE_REGION(frnew, as, Forward, region_nop);
-                if (frold->dirty_log_mask && !frnew->dirty_log_mask) {
-                    MEMORY_LISTENER_UPDATE_REGION(frnew, as, Reverse, log_stop);
-                } else if (frnew->dirty_log_mask && !frold->dirty_log_mask) {
-                    MEMORY_LISTENER_UPDATE_REGION(frnew, as, Forward, log_start);
-                }
-            }
-
-            ++iold;
-            ++inew;
-        } else {
-            /* In new */
-
-            if (adding) {
-                MEMORY_LISTENER_UPDATE_REGION(frnew, as, Forward, region_add);
-            }
-
-            ++inew;
-        }
-    }
-</pre>
-
-<p>重点在MEMORY_LISTENER_UPDATE_REGION函数上，将变化的FlatRange构造一个MemoryRegionSection，然后遍历所有的memory_listeners，如果memory_listeners监控的内存区域和MemoryRegionSection一样，则执行第四个入参函数，如region_del函数，即kvm_region_del函数，这个是在kvm_init中初始化的。kvm_region_del主要是kvm_set_phys_mem函数，主要是将MemoryRegionSection有效值转换成KVMSlot形式，在kvm_set_user_memory_region中使用kvm_vm_ioctl(s, KVM_SET_USER_MEMORY_REGION, &amp;mem)传递给kernel。<br>我们看内存初始化真正需要做的是什么？就是qemu申请内存，把申请物理地址传递给kernel进行映射，那我们直接就可以KVMSlot申请内存，然后传递给kvm_vm_ioctl，这样也是OK的，之所以有这么多代码，因为qemu本身是一个软件虚拟机，mr涉及的地址已经是vm的地址，对于KVM是多余的，只是方便函数复用而已。<br>内存初始化之后还是pci等处理先跳过，如此pc_init就完成了，但是前面VM线程已经初始化成功，在qemu_kvm_cpu_thread_fn函数中等待运行：</p>
-<pre class="lang:c decode:1 hljs bash">
-while (1) {
-        if (cpu_can_run(cpu)) {
-            r = kvm_cpu_exec(cpu);
-            if (r == EXCP_DEBUG) {
-                cpu_handle_guest_debug(cpu);
-            }
-        }
-        qemu_kvm_wait_io_event(cpu);
-    }
-</pre>
-
-<p>判断条件就是cpu_can_run函数，即cpu-&gt;stop &amp;&amp; cpu-&gt;stopped &amp;&amp; current_run_state ！= running 都是false，而这几个参数都是由vm_start函数决定的</p>
-<pre class="lang:c decode:1 hljs cpp">
-void vm_start(void){
-    if (!runstate_is_running()) {
-        cpu_enable_ticks();
-        runstate_set(RUN_STATE_RUNNING);
-        vm_state_notify(1, RUN_STATE_RUNNING);
-        resume_all_vcpus();
-        monitor_protocol_event(QEVENT_RESUME, NULL);
-    }
-}
-</pre>
-
-<p>如此kvm_cpu_exec就真正进入执行阶段，即通过kvm_vcpu_ioctl传递KVM_RUN给内核。</p>
+step1->step2->step3->step4</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script></p>
 
       
     </div>
@@ -761,7 +591,7 @@ void vm_start(void){
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/" title="KVM源代码分析2:虚拟机的创建与运行">http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/</a>
+    <a href="http://www.owalle.com/2019/12/18/fast-restart/" title="利用虚拟机(QEMU)实现宿主机快速重启">http://www.owalle.com/2019/12/18/fast-restart/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>
@@ -776,7 +606,7 @@ void vm_start(void){
       
         <div class="post-tags">
           
-            <a href="/tags/KVM/" rel="tag"># KVM</a>
+            <a href="/tags/KVM-QEMU/" rel="tag"># KVM QEMU</a>
           
         </div>
       
@@ -789,8 +619,8 @@ void vm_start(void){
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2014/12/11/kvm-src-1/" rel="next" title="KVM源代码分析1:基本工作原理">
-                <i class="fa fa-chevron-left"></i> KVM源代码分析1:基本工作原理
+              <a href="/2019/07/16/study-x86-fence/" rel="next" title="利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令">
+                <i class="fa fa-chevron-left"></i> 利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令
               </a>
             
           </div>
@@ -798,10 +628,6 @@ void vm_start(void){
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2014/12/11/kvm-src-3-cpu/" rel="prev" title="KVM源代码分析3:CPU虚拟化">
-                KVM源代码分析3:CPU虚拟化 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -894,8 +720,17 @@ void vm_start(void){
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
             
@@ -963,6 +798,22 @@ void vm_start(void){
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么这么做？"><span class="nav-number">1.</span> <span class="nav-text">为什么这么做？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#目前已有的类似方案"><span class="nav-number">2.</span> <span class="nav-text">目前已有的类似方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#方案的工作流程"><span class="nav-number">3.</span> <span class="nav-text">方案的工作流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#内核准备"><span class="nav-number">3.1.</span> <span class="nav-text">内核准备</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#编译内核"><span class="nav-number">3.1.1.</span> <span class="nav-text">编译内核</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#内核参数"><span class="nav-number">3.1.2.</span> <span class="nav-text">内核参数</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#QEMU准备"><span class="nav-number">3.2.</span> <span class="nav-text">QEMU准备</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#下载QEMU"><span class="nav-number">3.2.1.</span> <span class="nav-text">下载QEMU</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#编译QEMU"><span class="nav-number">3.2.2.</span> <span class="nav-text">编译QEMU</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#具体步骤"><span class="nav-number">3.3.</span> <span class="nav-text">具体步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#方法一：DEV-device实现方法"><span class="nav-number">3.3.1.</span> <span class="nav-text">方法一：DEV device实现方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方法二：DAX-file实现方法"><span class="nav-number">3.3.2.</span> <span class="nav-text">方法二：DAX file实现方法</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
