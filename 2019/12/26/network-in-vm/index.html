@@ -76,7 +76,7 @@
 
 
 
-  <meta name="keywords" content="KVM QEMU,">
+  <meta name="keywords" content="qemu kvm network,">
 
 
 
@@ -87,18 +87,22 @@
 
 
 
-<meta name="description" content="为什么这么做？ 系统完成一次重启的时间太久。 越来越频繁的安全相关的紧急的升级，包括Firmware/microcode/OS/VMM/QEMU。 运行中断给“云”服务提供商带来不好的用户体验。  目前已有的类似方案 Live patch在线补丁； 虚拟机热迁移；  这里暂且不评价各个方案的优劣，仅仅是想提供一个选择3！ 重点是，简单快捷，包教包会。 方案的工作流程 运行QEMU创建VM，在VM中">
-<meta name="keywords" content="KVM QEMU">
+<meta name="description" content="当我们打算建一个或者多个虚拟机时，通常都伴随着虚拟机的联网问题。这里我们总结一下虚拟机上网的三种方法：NAT方式、Bridge方式和passthrough网卡。 NAT方式如图所示，NAT方式与家里上网的方式有点类似，虚拟机在一个子网内(192.168.122.255)，宿主机看做双网卡(虚拟了一个网卡)。此时虚拟机可以访问Internet，但Internet默认是无法访问虚拟机的。 NAT配置方">
+<meta name="keywords" content="qemu kvm network">
 <meta property="og:type" content="article">
-<meta property="og:title" content="利用虚拟机(QEMU)实现宿主机快速重启">
-<meta property="og:url" content="http://www.owalle.com/2019/12/18/fast-restart/index.html">
+<meta property="og:title" content="QEMU虚拟机上网的三种方式">
+<meta property="og:url" content="http://www.owalle.com/2019/12/26/network-in-vm/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="为什么这么做？ 系统完成一次重启的时间太久。 越来越频繁的安全相关的紧急的升级，包括Firmware/microcode/OS/VMM/QEMU。 运行中断给“云”服务提供商带来不好的用户体验。  目前已有的类似方案 Live patch在线补丁； 虚拟机热迁移；  这里暂且不评价各个方案的优劣，仅仅是想提供一个选择3！ 重点是，简单快捷，包教包会。 方案的工作流程 运行QEMU创建VM，在VM中">
+<meta property="og:description" content="当我们打算建一个或者多个虚拟机时，通常都伴随着虚拟机的联网问题。这里我们总结一下虚拟机上网的三种方法：NAT方式、Bridge方式和passthrough网卡。 NAT方式如图所示，NAT方式与家里上网的方式有点类似，虚拟机在一个子网内(192.168.122.255)，宿主机看做双网卡(虚拟了一个网卡)。此时虚拟机可以访问Internet，但Internet默认是无法访问虚拟机的。 NAT配置方">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-12-23T01:57:39.715Z">
+<meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat.png">
+<meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat2.png">
+<meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-bridge.png">
+<meta property="og:updated_time" content="2019-12-26T16:53:48.200Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="利用虚拟机(QEMU)实现宿主机快速重启">
-<meta name="twitter:description" content="为什么这么做？ 系统完成一次重启的时间太久。 越来越频繁的安全相关的紧急的升级，包括Firmware/microcode/OS/VMM/QEMU。 运行中断给“云”服务提供商带来不好的用户体验。  目前已有的类似方案 Live patch在线补丁； 虚拟机热迁移；  这里暂且不评价各个方案的优劣，仅仅是想提供一个选择3！ 重点是，简单快捷，包教包会。 方案的工作流程 运行QEMU创建VM，在VM中">
+<meta name="twitter:title" content="QEMU虚拟机上网的三种方式">
+<meta name="twitter:description" content="当我们打算建一个或者多个虚拟机时，通常都伴随着虚拟机的联网问题。这里我们总结一下虚拟机上网的三种方法：NAT方式、Bridge方式和passthrough网卡。 NAT方式如图所示，NAT方式与家里上网的方式有点类似，虚拟机在一个子网内(192.168.122.255)，宿主机看做双网卡(虚拟了一个网卡)。此时虚拟机可以访问Internet，但Internet默认是无法访问虚拟机的。 NAT配置方">
+<meta name="twitter:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat.png">
 
 
 
@@ -128,13 +132,13 @@
 
 
 
-  <link rel="canonical" href="http://www.owalle.com/2019/12/18/fast-restart/">
+  <link rel="canonical" href="http://www.owalle.com/2019/12/26/network-in-vm/">
 
 
 
 
 
-  <title>利用虚拟机(QEMU)实现宿主机快速重启 | Yi颗烂樱桃</title>
+  <title>QEMU虚拟机上网的三种方式 | Yi颗烂樱桃</title>
   
 
 
@@ -313,7 +317,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2019/12/18/fast-restart/">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2019/12/26/network-in-vm/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Yi颗烂樱桃">
@@ -330,7 +334,7 @@
 
         
         
-          <h2 class="post-title" itemprop="name headline">利用虚拟机(QEMU)实现宿主机快速重启</h2>
+          <h2 class="post-title" itemprop="name headline">QEMU虚拟机上网的三种方式</h2>
         
 
         <div class="post-meta">
@@ -342,8 +346,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-12-18T21:28:40+08:00">
-                2019-12-18
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-12-26T13:44:43+08:00">
+                2019-12-26
               </time>
             
 
@@ -365,8 +369,8 @@
               
               
                 <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/QEMU/" itemprop="url" rel="index">
-                    <span itemprop="name">QEMU</span>
+                  <a href="/categories/QEMU-KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">QEMU KVM</span>
                   </a>
                 </span>
 
@@ -383,8 +387,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2019/12/18/fast-restart/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2019/12/18/fast-restart/" itemprop="commentCount"></span>
+                <a href="/2019/12/26/network-in-vm/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/12/26/network-in-vm/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -411,7 +415,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  1.7k
+                  1.4k
                 </span>
               
 
@@ -427,7 +431,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  7
+                  6
                 </span>
               
             </div>
@@ -448,100 +452,72 @@
       
 
       
-        <h2 id="为什么这么做？"><a href="#为什么这么做？" class="headerlink" title="为什么这么做？"></a>为什么这么做？</h2><ol>
-<li>系统完成一次重启的时间太久。</li>
-<li>越来越频繁的安全相关的紧急的升级，包括Firmware/microcode/OS/VMM/QEMU。</li>
-<li>运行中断给“云”服务提供商带来不好的用户体验。</li>
+        <p>当我们打算建一个或者多个虚拟机时，通常都伴随着虚拟机的联网问题。这里我们总结一下虚拟机上网的三种方法：NAT方式、Bridge方式和passthrough网卡。</p>
+<h2 id="NAT方式"><a href="#NAT方式" class="headerlink" title="NAT方式"></a>NAT方式</h2><p>如图所示，NAT方式与家里上网的方式有点类似，虚拟机在一个子网内(192.168.122.255)，宿主机看做双网卡(虚拟了一个网卡)。此时虚拟机可以访问Internet，但Internet默认是无法访问虚拟机的。<br><img src="/2019/12/26/network-in-vm/network-nat.png" alt=""></p>
+<h3 id="NAT配置方法"><a href="#NAT配置方法" class="headerlink" title="NAT配置方法"></a>NAT配置方法</h3><ol>
+<li><p>确保已安装libvirt-clients和libvirt-daemon</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Ubuntu:</span><br><span class="line">apt-get install libvirt-clients		//使用virsh</span><br><span class="line">apt-get install libvirt-daemon		//使用libvirtd</span><br><span class="line">apt-get install qemu-system-common	//使用qemu-bridge-helper</span><br></pre></td></tr></table></figure>
+<p>确保libvirt-daemon服务开启</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">systemctl start libvirtd</span><br><span class="line">systemctl enable libvirtd</span><br></pre></td></tr></table></figure>
+<p>如果libvirtd启动成功的话会出现一个虚拟桥virbr0和virbr0-nic：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">#ip a</span><br><span class="line"></span><br><span class="line">1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000</span><br><span class="line">    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</span><br><span class="line">    inet 127.0.0.1/8 scope host lo</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">    inet6 ::1/128 scope host</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">2: eno1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc fq_codel state UP group default qlen 1000</span><br><span class="line">    link/ether d4:5d:df:07:c1:07 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 10.239.48.54/24 brd 10.239.48.255 scope global dynamic noprefixroute eno1</span><br><span class="line">       valid_lft 12387sec preferred_lft 12387sec</span><br><span class="line">    inet6 fe80::d65d:dfff:fe07:c107/64 scope link</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">3: virbr0: &lt;NO-CARRIER,BROADCAST,MULTICAST,UP&gt; mtu 1500 qdisc noqueue state DOWN group default qlen 1000</span><br><span class="line">    link/ether 52:54:00:d3:6d:2d brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.122.1/24 brd 192.168.122.255 scope global virbr0</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">4: virbr0-nic: &lt;BROADCAST,MULTICAST&gt; mtu 1500 qdisc fq_codel master virbr0 state DOWN group default qlen 1000</span><br><span class="line">    link/ether 52:54:00:d3:6d:2d brd ff:ff:ff:ff:ff:ff</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用virsh配置网络<br>在没有进行任何网络配置之前，应该是这样的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#virsh net-list --all</span><br><span class="line"></span><br><span class="line"> Name                 State      Autostart     Persistent</span><br><span class="line">----------------------------------------------------------</span><br></pre></td></tr></table></figure>
+<p>一个比较偷懒的办法是使用现成的配置文件default.xml，内容如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&lt;network&gt;</span><br><span class="line">  &lt;name&gt;default&lt;/name&gt;</span><br><span class="line">  &lt;uuid&gt;417b7ead-6342-40a4-b29f-02fa2d4df491&lt;/uuid&gt;</span><br><span class="line">  &lt;forward mode=&apos;nat&apos;/&gt;</span><br><span class="line">  &lt;bridge name=&apos;virbr0&apos; stp=&apos;on&apos; delay=&apos;0&apos;/&gt;</span><br><span class="line">  &lt;mac address=&apos;52:54:00:d3:6d:2d&apos;/&gt;</span><br><span class="line">  &lt;ip address=&apos;192.168.122.1&apos; netmask=&apos;255.255.255.0&apos;&gt;</span><br><span class="line">    &lt;dhcp&gt;</span><br><span class="line">      &lt;range start=&apos;192.168.122.2&apos; end=&apos;192.168.122.254&apos;/&gt;</span><br><span class="line">    &lt;/dhcp&gt;</span><br><span class="line">  &lt;/ip&gt;</span><br><span class="line">&lt;/network&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#virsh net-define default.xml</span><br><span class="line">#virsh net-start default</span><br><span class="line">#virsh net-list --all</span><br><span class="line"></span><br><span class="line"> Name                 State      Autostart     Persistent</span><br><span class="line">----------------------------------------------------------</span><br><span class="line"> default              active     yes           yes</span><br></pre></td></tr></table></figure>
+<p>如果看到看到上面的结果，那么“虚拟桥”（virt bridge）就配置成功了。<br>实际上NAT方式的时候，各个网卡之间的关系如图所示:<br><img src="/2019/12/26/network-in-vm/network-nat2.png" alt=""></p>
+</li>
+<li><p>QEMU创建虚拟机</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-x86_64 --enable-kvm -M q35 -m 4G -smp 1 -hda /root/ubuntu1904.qcow -vnc :7 \</span><br><span class="line">	-device virtio-net-pci,netdev=nic0,mac=00:16:3e:0c:12:78 \</span><br><span class="line">	-netdev tap,id=nic0,br=br0,helper=/usr/local/libexec/qemu-bridge-helper,vhost=on</span><br></pre></td></tr></table></figure>
+<p>因为使用了工具qemu-bridge-helper，它需要一个配置文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">/usr/local/etc/qemu/bridge.conf:</span><br><span class="line"></span><br><span class="line">#把我们有可能用得到的网桥名字都列在这里。</span><br><span class="line"></span><br><span class="line">allow br0</span><br><span class="line">allow br1</span><br><span class="line">allow virbr0</span><br></pre></td></tr></table></figure>
+<p>顺利的话，虚拟机起来之后会DHCP得到一个IP例如<code>192.168.122.177</code>。</p>
+</li>
 </ol>
-<h2 id="目前已有的类似方案"><a href="#目前已有的类似方案" class="headerlink" title="目前已有的类似方案"></a>目前已有的类似方案</h2><ol>
-<li>Live patch在线补丁；</li>
-<li>虚拟机热迁移；</li>
-</ol>
-<p>这里暂且不评价各个方案的优劣，仅仅是想提供一个选择3！ 重点是，简单快捷，包教包会。</p>
-<h2 id="方案的工作流程"><a href="#方案的工作流程" class="headerlink" title="方案的工作流程"></a>方案的工作流程</h2><ol>
-<li>运行QEMU创建VM，在VM中进行任何操作。</li>
-<li>将现有的虚拟机（VM）保存（Snapshot）到内存（pmem）中。</li>
-<li>退出qemu，并且可以使用kexec软重启系统，同时可以升级内核、QEMU、Microcode 等。</li>
-<li>重新运行QEMU，恢复VM使其继续执行。</li>
-</ol>
-<div id="flowchart-0" class="flow-chart"></div>
-
-<h3 id="内核准备"><a href="#内核准备" class="headerlink" title="内核准备"></a>内核准备</h3><h4 id="编译内核"><a href="#编译内核" class="headerlink" title="编译内核"></a>编译内核</h4><p>大概率需要重新编译一个内核，确保所有的所需kernel config都打开。<br>主要是三类内核Configure： NVDIMM，DAX和PMEM相关的都打开吧。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">CONFIG_X86_PMEM_LEGACY_DEVICE=y</span><br><span class="line">CONFIG_X86_PMEM_LEGACY=m</span><br><span class="line">CONFIG_BLK_DEV_PMEM=m</span><br><span class="line">CONFIG_ARCH_HAS_PMEM_API=y</span><br><span class="line"></span><br><span class="line">CONFIG_DAX_DRIVER=y</span><br><span class="line">CONFIG_DAX=y</span><br><span class="line">CONFIG_DEV_DAX=y</span><br><span class="line">CONFIG_DEV_DAX_PMEM=m</span><br><span class="line">CONFIG_DEV_DAX_KMEM=m</span><br><span class="line">CONFIG_DEV_DAX_PMEM_COMPAT=m</span><br><span class="line">CONFIG_FS_DAX=y</span><br><span class="line">CONFIG_FS_DAX_PMD=y</span><br><span class="line"></span><br><span class="line">CONFIG_LIBNVDIMM=m</span><br><span class="line">CONFIG_NVDIMM_PFN=y</span><br><span class="line">CONFIG_NVDIMM_DAX=y</span><br><span class="line">CONFIG_NVDIMM_KEYS=y</span><br></pre></td></tr></table></figure></p>
-<h4 id="内核参数"><a href="#内核参数" class="headerlink" title="内核参数"></a>内核参数</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">memmap=2G!4G</span><br></pre></td></tr></table></figure>
-<p>含义是，需要在内存中4G的位置开始，预留2G的内存空间。<a href="https://docs.pmem.io/persistent-memory/getting-started-guide/creating-development-environments/linux-environments/linux-memmap" target="_blank" rel="noopener">了解更详细的memmap用法及含义</a>。</p>
-<h3 id="QEMU准备"><a href="#QEMU准备" class="headerlink" title="QEMU准备"></a>QEMU准备</h3><h4 id="下载QEMU"><a href="#下载QEMU" class="headerlink" title="下载QEMU"></a>下载QEMU</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone git://git.qemu.org/qemu.git</span><br></pre></td></tr></table></figure>
-<p>其中包含了几个子模块，会在编译过程中下载。但是如果在墙内的网络环境中，通常这会失败，下面是墙内的步骤：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git clone git://git.qemu.org/qemu.git</span><br><span class="line">cd qemu</span><br><span class="line">git submodule init</span><br><span class="line">git submodule update --recursive</span><br></pre></td></tr></table></figure></p>
-<p>如果在<code>git submodule update</code>的过程中出现某个module下载失败，需要手动下载到相应的目录里，路径通常在错误日志中会提到<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git clone http://git.qemu.org/git/seabios.git/  roms/seabios</span><br><span class="line">git submodule update --recursive</span><br></pre></td></tr></table></figure></p>
-<p>直到这样的状态就可以放心编译QEMU了：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">git submodule status --recursive</span><br><span class="line">65cc4d2748a2c2e6f27f1cf39e07a5dbabd80ebf dtc (v1.4.0)</span><br><span class="line">87eea99e443b389c978cf37efc52788bf03a0ee0 pixman (pixman-0.32.6)</span><br><span class="line">b4c93802a5b2c72f096649c497ec9ff5708e4456 roms/SLOF (qemu-slof-20141202-63-gb4c9380)</span><br><span class="line">4e03af8ec2d497e725566a91fd5c19dd604c18a6 roms/ipxe (v1.0.0-2016-g4e03af8)</span><br><span class="line">3caee1794ac3f742315823d8447d21f33ce019e9 roms/openbios (3caee17)</span><br><span class="line">c559da7c8eec5e45ef1f67978827af6f0b9546f5 roms/openhackware (heads/master)</span><br><span class="line">c87a92639b28ac42bc8f6c67443543b405dc479b roms/qemu-palcode (heads/master)</span><br><span class="line">33fbe13a3e2a01e0ba1087a8feed801a0451db21 roms/seabios (rel-1.8.2)</span><br><span class="line">23d474943dcd55d0550a3d20b3d30e9040a4f15b roms/sgabios (heads/master)</span><br><span class="line">2072e7262965bb48d7fffb1e283101e6ed8b21a8 roms/u-boot (v2014.07-rc1-79-g2072e72)</span><br><span class="line">19ea12c230ded95928ecaef0db47a82231c2e485 roms/vgabios (heads/master)</span><br></pre></td></tr></table></figure></p>
-<h4 id="编译QEMU"><a href="#编译QEMU" class="headerlink" title="编译QEMU"></a>编译QEMU</h4><p>QEMU的编译并没有什么特别的，参数都可以“顾名思义” :)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./configure --target-list=x86_64-softmmu --enable-kvm --enable-libpmem --enable-vnc --enable-gtk --disable-werror</span><br><span class="line"></span><br><span class="line">make</span><br></pre></td></tr></table></figure></p>
-<h3 id="具体步骤"><a href="#具体步骤" class="headerlink" title="具体步骤"></a>具体步骤</h3><p>可以通过DAX设备（DAX device）或者DAX文件（DAX file)两种方式来达到同样的效果。</p>
-<h4 id="方法一：DEV-device实现方法"><a href="#方法一：DEV-device实现方法" class="headerlink" title="方法一：DEV device实现方法"></a>方法一：DEV device实现方法</h4><p>使用<code>/dev/dax0.0</code>作为vNVDIMM的后端（backend）</p>
+<h2 id="Bridge方式"><a href="#Bridge方式" class="headerlink" title="Bridge方式"></a>Bridge方式</h2><p>如图所示，bridge方式是让虚拟机获得跟host一样网段的IP地址，就像是host的一个“网上邻居”一样。<br><img src="/2019/12/26/network-in-vm/network-bridge.png" alt=""></p>
+<h3 id="Bridge方式的配置方法1"><a href="#Bridge方式的配置方法1" class="headerlink" title="Bridge方式的配置方法1"></a>Bridge方式的配置方法1</h3><p>首先使用’ip’工具来配置，注意这种方法是临时的，一旦重启系统，这些配置需要重新做。</p>
 <ol>
-<li>创建虚拟机<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">        --enable-kvm \</span><br><span class="line">   	-M q35 \</span><br><span class="line">        -m 2G -smp 1 \</span><br><span class="line">        -hda ubuntu-1904.qcow2 \</span><br><span class="line">        -object memory-backend-file,id=dimm0,size=4g,mem-path=/dev/dax0.0,share=on,pmem=on,align=2M \</span><br><span class="line">        -numa node,memdev=dimm0,cpus=0 \</span><br><span class="line">        -monitor stdio \</span><br><span class="line">        -vnc :7</span><br></pre></td></tr></table></figure>
+<li><p>创建一个“网桥”(bridge),取名br0</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip link add name br0 type bridge</span><br><span class="line">ip link set br0 up</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>把物理网卡绑定到网桥上：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ip link set dev enp3s0f1 master br0	//enp3s0f1 是网卡interface的名字</span><br></pre></td></tr></table></figure>
+<p>这步之后，可以通过<code>ip a</code>查看，br0 和 enp3s0f1具有相同的mac地址。</p>
+</li>
+<li><p>重启网络服务：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl restart NetworkManager</span><br></pre></td></tr></table></figure>
+<p>正常情况下，网络重启之后，br0会拿到IP，而之前的enp3s0f1不会拿到IP了。如果不是，执行下面命令:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ifdown enp3s0f1</span><br><span class="line">ifdown br0</span><br><span class="line">ifup br0</span><br><span class="line">ifup enp3s0f1</span><br><span class="line">systemctl restart NetworkManager</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>QEMU创建虚拟机</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-x86_64 --enable-kvm -M q35 -m 4G -smp 1 -hda /root/ubuntu1904.qcow -vnc :7 \</span><br><span class="line">	-device virtio-net-pci,netdev=nic0,mac=00:16:3e:0c:12:78 \</span><br><span class="line">	-netdev tap,id=nic0,br=br0,helper=/usr/local/libexec/qemu-bridge-helper,vhost=on</span><br></pre></td></tr></table></figure>
+<p>吼吼，创建虚拟机的步骤与NAT时，没有区别，除了注意一下网桥的名字之外。</p>
+</li>
+<li><p>(选做)如果想要删掉“网桥”执行下面的步骤：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ip link set dev enp3s0f1 nomaster</span><br><span class="line">ip link set dev br0 down</span><br><span class="line">ip link del br0</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
-<p>两点说明：</p>
-<ul>
-<li><p><code>-object memory-backend-file,id=dimm0,size=4g,mem-path=/dev/dax0.0,share=on,pmem=on,align=2M</code>意思是：</p>
-<ul>
-<li>创建一个容量为<code>4g</code>的后端存储设备，设备节点路径是<code>/dev/dax0.0</code>，所以对这个虚拟NVDIMMM设备（vNDVIMM）设备的访问，都会走到<code>/dev/dax0.0</code></li>
-<li><code>share=on</code> 控制虚拟机写操作的可见性。如果share=on，那么虚拟机对这个存储设备的“写”操作会提交到设备上，同时，如果有其他虚拟机使用同一个存储设备，上面的“写”操作同样会被“看”到。如果share=off,那么虚拟机的“写”操作不会被提交到存储设备，也因此其他虚拟机无法“看“到此虚拟机”写“的内容。</li>
-<li><code>pmem=on</code> 同时需要满足QEMU编译的时候，打开了libpmem支持（–enable-libpmem）, 此时QEMU会保证虚拟机的对vNVDIMM设备的“写”操作的“持续性”；但如果这时候QEMU并没有enable libpmep，虚拟机会创建失败并且提示”lack of libpmem support”。</li>
-<li><code>align=2M</code> DAX设备需要2M对齐。</li>
-</ul>
+<h3 id="Bridge方式的配置方法2"><a href="#Bridge方式的配置方法2" class="headerlink" title="Bridge方式的配置方法2"></a>Bridge方式的配置方法2</h3><p>这里借用工具nmcli来配置，参考了<a href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-network_bridging_using_the_networkmanager_command_line_tool_nmcli" target="_blank" rel="noopener">USING THE NETWORKMANAGER COMMAND LINE TOOL, NMCLI</a></p>
+<ol>
+<li><p>简单来说执行下面的命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#nmcli con add type bridge ifname br0</span><br><span class="line">#nmcli con add type ethernet ifname enp3s0f1 master bridge-br0</span><br><span class="line">#nmcli connection down enp3s0f1</span><br><span class="line">#nmcli connection up bridge-br0</span><br><span class="line"></span><br><span class="line">#systemctl restart NetworkManager</span><br></pre></td></tr></table></figure>
+<p>这样应该就创建好网桥br1了</p>
 </li>
-<li><p><code>-numa node,memdev=dimm0,cpus=0</code> 意思是：<br>描述虚拟机的numa结构，这里主要是为了使用上一步创建的vNVDIMM作为虚拟机的内存。<br><a href="https://docs.pmem.io/persistent-memory/getting-started-guide/creating-development-environments/virtualization/qemu" target="_blank" rel="noopener">了解更详细的vNVDIMM用法及含义</a>。</p>
-</li>
-</ul>
-<p>这样虚拟机就创建好了，登录虚拟机（通过vncview :7）做点你想要做的事情。</p>
-<ol start="2">
-<li><p>保存虚拟机现场<br>在QEMU console中输入HMP命令，并且退出QEMU</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(qemu) migrate_set_capability x-ignore-shared on	//设置QEMU在保存VM的时候，忽略share=on的那些内存。这里指代不保存VM的pmem。</span><br><span class="line">(qemu) stop						//停止虚拟机</span><br><span class="line">(qemu) savevm s0					//保存虚拟机snapshot为s0</span><br><span class="line">(qemu) q						//退出QEMU</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>升级操作系统<br>这个时候，可以对宿主机为所欲为，比如更新QEMU，更新microcode，安装新kernel，kexec软重启。<br>kexec的使用方法:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kernel_image=&quot;/boot/vmlinuz-`uname -r`&quot;   </span><br><span class="line">initrd_image=&quot;/boot/initrd.img-`uname -r`&quot;</span><br><span class="line">sudo kexec -l $kernel_image --reuse-cmdline --initrd=$initrd_image</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>重启QEMU，恢复虚拟机现场</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">        --enable-kvm \</span><br><span class="line">        -M q35 \</span><br><span class="line">        -m 4G -smp 1 \</span><br><span class="line">        -hda $IMAGE_PATH/ubuntu-1904.qcow2 \</span><br><span class="line">        -object memory-backend-file,id=dimm0,size=4g,mem-path=/dev/dax0.0,share=on,pmem=on,align=2M \</span><br><span class="line">        -numa node,memdev=dimm0,cpus=0 \</span><br><span class="line">        -S \</span><br><span class="line">        -monitor stdio \</span><br><span class="line">        -vnc :7</span><br></pre></td></tr></table></figure>
-<p>在QEMU console中输入HMP命令，重新加载snapshot s0</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">(qemu) stop</span><br><span class="line">(qemu) loadvm s0</span><br><span class="line">(qemu) c</span><br></pre></td></tr></table></figure>
+<li><p>QEMU创建虚拟机的步骤还是跟之前的一样。<br>这个方法的有点就是系统重启之后，配置还在。</p>
 </li>
 </ol>
-<h4 id="方法二：DAX-file实现方法"><a href="#方法二：DAX-file实现方法" class="headerlink" title="方法二：DAX file实现方法"></a>方法二：DAX file实现方法</h4><p>使用DAX file实现时，是用一个支持文件（支持影射为pmem）作为后端。“写”操作的“持续性”是“宿主机”的内核来支持（v4.15之后）。</p>
-<ol start="0">
-<li><p>创建虚拟机前的准备工作</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkfs.ext4 -b 4096 -E stride=512 -F /dev/pmem0		//格式化pmem设备</span><br><span class="line">mount -t ext4 -o dax /dev/pmem0 /dax			//把pmem设备mount到一个目录，支持DAX</span><br></pre></td></tr></table></figure>
+<h3 id="pass-through物理网卡"><a href="#pass-through物理网卡" class="headerlink" title="pass-through物理网卡"></a>pass-through物理网卡</h3><p>这种方法的网络拓扑结构跟bridge方式是一样的，不过这次虚拟机成为货真价实的网上邻居，因为它使用的是物理网卡。如果host上恰好有一个多余的网卡，不放试下这个方法。<br>pass-through物理网卡虽然实现起来相对复杂，但用起来确比较容易：</p>
+<ol>
+<li><p>确保host没有加载对应网卡的驱动<br>不过通常这都太可能，可以参考<a href="vfio-pci.sh">这个脚本</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># ./vfio-pci.sh -h &lt;B:D:F&gt;</span><br></pre></td></tr></table></figure>
 </li>
-<li><p>创建虚拟机</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">	--enable-kvm \</span><br><span class="line">	-M q35 \</span><br><span class="line">	-m 4G -smp 1 \</span><br><span class="line">	-hda $IMAGE_PATH/ubuntu-1904.qcow2 \</span><br><span class="line">	-enable-dax -mem-path /dax \</span><br><span class="line">	-device vfio-pci,host=81:00.0,romfile= \</span><br><span class="line">	-monitor stdio \</span><br><span class="line">	-vnc :7</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<ul>
-<li><code>-mem-path /dax</code> ：为虚拟机分配内存，使用一个临时创建的文件路径。这里是指之前mount的pmem0设备</li>
-<li><code>-enable-dax</code>： 正在努力upstream…… :p</li>
-</ul>
-<ol start="2">
-<li><p>保存虚拟机现场<br>在QEMU console中输入HMP命令，并且退出QEMU</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(qemu) migrate_set_capability x-ignore-shared on	//设置QEMU在保存VM的时候，忽略share=on的那些内存。这里指代不保存VM的pmem。</span><br><span class="line">(qemu) stop						//停止虚拟机</span><br><span class="line">(qemu) savevm s0 -dax-no-save				//保存虚拟机snapshot为s0</span><br><span class="line">(qemu) q						//退出QEMU</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>升级操作系统<br>这个时候，可以对宿主机为所欲为，比如更新QEMU，更新microcode，安装新kernel，kexec软重启。<br>kexec的使用方法:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kernel_image=&quot;/boot/vmlinuz-`uname -r`&quot;   </span><br><span class="line">initrd_image=&quot;/boot/initrd.img-`uname -r`&quot;</span><br><span class="line">sudo kexec -l $kernel_image --reuse-cmdline --initrd=$initrd_image</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>重启QEMU，恢复虚拟机现场</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">	--enable-kvm \</span><br><span class="line">	-M q35 \</span><br><span class="line">	-m 4G -smp 1 \</span><br><span class="line">	-hda $IMAGE_PATH/ubuntu-1904.qcow2 \</span><br><span class="line">	-enable-dax -mem-path /dax \</span><br><span class="line">	-loadvm s0,mode=dax \</span><br><span class="line">	-device vfio-pci,host=81:00.0,romfile= \</span><br><span class="line">	-monitor stdio \</span><br><span class="line">	-vnc :7</span><br></pre></td></tr></table></figure>
+<li><p>QEMU创建虚拟机</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-x86_64 --enable-kvm -M q35 -m 4G -smp 1 -hda /root/ubuntu1904.qcow -vnc :7 \</span><br><span class="line">	-device vfio-pci,host=81:00.0,romfile=</span><br></pre></td></tr></table></figure>
+<p>相比几种方法，去掉了复杂的网络参数，仅仅加上了一个设备，并且指定其B:D:F是需要被pass-through给虚拟机的网卡对应的B:D:F的即可(例子中为81:00.0)。</p>
 </li>
 </ol>
-<ul>
-<li><code>-loadvm</code> 正在努力upstream…… :p</li>
-</ul>
-<p>至此，虚拟机又可以接着之前的地方呼啸的跑下去了。效果看下面的视频吧：</p>
-<p><iframe height="360" width="640" src="http://player.youku.com/embed/XNDQ3MTkyMTYzNg==" frameborder="0" 'allowfullscreen'=""></iframe><br><a href="http://v.youku.com/v_show/id_XNDQ3MTkyMTYzNg==.html?spm=a2h3j.8428770.3416059.1" target="_blank" rel="noopener">快速启动演示</a></p>
-<p><script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.8/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.11.3/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">step1=>operation: 创建虚拟机。
-step2=>operation: 保存虚拟机到pmem。
-step3=>operation: 退出QEMU、更新kernel、Microcode等升级。
-step4=>operation: 重新运行QEMU，恢复VM使其继续执行。
-
-step1->step2->step3->step4</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script></p>
 
       
     </div>
@@ -591,7 +567,7 @@ step1->step2->step3->step4</textarea><textarea id="flowchart-0-options" style="d
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://www.owalle.com/2019/12/18/fast-restart/" title="利用虚拟机(QEMU)实现宿主机快速重启">http://www.owalle.com/2019/12/18/fast-restart/</a>
+    <a href="http://www.owalle.com/2019/12/26/network-in-vm/" title="QEMU虚拟机上网的三种方式">http://www.owalle.com/2019/12/26/network-in-vm/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>
@@ -606,7 +582,7 @@ step1->step2->step3->step4</textarea><textarea id="flowchart-0-options" style="d
       
         <div class="post-tags">
           
-            <a href="/tags/KVM-QEMU/" rel="tag"># KVM QEMU</a>
+            <a href="/tags/qemu-kvm-network/" rel="tag"># qemu kvm network</a>
           
         </div>
       
@@ -619,8 +595,8 @@ step1->step2->step3->step4</textarea><textarea id="flowchart-0-options" style="d
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/07/16/study-x86-fence/" rel="next" title="利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令">
-                <i class="fa fa-chevron-left"></i> 利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令
+              <a href="/2019/12/18/fast-restart/" rel="next" title="利用虚拟机(QEMU)实现宿主机快速重启">
+                <i class="fa fa-chevron-left"></i> 利用虚拟机(QEMU)实现宿主机快速重启
               </a>
             
           </div>
@@ -628,10 +604,6 @@ step1->step2->step3->step4</textarea><textarea id="flowchart-0-options" style="d
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/12/26/network-in-vm/" rel="prev" title="QEMU虚拟机上网的三种方式">
-                QEMU虚拟机上网的三种方式 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -812,7 +784,7 @@ step1->step2->step3->step4</textarea><textarea id="flowchart-0-options" style="d
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么这么做？"><span class="nav-number">1.</span> <span class="nav-text">为什么这么做？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#目前已有的类似方案"><span class="nav-number">2.</span> <span class="nav-text">目前已有的类似方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#方案的工作流程"><span class="nav-number">3.</span> <span class="nav-text">方案的工作流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#内核准备"><span class="nav-number">3.1.</span> <span class="nav-text">内核准备</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#编译内核"><span class="nav-number">3.1.1.</span> <span class="nav-text">编译内核</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#内核参数"><span class="nav-number">3.1.2.</span> <span class="nav-text">内核参数</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#QEMU准备"><span class="nav-number">3.2.</span> <span class="nav-text">QEMU准备</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#下载QEMU"><span class="nav-number">3.2.1.</span> <span class="nav-text">下载QEMU</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#编译QEMU"><span class="nav-number">3.2.2.</span> <span class="nav-text">编译QEMU</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#具体步骤"><span class="nav-number">3.3.</span> <span class="nav-text">具体步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#方法一：DEV-device实现方法"><span class="nav-number">3.3.1.</span> <span class="nav-text">方法一：DEV device实现方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方法二：DAX-file实现方法"><span class="nav-number">3.3.2.</span> <span class="nav-text">方法二：DAX file实现方法</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT方式"><span class="nav-number">1.</span> <span class="nav-text">NAT方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#NAT配置方法"><span class="nav-number">1.1.</span> <span class="nav-text">NAT配置方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bridge方式"><span class="nav-number">2.</span> <span class="nav-text">Bridge方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Bridge方式的配置方法1"><span class="nav-number">2.1.</span> <span class="nav-text">Bridge方式的配置方法1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bridge方式的配置方法2"><span class="nav-number">2.2.</span> <span class="nav-text">Bridge方式的配置方法2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#pass-through物理网卡"><span class="nav-number">2.3.</span> <span class="nav-text">pass-through物理网卡</span></a></li></ol></li></ol></div>
             
 
           </div>
