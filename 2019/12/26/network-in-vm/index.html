@@ -98,7 +98,7 @@
 <meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat.png">
 <meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat2.png">
 <meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-bridge.png">
-<meta property="og:updated_time" content="2019-12-26T16:53:48.200Z">
+<meta property="og:updated_time" content="2019-12-26T16:57:42.520Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="QEMU虚拟机上网的三种方式">
 <meta name="twitter:description" content="当我们打算建一个或者多个虚拟机时，通常都伴随着虚拟机的联网问题。这里我们总结一下虚拟机上网的三种方法：NAT方式、Bridge方式和passthrough网卡。 NAT方式如图所示，NAT方式与家里上网的方式有点类似，虚拟机在一个子网内(192.168.122.255)，宿主机看做双网卡(虚拟了一个网卡)。此时虚拟机可以访问Internet，但Internet默认是无法访问虚拟机的。 NAT配置方">
@@ -508,7 +508,7 @@
 <li><p>QEMU创建虚拟机的步骤还是跟之前的一样。<br>这个方法的有点就是系统重启之后，配置还在。</p>
 </li>
 </ol>
-<h3 id="pass-through物理网卡"><a href="#pass-through物理网卡" class="headerlink" title="pass-through物理网卡"></a>pass-through物理网卡</h3><p>这种方法的网络拓扑结构跟bridge方式是一样的，不过这次虚拟机成为货真价实的网上邻居，因为它使用的是物理网卡。如果host上恰好有一个多余的网卡，不放试下这个方法。<br>pass-through物理网卡虽然实现起来相对复杂，但用起来确比较容易：</p>
+<h2 id="pass-through物理网卡"><a href="#pass-through物理网卡" class="headerlink" title="pass-through物理网卡"></a>pass-through物理网卡</h2><p>这种方法的网络拓扑结构跟bridge方式是一样的，不过这次虚拟机成为货真价实的网上邻居，因为它使用的是物理网卡。如果host上恰好有一个多余的网卡，不放试下这个方法。<br>pass-through物理网卡虽然实现起来相对复杂，但用起来确比较容易：</p>
 <ol>
 <li><p>确保host没有加载对应网卡的驱动<br>不过通常这都太可能，可以参考<a href="vfio-pci.sh">这个脚本</a></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># ./vfio-pci.sh -h &lt;B:D:F&gt;</span><br></pre></td></tr></table></figure>
@@ -784,7 +784,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT方式"><span class="nav-number">1.</span> <span class="nav-text">NAT方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#NAT配置方法"><span class="nav-number">1.1.</span> <span class="nav-text">NAT配置方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bridge方式"><span class="nav-number">2.</span> <span class="nav-text">Bridge方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Bridge方式的配置方法1"><span class="nav-number">2.1.</span> <span class="nav-text">Bridge方式的配置方法1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bridge方式的配置方法2"><span class="nav-number">2.2.</span> <span class="nav-text">Bridge方式的配置方法2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#pass-through物理网卡"><span class="nav-number">2.3.</span> <span class="nav-text">pass-through物理网卡</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT方式"><span class="nav-number">1.</span> <span class="nav-text">NAT方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#NAT配置方法"><span class="nav-number">1.1.</span> <span class="nav-text">NAT配置方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bridge方式"><span class="nav-number">2.</span> <span class="nav-text">Bridge方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Bridge方式的配置方法1"><span class="nav-number">2.1.</span> <span class="nav-text">Bridge方式的配置方法1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bridge方式的配置方法2"><span class="nav-number">2.2.</span> <span class="nav-text">Bridge方式的配置方法2</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pass-through物理网卡"><span class="nav-number">3.</span> <span class="nav-text">pass-through物理网卡</span></a></li></ol></div>
             
 
           </div>
