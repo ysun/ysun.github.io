@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="为什么这么做？ 系统完成一次重启的时间太久。 越来越频繁的安全相关的紧急的升级，包括Firmware/microcode/OS/VMM/QEMU。 运行中断给“云”服务提供商带来不好的用户体验。  目前已有的类似方案 Live patch在线补丁； 虚拟机热迁移；  这里暂且不评价各个方案的优劣，仅仅是想提供一个选择3！ 重点是，简单快捷，包教包会。 方案的工作流程 运行QEMU创建VM，在VM中">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-12-23T01:57:39.715Z">
+<meta property="og:updated_time" content="2019-12-31T07:54:28.548Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="利用虚拟机(QEMU)实现宿主机快速重启">
 <meta name="twitter:description" content="为什么这么做？ 系统完成一次重启的时间太久。 越来越频繁的安全相关的紧急的升级，包括Firmware/microcode/OS/VMM/QEMU。 运行中断给“云”服务提供商带来不好的用户体验。  目前已有的类似方案 Live patch在线补丁； 虚拟机热迁移；  这里暂且不评价各个方案的优劣，仅仅是想提供一个选择3！ 重点是，简单快捷，包教包会。 方案的工作流程 运行QEMU创建VM，在VM中">
@@ -535,7 +535,7 @@
 <li><code>-loadvm</code> 正在努力upstream…… :p</li>
 </ul>
 <p>至此，虚拟机又可以接着之前的地方呼啸的跑下去了。效果看下面的视频吧：</p>
-<p><iframe height="360" width="640" src="http://player.youku.com/embed/XNDQ3MTkyMTYzNg==" frameborder="0" 'allowfullscreen'=""></iframe><br><a href="http://v.youku.com/v_show/id_XNDQ3MTkyMTYzNg==.html?spm=a2h3j.8428770.3416059.1" target="_blank" rel="noopener">快速启动演示</a></p>
+<p><iframe height="360" width="640" src="https://player.youku.com/embed/XNDQ3MTkyMTYzNg==" frameborder="0" 'allowfullscreen'=""></iframe><br><a href="http://v.youku.com/v_show/id_XNDQ3MTkyMTYzNg==.html?spm=a2h3j.8428770.3416059.1" target="_blank" rel="noopener">快速启动演示</a></p>
 <p><script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.8/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.11.3/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">step1=>operation: 创建虚拟机。
 step2=>operation: 保存虚拟机到pmem。
 step3=>operation: 退出QEMU、更新kernel、Microcode等升级。
