@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="最近“被迫”研究ChromeOS——这个东东在国内往实在是太痛苦了！！不管怎么样，把最近玩ChromeOS的过程记个流水账。防止自己遗忘，也给国内同样想玩ChromeOS的玩家提供点参考——国内可以搜到的东西实在是太少了。下面所有的步骤，都默认读者是可以无障碍访问互联网的，对于GFW这件事情，这篇文章基本上帮不上忙，因为我自己没有找到一个完美解决的办法。 安装ChromeOS从源码使用cros_s">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2020-03-10T05:25:52.066Z">
+<meta property="og:updated_time" content="2020-03-24T01:29:55.896Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="新安装ChromeOS之后需要做的事情">
 <meta name="twitter:description" content="最近“被迫”研究ChromeOS——这个东东在国内往实在是太痛苦了！！不管怎么样，把最近玩ChromeOS的过程记个流水账。防止自己遗忘，也给国内同样想玩ChromeOS的玩家提供点参考——国内可以搜到的东西实在是太少了。下面所有的步骤，都默认读者是可以无障碍访问互联网的，对于GFW这件事情，这篇文章基本上帮不上忙，因为我自己没有找到一个完美解决的办法。 安装ChromeOS从源码使用cros_s">
@@ -411,7 +411,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  911
+                  1k
                 </span>
               
 
@@ -427,7 +427,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  3
+                  4
                 </span>
               
             </div>
@@ -470,6 +470,9 @@
 <h2 id="安装其他benchmark"><a href="#安装其他benchmark" class="headerlink" title="安装其他benchmark"></a>安装其他benchmark</h2><h3 id="glmark2"><a href="#glmark2" class="headerlink" title="glmark2"></a>glmark2</h3><p>source code: <a href="https://github.com/glmark2/glmark2.git" target="_blank" rel="noopener">https://github.com/glmark2/glmark2.git</a></p>
 <p>Chroot 中编译：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sudo apt install libx11-dev libjpeg-dev libpng*</span><br><span class="line"></span><br><span class="line">./waf configure --with-flavors x11-gl</span><br><span class="line">sudo ./waf install</span><br></pre></td></tr></table></figure></p>
 <p>VM 中编译：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">apt install libjpeg-dev pkg-config libpng* libdrm-dev libgbm-dev libwayland-client0 libudev-dev libx11-dev</span><br><span class="line"></span><br><span class="line">./waf configure --with-flavors x11-gl</span><br><span class="line">sudo ./waf install</span><br></pre></td></tr></table></figure></p>
+<h2 id="安装Steam"><a href="#安装Steam" class="headerlink" title="安装Steam"></a>安装Steam</h2><p>目前基于Linux的游戏平台，可以说就只有Steam了。安装Steam的坑在于，Steam自己为了支持多数游戏运行，平台客户端软件只支持32bit。安装步骤：</p>
+<h3 id="安装32bit支持"><a href="#安装32bit支持" class="headerlink" title="安装32bit支持"></a>安装32bit支持</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sudo dpkg --add-architecture i386</span><br><span class="line">sudo apt-get update</span><br><span class="line">sudo apt-get dist-upgrade</span><br><span class="line">sudo apt-get install libc-i386</span><br></pre></td></tr></table></figure>
+<h3 id="下载Steam-安装包"><a href="#下载Steam-安装包" class="headerlink" title="下载Steam 安装包"></a>下载Steam 安装包</h3><p>官方下载地址: <a href="https://store.steampowered.com/about/" target="_blank" rel="noopener">https://store.steampowered.com/about/</a><br>dpkg -i setup.deb</p>
 
       
     </div>
@@ -736,7 +739,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#安装ChromeOS"><span class="nav-number">1.</span> <span class="nav-text">安装ChromeOS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#从源码使用cros-sdk编译"><span class="nav-number">1.1.</span> <span class="nav-text">从源码使用cros_sdk编译</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Google-partner账户"><span class="nav-number">1.2.</span> <span class="nav-text">Google partner账户</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#登录"><span class="nav-number">2.</span> <span class="nav-text">登录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置开始"><span class="nav-number">3.</span> <span class="nav-text">配置开始</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装Linux-Beta"><span class="nav-number">3.1.</span> <span class="nav-text">安装Linux Beta</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装Chromebrew"><span class="nav-number">3.2.</span> <span class="nav-text">安装Chromebrew</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装Crouton"><span class="nav-number">3.3.</span> <span class="nav-text">安装Crouton</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#读写分区"><span class="nav-number">3.4.</span> <span class="nav-text">读写分区</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#清空iptable规则"><span class="nav-number">3.5.</span> <span class="nav-text">清空iptable规则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装pip3"><span class="nav-number">3.6.</span> <span class="nav-text">安装pip3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装paramiko-–-python的一个包"><span class="nav-number">3.7.</span> <span class="nav-text">安装paramiko – python的一个包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Chroot中-安装apitrace"><span class="nav-number">3.8.</span> <span class="nav-text">Chroot中 安装apitrace</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装其他benchmark"><span class="nav-number">5.</span> <span class="nav-text">安装其他benchmark</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#glmark2"><span class="nav-number">5.1.</span> <span class="nav-text">glmark2</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#安装ChromeOS"><span class="nav-number">1.</span> <span class="nav-text">安装ChromeOS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#从源码使用cros-sdk编译"><span class="nav-number">1.1.</span> <span class="nav-text">从源码使用cros_sdk编译</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Google-partner账户"><span class="nav-number">1.2.</span> <span class="nav-text">Google partner账户</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#登录"><span class="nav-number">2.</span> <span class="nav-text">登录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置开始"><span class="nav-number">3.</span> <span class="nav-text">配置开始</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装Linux-Beta"><span class="nav-number">3.1.</span> <span class="nav-text">安装Linux Beta</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装Chromebrew"><span class="nav-number">3.2.</span> <span class="nav-text">安装Chromebrew</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装Crouton"><span class="nav-number">3.3.</span> <span class="nav-text">安装Crouton</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#读写分区"><span class="nav-number">3.4.</span> <span class="nav-text">读写分区</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#清空iptable规则"><span class="nav-number">3.5.</span> <span class="nav-text">清空iptable规则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装pip3"><span class="nav-number">3.6.</span> <span class="nav-text">安装pip3</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装paramiko-–-python的一个包"><span class="nav-number">3.7.</span> <span class="nav-text">安装paramiko – python的一个包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Chroot中-安装apitrace"><span class="nav-number">3.8.</span> <span class="nav-text">Chroot中 安装apitrace</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装其他benchmark"><span class="nav-number">5.</span> <span class="nav-text">安装其他benchmark</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#glmark2"><span class="nav-number">5.1.</span> <span class="nav-text">glmark2</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装Steam"><span class="nav-number">6.</span> <span class="nav-text">安装Steam</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装32bit支持"><span class="nav-number">6.1.</span> <span class="nav-text">安装32bit支持</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#下载Steam-安装包"><span class="nav-number">6.2.</span> <span class="nav-text">下载Steam 安装包</span></a></li></ol></li></ol></div>
             
 
           </div>
@@ -770,7 +773,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">67.9k</span>
+    <span title="Site words total count">68k</span>
 
   <span class="post-meta-divider">|</span>
   
