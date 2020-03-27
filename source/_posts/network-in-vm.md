@@ -45,6 +45,12 @@ apt-get install qemu-system-common	//使用qemu-bridge-helper
 systemctl start libvirtd
 systemctl enable libvirtd
 ```
+  如果遇到libvird启动失败，尝试一下:
+```
+# brctl addbr br0
+add bridge failed: Package not installed
+  ```
+  如果出现上述错误，说明需要重新编译内核，同时需要打开 networking > 802.1d Ethernet Bridging
 
   如果libvirtd启动成功的话会出现一个虚拟桥virbr0和virbr0-nic：
 ```
