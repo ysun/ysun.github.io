@@ -96,3 +96,37 @@ make && make install
 
 ## 总结
 至此，基本上，一个ChromeBook已经可以用起来了。如果谁还有那些新奇好玩的用法，欢迎留言
+
+## 安装其他benchmark
+### glmark2
+source code: https://github.com/glmark2/glmark2.git
+
+Chroot 中编译：
+```
+sudo apt install libx11-dev libjpeg-dev libpng*
+
+./waf configure --with-flavors x11-gl
+sudo ./waf install
+```
+
+VM 中编译：
+```
+apt install libjpeg-dev pkg-config libpng* libdrm-dev libgbm-dev libwayland-client0 libudev-dev libx11-dev
+
+./waf configure --with-flavors x11-gl
+sudo ./waf install
+```
+
+## 安装Steam
+目前基于Linux的游戏平台，可以说就只有Steam了。安装Steam的坑在于，Steam自己为了支持多数游戏运行，平台客户端软件只支持32bit。安装步骤：
+### 安装32bit支持
+```
+sudo dpkg --add-architecture i386
+sudo apt-get update
+sudo apt-get dist-upgrade
+sudo apt-get install libc-i386
+```
+
+### 下载Steam 安装包
+官方下载地址: https://store.steampowered.com/about/
+dpkg -i setup.deb

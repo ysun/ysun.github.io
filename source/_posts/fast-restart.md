@@ -232,5 +232,5 @@ x86_64-softmmu/qemu-system-x86_64 \
 
 至此，虚拟机又可以接着之前的地方呼啸的跑下去了。效果看下面的视频吧：
 
-<iframe height=360 width=640 src='http://player.youku.com/embed/XNDQ3MTkyMTYzNg==' frameborder=0 'allowfullscreen'></iframe>
+<iframe height=360 width=640 src='https://player.youku.com/embed/XNDQ3MTkyMTYzNg==' frameborder=0 'allowfullscreen'></iframe>
 [快速启动演示](http://v.youku.com/v_show/id_XNDQ3MTkyMTYzNg==.html?spm=a2h3j.8428770.3416059.1)
