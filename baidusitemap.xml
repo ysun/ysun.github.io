@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://www.owalle.com/2020/02/27/chuncheng-parking/</loc>
+    <lastmod>2020-04-06T03:25:31.394Z</lastmod>
+  </url>  <url>
     <loc>http://www.owalle.com/2020/03/30/crosvm-setup/</loc>
     <lastmod>2020-04-06T02:56:57.546Z</lastmod>
   </url>  <url>
@@ -12,9 +15,6 @@
   </url>  <url>
     <loc>http://www.owalle.com/2020/03/03/chromeos-setup/</loc>
     <lastmod>2020-03-24T01:29:55.896Z</lastmod>
-  </url>  <url>
-    <loc>http://www.owalle.com/2020/02/27/chuncheng-parking/</loc>
-    <lastmod>2020-03-03T04:52:21.679Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2019/12/18/fast-restart/</loc>
     <lastmod>2019-12-31T07:54:28.548Z</lastmod>
