@@ -76,7 +76,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT">
+  <meta name="keywords" content="ChromeOS crosvm,">
 
 
 
@@ -87,17 +87,20 @@
 
 
 
-<meta name="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
-<meta name="keywords" content="KVM Linux Kernel Qemu">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Yi颗烂樱桃">
-<meta property="og:url" content="http://www.owalle.com/tags/x86-KVM-QEMU/index.html">
+<meta name="description" content="什么是Virgil 3d项目Virgil是Dave Airlie(from Red Hat)的一个研究项目。该项目在虚拟机中创建一个虚拟GPU，通过它允许Guest操作系统使用Host的物理GPU来加速3D渲染。让用户感觉拥有一个完全独立于主机GPU的虚拟机GPU。 该虚拟显卡的设计基于Gallium3D，以简化Mesa和3D驱动程序。该卡使用Gallium TGSI中间件作为着色器。卡的渲染实现">
+<meta name="keywords" content="ChromeOS crosvm">
+<meta property="og:type" content="article">
+<meta property="og:title" content="由浅入深CrosVM（二）—— 如何在虚拟机中使用3D加速(借助Virgil 3D项目)">
+<meta property="og:url" content="http://www.owalle.com/2020/04/03/crosvm-virtio-gpu/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+<meta property="og:description" content="什么是Virgil 3d项目Virgil是Dave Airlie(from Red Hat)的一个研究项目。该项目在虚拟机中创建一个虚拟GPU，通过它允许Guest操作系统使用Host的物理GPU来加速3D渲染。让用户感觉拥有一个完全独立于主机GPU的虚拟机GPU。 该虚拟显卡的设计基于Gallium3D，以简化Mesa和3D驱动程序。该卡使用Gallium TGSI中间件作为着色器。卡的渲染实现">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://www.owalle.com/2020/04/03/crosvm-virtio-gpu/virgl_stack.png">
+<meta property="og:updated_time" content="2020-04-06T02:56:54.778Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Yi颗烂樱桃">
-<meta name="twitter:description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+<meta name="twitter:title" content="由浅入深CrosVM（二）—— 如何在虚拟机中使用3D加速(借助Virgil 3D项目)">
+<meta name="twitter:description" content="什么是Virgil 3d项目Virgil是Dave Airlie(from Red Hat)的一个研究项目。该项目在虚拟机中创建一个虚拟GPU，通过它允许Guest操作系统使用Host的物理GPU来加速3D渲染。让用户感觉拥有一个完全独立于主机GPU的虚拟机GPU。 该虚拟显卡的设计基于Gallium3D，以简化Mesa和3D驱动程序。该卡使用Gallium TGSI中间件作为着色器。卡的渲染实现">
+<meta name="twitter:image" content="http://www.owalle.com/2020/04/03/crosvm-virtio-gpu/virgl_stack.png">
 
 
 
@@ -127,13 +130,13 @@
 
 
 
-  <link rel="canonical" href="http://www.owalle.com/tags/x86-KVM-QEMU/">
+  <link rel="canonical" href="http://www.owalle.com/2020/04/03/crosvm-virtio-gpu/">
 
 
 
 
 
-  <title>标签: x86 KVM QEMU | Yi颗烂樱桃</title>
+  <title>由浅入深CrosVM（二）—— 如何在虚拟机中使用3D加速(借助Virgil 3D项目) | Yi颗烂樱桃</title>
   
 
 
@@ -152,7 +155,7 @@
     
   
 
-  <div class="container sidebar-position-left ">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
@@ -298,52 +301,326 @@
           <div id="content" class="content">
             
 
-  
-  
-  
-  <div class="post-block tag">
+  <div id="posts" class="posts-expand">
+    
 
-    <div id="posts" class="posts-collapse">
-      <div class="collection-title">
-        <h2>x86 KVM QEMU<small>标签</small>
-        </h2>
-      </div>
+  
 
-      
-        
+  
+  
+  
 
   <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-    <header class="post-header">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2020/04/03/crosvm-virtio-gpu/">
 
-      <h3 class="post-title">
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+
+    
+      <header class="post-header">
+
         
-            <a class="post-title-link" href="/2019/07/16/study-x86-fence/" itemprop="url">
-              
-                <span itemprop="name">利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令</span>
-              
-            </a>
         
-      </h3>
+          <h2 class="post-title" itemprop="name headline">由浅入深CrosVM（二）—— 如何在虚拟机中使用3D加速(借助Virgil 3D项目)</h2>
+        
 
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2019-07-16T21:28:40+08:00" content="2019-07-16">
-          07-16
-        </time>
-      </div>
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-04-03T20:08:26+08:00">
+                2020-04-03
+              </time>
+            
 
-    </header>
-  </article>
+            
 
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/ChromeOS/" itemprop="url" rel="index">
+                    <span itemprop="name">ChromeOS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2020/04/03/crosvm-virtio-gpu/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2020/04/03/crosvm-virtio-gpu/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  675
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  2
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="什么是Virgil-3d项目"><a href="#什么是Virgil-3d项目" class="headerlink" title="什么是Virgil 3d项目"></a>什么是Virgil 3d项目</h2><p>Virgil是Dave Airlie(from Red Hat)的一个研究项目。该项目在虚拟机中创建一个虚拟GPU，通过它允许Guest操作系统使用Host的物理GPU来加速3D渲染。让用户感觉拥有一个完全独立于主机GPU的虚拟机GPU。</p>
+<p>该虚拟显卡的设计基于Gallium3D，以简化Mesa和3D驱动程序。该卡使用Gallium TGSI中间件作为着色器。卡的渲染实现是在主机系统中作为qemu、crosvm的一部分完成的，目前支持OpenGL(4.3)和OpenGL ES (3.2)，并且需要SDL支持。可以在任何支持显卡/驱动程序上加速渲染。</p>
+<p>该项目还包含一个完整的Linux虚拟机技术栈，包括Linux内核KMS驱动程序(DRM/i915)，X.org(2D DDX驱动程序)和Mesa(3D驱动程序)组成。</p>
+<p>现在，所有组件都已经集成到了各个项目中:</p>
+<ul>
+<li>Linux 内核4.4开始，包含3D支持的部分。</li>
+<li>Mesa master分支包含virgl 3D驱动程序。</li>
+<li>QEMU 2.5开始包含virtio-gpu，以及支持GL的GTK3前端。</li>
+<li>virglrenderer库已经提供QEMU或者CrosVM所需要的API。</li>
+</ul>
+<p>未来的功能以及缺点：</p>
+<ul>
+<li>通过编解码实现远程渲染(rendering)暂不支持。</li>
+<li>Windows Guest以及Direct 3D暂不支持。</li>
+<li>不支持Passing through GPU给guest。</li>
+</ul>
+<p><img src="/2020/04/03/crosvm-virtio-gpu/virgl_stack.png" alt="virgl_stack.png"><br>参考: <a href="https://virgil3d.github.io/" target="_blank" rel="noopener">Virgil 3D GPU project</a></p>
+<h2 id="开始搭建环境"><a href="#开始搭建环境" class="headerlink" title="开始搭建环境"></a>开始搭建环境</h2><p>有了上面的virgl技术栈的图，事情变得清晰多了：在Host端安装virglrenderer，安装最新的Mesa、和Linux Kernel。</p>
+<h3 id="编译安装virglrenderer"><a href="#编译安装virglrenderer" class="headerlink" title="编译安装virglrenderer"></a>编译安装virglrenderer</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">apt install python3-pip</span><br><span class="line">pip3 install meson</span><br><span class="line"></span><br><span class="line"># 安装依赖</span><br><span class="line">apt install libgbm-dev mesa-utils</span><br><span class="line"></span><br><span class="line">git clone https://github.com/anholt/libepoxy.git</span><br><span class="line">cd libepoxy</span><br><span class="line">mkdir build &amp;&amp; cd build &amp;&amp; meson .. &amp;&amp; meson install &amp;&amp; cd ..</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">git clone https://gitlab.freedesktop.org/virgl/virglrenderer.git</span><br><span class="line">mkdir build &amp;&amp; cd build &amp;&amp; meson .. &amp;&amp; meson install &amp;&amp; cd ..</span><br></pre></td></tr></table></figure>
+<h3 id="确认Mesa-支持"><a href="#确认Mesa-支持" class="headerlink" title="确认Mesa 支持"></a>确认Mesa 支持</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># glxinfo |grep renderer</span><br></pre></td></tr></table></figure>
+<p>如果renderer string使用 llvmpipe，说明Mesa不支持:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OpenGL renderer string: llvmpipe (LLVM 5.0, 256 bits)</span><br></pre></td></tr></table></figure></p>
+<p>如果renderer string使用 Intel，说明3D驱动安装正确:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OpenGL renderer string: Mesa DRI Intel(R) HD Graphics 620 (Kaby Lake GT2)</span><br></pre></td></tr></table></figure></p>
+<p>如果当前Mesa不支持的话，请参考Mesa的官网，<a href="https://www.mesa3d.org/install.html" target="_blank" rel="noopener">编译安装Mesa</a></p>
+<h2 id="重新编译安装CrosVM"><a href="#重新编译安装CrosVM" class="headerlink" title="重新编译安装CrosVM"></a>重新编译安装CrosVM</h2><p>加上参数<code>--features=gpu,x</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cargo build --features=gpu,x #BTW, 如果需要图形加速，需要打开gpu和x</span><br><span class="line"></span><br><span class="line">mkdir -p /usr/share/policy/crosvm/                #这里面是CrosVM运行时的一些policy配置</span><br><span class="line">cp -r src/platform/crosvm/seccomp/x86_64/* /usr/share/policy/crosvm/</span><br></pre></td></tr></table></figure></p>
+<h2 id="创建虚拟机"><a href="#创建虚拟机" class="headerlink" title="创建虚拟机"></a>创建虚拟机</h2><h3 id="Host"><a href="#Host" class="headerlink" title="Host"></a>Host</h3><p>启动X(xinit)，或者桌面环境。加上参数<code>-gpu</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">crosvm run --disable-sandbox -s /tmp/crosvm.sock --rwdisk &lt;rootfs.img&gt; -p &quot;root=/dev/vda&quot; --gpu vmlinux.cros</span><br></pre></td></tr></table></figure></p>
+<h3 id="Guest"><a href="#Guest" class="headerlink" title="Guest"></a>Guest</h3><p>启动X(xinit)，执行3D程序。同样可以使用glxinfo来确认3D驱动是否安装正确<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># glxinfo |grep renderer</span><br><span class="line"></span><br><span class="line">OpenGL renderer string: virgl</span><br></pre></td></tr></table></figure></p>
+<p>如果renderer string是virgl，说明guest里的3D环境已经ready了。<br>Have Fun!</p>
 
       
     </div>
+    
+    
+    
 
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="Yi颗烂樱桃 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.png" alt="Yi颗烂樱桃 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者：</strong>
+    Yi颗烂樱桃
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://www.owalle.com/2020/04/03/crosvm-virtio-gpu/" title="由浅入深CrosVM（二）—— 如何在虚拟机中使用3D加速(借助Virgil 3D项目)">http://www.owalle.com/2020/04/03/crosvm-virtio-gpu/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>
+    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="external nofollow" target="_blank">CC BY-NC-ND 3.0</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/ChromeOS-crosvm/" rel="tag"># ChromeOS crosvm</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/03/30/crosvm-setup/" rel="next" title="由浅入深CrosVM（一）—— 如何在Ubuntu中搭建CrosVM">
+                <i class="fa fa-chevron-left"></i> 由浅入深CrosVM（一）—— 如何在Ubuntu中搭建CrosVM
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
   </div>
   
   
   
+  </article>
 
-  
+
+
+    <div class="post-spread">
+      
+        
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
+    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
+    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a class="bds_count" data-cmd="count"></a>
+  </div>
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "2",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "share": {
+        "bdSize": "16",
+        "bdStyle": "0"
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      }
+    }
+  </script>
+
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      
+    </div>
+  </div>
 
 
           </div>
@@ -351,6 +628,13 @@
 
 
           
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
 
         </div>
         
@@ -371,8 +655,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
             
@@ -440,6 +733,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是Virgil-3d项目"><span class="nav-number">1.</span> <span class="nav-text">什么是Virgil 3d项目</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#开始搭建环境"><span class="nav-number">2.</span> <span class="nav-text">开始搭建环境</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#编译安装virglrenderer"><span class="nav-number">2.1.</span> <span class="nav-text">编译安装virglrenderer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#确认Mesa-支持"><span class="nav-number">2.2.</span> <span class="nav-text">确认Mesa 支持</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#重新编译安装CrosVM"><span class="nav-number">3.</span> <span class="nav-text">重新编译安装CrosVM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#创建虚拟机"><span class="nav-number">4.</span> <span class="nav-text">创建虚拟机</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Host"><span class="nav-number">4.1.</span> <span class="nav-text">Host</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Guest"><span class="nav-number">4.2.</span> <span class="nav-text">Guest</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -628,6 +937,10 @@
   
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 
@@ -1039,26 +1352,6 @@
   
 
   
-  
-    <script type="text/x-mathjax-config">
-      MathJax.Hub.Config({
-        tex2jax: {
-          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
-          processEscapes: true,
-          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
-        }
-      });
-    </script>
-
-    <script type="text/x-mathjax-config">
-      MathJax.Hub.Queue(function() {
-        var all = MathJax.Hub.getAllJax(), i;
-        for (i=0; i < all.length; i += 1) {
-          all[i].SourceElement().parentNode.className += ' has-jax';
-        }
-      });
-    </script>
-    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
   
 
 

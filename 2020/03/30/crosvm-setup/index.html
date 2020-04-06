@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="什么是CrosVMCrosVM是Chrome操作系统中，用于创建虚拟机的应用。是一个Rust编写的轻量级的虚拟机。亚马逊的Firecracker从crosvm开始。借助于CrosVM 用户可以很容易的在ChromeOS中运行Linux、Android以及Windows应用程序。 CrosVM 的源码是Google ChromeOS的一部分，但也可以独立编译使用。哎，还是那句话“不要问为什么连接打不">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2020-04-03T00:56:33.236Z">
+<meta property="og:updated_time" content="2020-04-06T02:56:57.546Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="由浅入深CrosVM（一）—— 如何在Ubuntu中搭建CrosVM">
 <meta name="twitter:description" content="什么是CrosVMCrosVM是Chrome操作系统中，用于创建虚拟机的应用。是一个Rust编写的轻量级的虚拟机。亚马逊的Firecracker从crosvm开始。借助于CrosVM 用户可以很容易的在ChromeOS中运行Linux、Android以及Windows应用程序。 CrosVM 的源码是Google ChromeOS的一部分，但也可以独立编译使用。哎，还是那句话“不要问为什么连接打不">
@@ -411,7 +411,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  518
+                  537
                 </span>
               
 
@@ -451,7 +451,7 @@
         <h2 id="什么是CrosVM"><a href="#什么是CrosVM" class="headerlink" title="什么是CrosVM"></a>什么是CrosVM</h2><p>CrosVM是Chrome操作系统中，用于创建虚拟机的应用。是一个Rust编写的轻量级的虚拟机。亚马逊的Firecracker从crosvm开始。借助于CrosVM 用户可以很容易的在ChromeOS中运行Linux、Android以及Windows应用程序。</p>
 <p><a href="https://chromium.googlesource.com/chromiumos/platform/crosvm" target="_blank" rel="noopener">CrosVM</a> 的源码是Google ChromeOS的一部分，但也可以独立编译使用。哎，还是那句话“不要问为什么连接打不开”。还好github.com有好多CrosVM的镜像，有需要的可以上去找下。<br>本文，我们着重描述下如何在Ubuntu 19.10中使用CrosVM创建一个Linux 虚拟机。</p>
 <h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><h3 id="安装minijail"><a href="#安装minijail" class="headerlink" title="安装minijail"></a>安装minijail</h3><p>这个是CrosVM 打开feature ’sandbox‘时需要的，因为是默认打开的，这里就罗列一下。如果编译有问题，或者很费劲，可以在运行crosvm的时候加上’–disable-sandbox’ 参数即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git clone https://android.googlesource.com/platform/external/minijail</span><br><span class="line">cd minijail</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure></p>
-<h2 id="编译CrosVM"><a href="#编译CrosVM" class="headerlink" title="编译CrosVM"></a>编译CrosVM</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">git clone https://chromium.googlesource.com/chromiumos/platform/crosvm</span><br><span class="line">cd crosvm</span><br><span class="line"></span><br><span class="line">cargo build</span><br><span class="line">cargo build --features=gpu,x #BTW, 如果需要图形加速，需要打开gpu和x</span><br><span class="line"></span><br><span class="line">mkdir -p /usr/share/policy/crosvm/                #这里面是CrosVM运行时的一些policy配置</span><br><span class="line">cp -r iseccomp/x86_64/* /usr/share/policy/crosvm/</span><br></pre></td></tr></table></figure>
+<h3 id="编译安装CrosVM"><a href="#编译安装CrosVM" class="headerlink" title="编译安装CrosVM"></a>编译安装CrosVM</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">apt install build-essential libcap-dev libfdt-dev pkg-config python</span><br><span class="line">git clone https://android.googlesource.com/platform/external/minijail</span><br><span class="line">cd minijail</span><br><span class="line"></span><br><span class="line">mkdir crosvm</span><br><span class="line">cd crosvm</span><br><span class="line">repo init -g crosvm -u https://chromium.googlesource.com/chromiumos/manifest.git --repo-url=https://chromium.googlesource.com/external/repo.git</span><br><span class="line">repo sync</span><br><span class="line"></span><br><span class="line">cargo build</span><br><span class="line"></span><br><span class="line">mkdir -p /usr/share/policy/crosvm/                #这里面是CrosVM运行时的一些policy配置</span><br><span class="line">cp -r src/platform/crosvm/seccomp/x86_64/* /usr/share/policy/crosvm/</span><br></pre></td></tr></table></figure>
 <h2 id="准备虚拟镜像"><a href="#准备虚拟镜像" class="headerlink" title="准备虚拟镜像"></a>准备虚拟镜像</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"># 创建一个空的image，大小是20G</span><br><span class="line">dd if=/dev/zero of=ubuntu19.10_rootfs.img bs=1M count=20480</span><br><span class="line">方法2：</span><br><span class="line">qemu-img create -f raw ubuntu19.10_rootfs.img 20G</span><br><span class="line"></span><br><span class="line"># 格式化</span><br><span class="line">mkfs.ext4 ubuntu19.10_rootfs.img</span><br><span class="line"></span><br><span class="line">mkdir rootfs/</span><br><span class="line">sudo mount ubuntu19.10_rootfs.img rootfs/</span><br><span class="line"></span><br><span class="line"># 下载Ubuntu 19.10文件系统(eoan)</span><br><span class="line">debootstrap --arch amd64  eoan rootfs/ http://archive.ubuntu.com/ubuntu</span><br><span class="line"></span><br><span class="line">sudo umount rootfs/</span><br></pre></td></tr></table></figure>
 <p>对镜像的一些修改：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">sudo mount ubuntu19.10_rootfs.img rootfs/</span><br><span class="line"></span><br><span class="line"># 去掉rootfs中的密码：</span><br><span class="line">vim /etc/passwd</span><br><span class="line">root:x:0:0:root:/root:/bin/bash</span><br><span class="line">取缔 root: 后面的那个x</span><br></pre></td></tr></table></figure></p>
 <h2 id="创建虚拟机"><a href="#创建虚拟机" class="headerlink" title="创建虚拟机"></a>创建虚拟机</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo LD_LIBRARY_PATH=~/project/vm/minijail/ ./target/debug/crosvm run --rwroot ubuntu19.10_rootfs.img --seccomp-policy-dir=/usr/share/policy/crosvm/x86_64/ -i /boot/initrd.img-4.13.0-46-generic /boot/vmlinuz-4.13.0-46-generic</span><br><span class="line"></span><br><span class="line">sudo ./target/debug/crosvm run --disable-sandbox --rwroot rootfs.ext4 --seccomp-policy-dir=./seccomp/x86_64/ -i /boot/initrd.img-4.13.0-46-generic /boot/vmlinuz-4.13.0-46-generic</span><br></pre></td></tr></table></figure>
@@ -542,6 +542,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/04/03/crosvm-virtio-gpu/" rel="prev" title="由浅入深CrosVM（二）—— 如何在虚拟机中使用3D加速(借助Virgil 3D项目)">
+                由浅入深CrosVM（二）—— 如何在虚拟机中使用3D加速(借助Virgil 3D项目) <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -661,7 +665,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-count">26</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -683,7 +687,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-count">16</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -722,7 +726,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是CrosVM"><span class="nav-number">1.</span> <span class="nav-text">什么是CrosVM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#环境准备"><span class="nav-number">2.</span> <span class="nav-text">环境准备</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装minijail"><span class="nav-number">2.1.</span> <span class="nav-text">安装minijail</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译CrosVM"><span class="nav-number">3.</span> <span class="nav-text">编译CrosVM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#准备虚拟镜像"><span class="nav-number">4.</span> <span class="nav-text">准备虚拟镜像</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#创建虚拟机"><span class="nav-number">5.</span> <span class="nav-text">创建虚拟机</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是CrosVM"><span class="nav-number">1.</span> <span class="nav-text">什么是CrosVM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#环境准备"><span class="nav-number">2.</span> <span class="nav-text">环境准备</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装minijail"><span class="nav-number">2.1.</span> <span class="nav-text">安装minijail</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#编译安装CrosVM"><span class="nav-number">2.2.</span> <span class="nav-text">编译安装CrosVM</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#准备虚拟镜像"><span class="nav-number">3.</span> <span class="nav-text">准备虚拟镜像</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#创建虚拟机"><span class="nav-number">4.</span> <span class="nav-text">创建虚拟机</span></a></li></ol></div>
             
 
           </div>
@@ -756,7 +760,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">68.5k</span>
+    <span title="Site words total count">69.2k</span>
 
   <span class="post-meta-divider">|</span>
   
