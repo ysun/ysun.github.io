@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://www.owalle.com/2020/04/03/crosvm-virtio-gpu/</loc>
+    
+    <lastmod>2020-04-07T02:31:08.088Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://www.owalle.com/2020/02/27/chuncheng-parking/</loc>
     
     <lastmod>2020-04-06T03:25:31.394Z</lastmod>
@@ -12,13 +19,6 @@
     <loc>http://www.owalle.com/2020/03/30/crosvm-setup/</loc>
     
     <lastmod>2020-04-06T02:56:57.546Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://www.owalle.com/2020/04/03/crosvm-virtio-gpu/</loc>
-    
-    <lastmod>2020-04-06T02:56:54.778Z</lastmod>
     
   </url>
   
