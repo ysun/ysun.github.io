@@ -22,16 +22,21 @@ make
 make install
 ```
 
-## 编译CrosVM
+### 编译安装CrosVM
 ```
-git clone https://chromium.googlesource.com/chromiumos/platform/crosvm
+apt install build-essential libcap-dev libfdt-dev pkg-config python
+git clone https://android.googlesource.com/platform/external/minijail
+cd minijail
+
+mkdir crosvm
 cd crosvm
+repo init -g crosvm -u https://chromium.googlesource.com/chromiumos/manifest.git --repo-url=https://chromium.googlesource.com/external/repo.git
+repo sync
 
 cargo build
-cargo build --features=gpu,x #BTW, 如果需要图形加速，需要打开gpu和x
 
 mkdir -p /usr/share/policy/crosvm/                #这里面是CrosVM运行时的一些policy配置
-cp -r iseccomp/x86_64/* /usr/share/policy/crosvm/
+cp -r src/platform/crosvm/seccomp/x86_64/* /usr/share/policy/crosvm/
 ```
 
 ## 准备虚拟镜像
