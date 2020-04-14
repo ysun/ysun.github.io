@@ -7,9 +7,9 @@ tags: ChromeOS crosvm
 ---
 
 ## 什么是Virgil 3d项目
-Virgil是Dave Airlie(from Red Hat)的一个研究项目。该项目在虚拟机中创建一个虚拟GPU，通过它允许Guest操作系统使用Host的物理GPU来加速3D渲染。让用户感觉拥有一个完全独立于主机GPU的虚拟机GPU。
+Virgil是Dave Airlie(from Red Hat)的一个研究项目。该项目在虚拟机中创建一个虚拟GPU，通过它允许虚拟机操作系统(Guest OS)使用物理机(宿主机，Host)的物理GPU来加速3D渲染。让用户感觉拥有一个完全独立于主机的虚拟机GPU。
 
-该虚拟显卡的设计基于Gallium3D，以简化Mesa和3D驱动程序。该卡使用Gallium TGSI中间件作为着色器。卡的渲染实现是在主机系统中作为qemu、crosvm的一部分完成的，目前支持OpenGL(4.3)和OpenGL ES (3.2)，并且需要SDL支持。可以在任何支持显卡/驱动程序上加速渲染。
+该虚拟显卡的设计基于Gallium3D，使用Gallium TGSI中间件作为着色器。虚拟显卡的渲染实现是在主机系统中作为qemu、crosvm等VMM(virtual machine manager)的一部分完成的。目前支持OpenGL(4.3)和OpenGL ES (3.2)，并且需要SDL支持。可以在任何支持的显卡/驱动程序上加速渲染。
 
 该项目还包含一个完整的Linux虚拟机技术栈，包括Linux内核KMS驱动程序(DRM/i915)，X.org(2D DDX驱动程序)和Mesa(3D驱动程序)组成。
 
@@ -17,7 +17,7 @@ Virgil是Dave Airlie(from Red Hat)的一个研究项目。该项目在虚拟机�
 * Linux 内核4.4开始，包含3D支持的部分。
 * Mesa master分支包含virgl 3D驱动程序。
 * QEMU 2.5开始包含virtio-gpu，以及支持GL的GTK3前端。
-* virglrenderer库已经提供QEMU或者CrosVM所需要的API。
+* virglrenderer库已经可以提供QEMU或者CrosVM所需要的API。
 
 未来的功能以及缺点：
 * 通过编解码实现远程渲染(rendering)暂不支持。
@@ -36,15 +36,18 @@ apt install python3-pip
 pip3 install meson
 
 # 安装依赖
-apt install libgbm-dev mesa-utils
+apt install libgbm-dev mesa-utils llvm llvm-9-dev libpciaccess-dev wayland-protocols libwayland-egl-backend-dev
 
 git clone https://github.com/anholt/libepoxy.git
 cd libepoxy
 mkdir build && cd build && meson .. && meson install && cd ..
 
-
 git clone https://gitlab.freedesktop.org/virgl/virglrenderer.git
 mkdir build && cd build && meson .. && meson install && cd ..
+
+git clone https://gitlab.freedesktop.org/mesa/drm.git
+cd drm
+mkdir build && meson build/ && ninja -C build install
 
 ```
 
@@ -81,12 +84,21 @@ cp -r src/platform/crosvm/seccomp/x86_64/* /usr/share/policy/crosvm/
 ```
 crosvm run --disable-sandbox \
 	--cpus 4 --mem 4096 \
-	--rwdisk=ubuntu-rootfs.img --params=root=/dev/vda \
+	--rwdisk=ubuntu-rootfs.img \
+	--params=root=/dev/vda \
 	--gpu --x-display :0 \
 	--socket=crosvm.sock \
 	--evdev /dev/input/event18 --evdev /dev/input/event19 \
 	vmlinux-5.4.18
 ```
+参数说明:
+* --disable-sandbox: 如果上一篇文章里面的minijail已经正确安装，可以省略这个参数，大概是为了安全性，不详述了吧，因为——不懂~！
+* --cpus 4 --mem 4096: vCPU数目和虚拟内存大小4096M
+* --rwdisk=ubuntu-rootfs.img: 虚拟机镜像。可以使用上一篇文章中的方法，使用debootstrap生成一个rootfs镜像；CrosVM同样支持带有分区信息虚拟机镜像，可以直接使用QEMU虚拟机的Raw或者Qcow2类型的镜像，没有压力。
+* --gpu --x-display :0 : 开起GPU以及X显示支持，这个参数是全篇的"精髓"，上面安装一大堆的库，就为了这两个参数。
+* --socket=crosvm.sock : socket用于控制CrosVM以及通信。
+* --evdev /dev/input/event18 : Passthrough 鼠标和键盘给虚拟机，需要额接一套键鼠。不过后面想尽量可以专门讲一期外设吧，尽量……。
+* vmlinux-5.4.18 : 虚拟机内核，ELF 64-bit LSB executable格式的，就是编译完kernel之后，在源码根目录生成的那个静态链接的内核文件(statically linked)。注: 为了方便，建议将所有用到的内核模块(module)都配置成built-in (y)而不是m。否则，需要一个initramfs，通过(-i)参数传递给crosvm，而且initrd的大小有限制，比较麻烦。
 
 ### Guest
 启动X(xinit)，执行3D程序。同样可以使用glxinfo来确认3D驱动是否安装正确
