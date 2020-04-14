@@ -99,7 +99,7 @@ c87a92639b28ac42bc8f6c67443543b405dc479b roms/qemu-palcode (heads/master)
 #### 编译QEMU
 QEMU的编译并没有什么特别的，参数都可以“顾名思义” :)
 ```
-./configure --target-list=x86_64-softmmu --enable-kvm --enable-libpmem --enable-vnc --enable-gtk --disable-werror
+./configure --target-list=x86_64-softmmu --enable-kvm --enable-libpmem --enable-vnc --enable-gtk --enable-sdl --disable-werror
 
 make
 ```
@@ -110,7 +110,14 @@ make
 #### 方法一：DEV device实现方法
 使用`/dev/dax0.0`作为vNVDIMM的后端（backend）
 
-1. 创建虚拟机
+1. 准备一个DAX设备(dax dev)
+前提是Kernel已经按照前面的configure配置，并且成功编译安装。
+```
+ndctl create-namespace --mode devdax --map mem -e namespace0.0 -f
+```
+这样会产生一个 `/dev/dax0.0`
+
+2. 创建虚拟机
 ```
 x86_64-softmmu/qemu-system-x86_64 \
         --enable-kvm \
@@ -120,11 +127,11 @@ x86_64-softmmu/qemu-system-x86_64 \
         -object memory-backend-file,id=dimm0,size=4g,mem-path=/dev/dax0.0,share=on,pmem=on,align=2M \
         -numa node,memdev=dimm0,cpus=0 \
         -monitor stdio \
-        -vnc :7
+        -vnc :7 -sdl
 ```
 两点说明：
 * `-object memory-backend-file,id=dimm0,size=4g,mem-path=/dev/dax0.0,share=on,pmem=on,align=2M`意思是：
- * 创建一个容量为`4g`的后端存储设备，设备节点路径是`/dev/dax0.0`，所以对这个虚拟NVDIMMM设备（vNDVIMM）设备的访问，都会走到`/dev/dax0.0`
+ * 创建一个容量为`4g`的后端存储设备，设备节点路径是`/dev/dax0.0`，所有对这个虚拟NVDIMMM设备（vNDVIMM）设备的访问，都会走到`/dev/dax0.0`
  * `share=on` 控制虚拟机写操作的可见性。如果share=on，那么虚拟机对这个存储设备的“写”操作会提交到设备上，同时，如果有其他虚拟机使用同一个存储设备，上面的“写”操作同样会被“看”到。如果share=off,那么虚拟机的“写”操作不会被提交到存储设备，也因此其他虚拟机无法“看“到此虚拟机”写“的内容。
  * `pmem=on` 同时需要满足QEMU编译的时候，打开了libpmem支持（--enable-libpmem）, 此时QEMU会保证虚拟机的对vNVDIMM设备的“写”操作的“持续性”；但如果这时候QEMU并没有enable libpmep，虚拟机会创建失败并且提示"lack of libpmem support"。
  * `align=2M` DAX设备需要2M对齐。
@@ -162,9 +169,8 @@ x86_64-softmmu/qemu-system-x86_64 \
         -hda $IMAGE_PATH/ubuntu-1904.qcow2 \
         -object memory-backend-file,id=dimm0,size=4g,mem-path=/dev/dax0.0,share=on,pmem=on,align=2M \
         -numa node,memdev=dimm0,cpus=0 \
-        -S \
         -monitor stdio \
-        -vnc :7
+        -vnc :7 -sdl
 ```
   在QEMU console中输入HMP命令，重新加载snapshot s0
   ```
@@ -176,33 +182,37 @@ x86_64-softmmu/qemu-system-x86_64 \
 #### 方法二：DAX file实现方法
 使用DAX file实现时，是用一个支持文件（支持影射为pmem）作为后端。“写”操作的“持续性”是“宿主机”的内核来支持（v4.15之后）。
 
-0. 创建虚拟机前的准备工作
+1. 创建虚拟机前的准备工作
+```
+ndctl create-namespace --mode fsdax --map mem -e namespace0.0 -f
+```
+没有意外的话，会出现`/dev/pmem0'的一个块设备。然后执行:
+
 ```
 mkfs.ext4 -b 4096 -E stride=512 -F /dev/pmem0		//格式化pmem设备
 mount -t ext4 -o dax /dev/pmem0 /dax			//把pmem设备mount到一个目录，支持DAX
 ```
 
-1. 创建虚拟机
+2. 创建虚拟机
 ```
 x86_64-softmmu/qemu-system-x86_64 \
 	--enable-kvm \
 	-M q35 \
 	-m 4G -smp 1 \
 	-hda $IMAGE_PATH/ubuntu-1904.qcow2 \
-	-enable-dax -mem-path /dax \
+	-mem-path /dax \
 	-device vfio-pci,host=81:00.0,romfile= \
 	-monitor stdio \
-	-vnc :7
+	-vnc :7 -sdl
 ```
 * `-mem-path /dax` ：为虚拟机分配内存，使用一个临时创建的文件路径。这里是指之前mount的pmem0设备
-* `-enable-dax`： 正在努力upstream…… :p
 
 2. 保存虚拟机现场
-在QEMU console中输入HMP命令，并且退出QEMU
+保存虚拟机的方法跟Dev DAX一模一样，在QEMU console中输入HMP命令，并且退出QEMU。
 ```
 (qemu) migrate_set_capability x-ignore-shared on	//设置QEMU在保存VM的时候，忽略share=on的那些内存。这里指代不保存VM的pmem。
 (qemu) stop						//停止虚拟机
-(qemu) savevm s0 -dax-no-save				//保存虚拟机snapshot为s0
+(qemu) savevm s0					//保存虚拟机snapshot为s0
 (qemu) q						//退出QEMU
 ```
 
@@ -222,13 +232,11 @@ x86_64-softmmu/qemu-system-x86_64 \
 	-M q35 \
 	-m 4G -smp 1 \
 	-hda $IMAGE_PATH/ubuntu-1904.qcow2 \
-	-enable-dax -mem-path /dax \
-	-loadvm s0,mode=dax \
+	-mem-path /dax \
 	-device vfio-pci,host=81:00.0,romfile= \
 	-monitor stdio \
-	-vnc :7
+	-vnc :7 -sdl
 ```
-* `-loadvm` 正在努力upstream…… :p
 
 至此，虚拟机又可以接着之前的地方呼啸的跑下去了。效果看下面的视频吧：
 
