@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="为什么这么做？ 系统完成一次重启的时间太久。 越来越频繁的安全相关的紧急的升级，包括Firmware/microcode/OS/VMM/QEMU。 运行中断给“云”服务提供商带来不好的用户体验。  目前已有的类似方案 Live patch在线补丁； 虚拟机热迁移；  这里暂且不评价各个方案的优劣，仅仅是想提供一个选择3！ 重点是，简单快捷，包教包会。 方案的工作流程 运行QEMU创建VM，在VM中">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2020-04-14T08:58:00.819Z">
+<meta property="og:updated_time" content="2020-04-14T14:06:47.442Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="利用虚拟机(QEMU)实现宿主机快速重启">
 <meta name="twitter:description" content="为什么这么做？ 系统完成一次重启的时间太久。 越来越频繁的安全相关的紧急的升级，包括Firmware/microcode/OS/VMM/QEMU。 运行中断给“云”服务提供商带来不好的用户体验。  目前已有的类似方案 Live patch在线补丁； 虚拟机热迁移；  这里暂且不评价各个方案的优劣，仅仅是想提供一个选择3！ 重点是，简单快捷，包教包会。 方案的工作流程 运行QEMU创建VM，在VM中">
@@ -411,7 +411,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  1.8k
+                  1.9k
                 </span>
               
 
@@ -427,7 +427,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  7
+                  8
                 </span>
               
             </div>
@@ -496,6 +496,9 @@
 </ul>
 </li>
 <li><p><code>-numa node,memdev=dimm0,cpus=0</code> 意思是：<br>描述虚拟机的numa结构，这里主要是为了使用上一步创建的vNVDIMM作为虚拟机的内存。<br><a href="https://docs.pmem.io/persistent-memory/getting-started-guide/creating-development-environments/virtualization/qemu" target="_blank" rel="noopener">了解更详细的vNVDIMM用法及含义</a>。</p>
+</li>
+<li><p><em>特别说明</em> guest的镜像_必须_是 qcow2 格式的！如果vm的镜像是raw格式，需要创建qcow2格式的镜像。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">qemu-img create -b xxxx.img -f qcow2 test.qcow2</span><br></pre></td></tr></table></figure>
 </li>
 </ul>
 <p>这样虚拟机就创建好了，登录虚拟机（通过vncview :7）做点你想要做的事情。</p>
@@ -849,7 +852,7 @@ step1->step2->step3->step4</textarea><textarea id="flowchart-0-options" style="d
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">69.8k</span>
+    <span title="Site words total count">69.9k</span>
 
   <span class="post-meta-divider">|</span>
   
