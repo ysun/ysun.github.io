@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://www.owalle.com/2019/12/18/fast-restart/</loc>
+    
+    <lastmod>2020-04-14T08:58:00.819Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://www.owalle.com/2020/04/07/crosvm-network/</loc>
     
     <lastmod>2020-04-07T04:22:21.148Z</lastmod>
@@ -40,13 +47,6 @@
     <loc>http://www.owalle.com/2020/03/03/chromeos-setup/</loc>
     
     <lastmod>2020-03-24T01:29:55.896Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://www.owalle.com/2019/12/18/fast-restart/</loc>
-    
-    <lastmod>2019-12-31T07:54:28.548Z</lastmod>
     
   </url>
   
