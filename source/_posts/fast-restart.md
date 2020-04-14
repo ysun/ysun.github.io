@@ -140,6 +140,10 @@ x86_64-softmmu/qemu-system-x86_64 \
 描述虚拟机的numa结构，这里主要是为了使用上一步创建的vNVDIMM作为虚拟机的内存。
 [了解更详细的vNVDIMM用法及含义](https://docs.pmem.io/persistent-memory/getting-started-guide/creating-development-environments/virtualization/qemu)。
 
+* _特别说明_ guest的镜像_必须_是 qcow2 格式的！如果vm的镜像是raw格式，需要创建qcow2格式的镜像。
+```
+  qemu-img create -b xxxx.img -f qcow2 test.qcow2
+```
 这样虚拟机就创建好了，登录虚拟机（通过vncview :7）做点你想要做的事情。
 
 2. 保存虚拟机现场
