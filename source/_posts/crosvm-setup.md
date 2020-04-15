@@ -16,18 +16,16 @@ CrosVM是Chrome操作系统中，用于创建虚拟机的应用。是一个Rust�
 ### 安装minijail
 这个是CrosVM 打开feature ’sandbox‘时需要的，因为是默认打开的，这里就罗列一下。如果编译有问题，或者很费劲，可以在运行crosvm的时候加上'--disable-sandbox' 参数即可。
 ```
+apt install build-essential libcap-dev libfdt-dev pkg-config python
 git clone https://android.googlesource.com/platform/external/minijail
 cd minijail
 make
 make install
 ```
+或者，如有有cros_sdk的话，在`~/trunk/src/aosp/external/minijail`目录中执行`cargo build`同样可以编译得到库文件，然后可以复制到/usr/local/lib/下面就好。
 
-### 编译安装CrosVM
+## 编译安装CrosVM
 ```
-apt install build-essential libcap-dev libfdt-dev pkg-config python
-git clone https://android.googlesource.com/platform/external/minijail
-cd minijail
-
 mkdir crosvm
 cd crosvm
 repo init -g crosvm -u https://chromium.googlesource.com/chromiumos/manifest.git --repo-url=https://chromium.googlesource.com/external/repo.git
@@ -38,6 +36,19 @@ cargo build
 mkdir -p /usr/share/policy/crosvm/                #这里面是CrosVM运行时的一些policy配置
 cp -r src/platform/crosvm/seccomp/x86_64/* /usr/share/policy/crosvm/
 ```
+
+## 编译虚拟机的内核(Kernel)
+```
+git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
+```
+这里是我自己配置的[kernel config](config-builtin-guest-host)
+下载并并且改名字为 `.config`
+然后编译内核:
+```
+make olddefconfig
+make -j8
+```
+在内核根目录中生成的vmlinux就是需要的内核文件了(ELF 64-bit LSB executable)。
 
 ## 准备虚拟镜像
 ```
@@ -64,15 +75,26 @@ sudo mount ubuntu19.10_rootfs.img rootfs/
 # 去掉rootfs中的密码：
 vim /etc/passwd
 root:x:0:0:root:/root:/bin/bash
-取缔 root: 后面的那个x
+取掉 root: 后面的那个x
 
 ```
+注: 如果有同学玩过Qemu，那么可以直接使用Qemu支持的raw或者qcow2格式的虚拟机镜像。
 
 ## 创建虚拟机
 ```
-sudo LD_LIBRARY_PATH=~/project/vm/minijail/ ./target/debug/crosvm run --rwroot ubuntu19.10_rootfs.img --seccomp-policy-dir=/usr/share/policy/crosvm/x86_64/ -i /boot/initrd.img-4.13.0-46-generic /boot/vmlinuz-4.13.0-46-generic
+sudo LD_LIBRARY_PATH=~/project/vm/minijail/ ./target/debug/crosvm run \
+	--rwroot ubuntu19.10_rootfs.img \
+	--seccomp-policy-dir=/usr/share/policy/crosvm/x86_64/ \
+	vmlinux
+```
 
-sudo ./target/debug/crosvm run --disable-sandbox --rwroot rootfs.ext4 --seccomp-policy-dir=./seccomp/x86_64/ -i /boot/initrd.img-4.13.0-46-generic /boot/vmlinuz-4.13.0-46-generic
+或者，CrosVM同样支持带有initrd的内核，如果编译内核有困难或者比较“懒”的同学，可以直接把Ubuntu或者其他Linux发行版的内核拿来用下，启动时可能会有少许问题，但或许可以起来尝鲜一下虚拟机:
+```
+sudo LD_LIBRARY_PATH=~/project/vm/minijail/ ./target/debug/crosvm run \
+	--rwroot ubuntu19.10_rootfs.img \
+	--seccomp-policy-dir=/usr/share/policy/crosvm/x86_64/ \
+	-i /boot/initrd.img-4.13.0-46-generic \
+	/boot/vmlinuz-4.13.0-46-generic
 ```
 
 运气好的话，在创建VM的终端里面，应该可以看到Kernel启动的log，最后停在登录提示符。输入root 并回车，就可以直接登录虚拟机了。
