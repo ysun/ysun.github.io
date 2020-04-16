@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="什么是CrosVMCrosVM是Chrome操作系统中，用于创建虚拟机的应用。是一个Rust编写的轻量级的虚拟机。亚马逊的Firecracker从crosvm开始。借助于CrosVM 用户可以很容易的在ChromeOS中运行Linux、Android以及Windows应用程序。 CrosVM 的源码是Google ChromeOS的一部分，但也可以独立编译使用。哎，还是那句话“不要问为什么连接打不">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2020-04-15T02:09:29.989Z">
+<meta property="og:updated_time" content="2020-04-16T02:26:08.904Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="由浅入深CrosVM（一）—— 如何在Ubuntu中搭建CrosVM">
 <meta name="twitter:description" content="什么是CrosVMCrosVM是Chrome操作系统中，用于创建虚拟机的应用。是一个Rust编写的轻量级的虚拟机。亚马逊的Firecracker从crosvm开始。借助于CrosVM 用户可以很容易的在ChromeOS中运行Linux、Android以及Windows应用程序。 CrosVM 的源码是Google ChromeOS的一部分，但也可以独立编译使用。哎，还是那句话“不要问为什么连接打不">
@@ -411,7 +411,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  749
+                  809
                 </span>
               
 
@@ -458,6 +458,7 @@
 <p>在内核根目录中生成的vmlinux就是需要的内核文件了(ELF 64-bit LSB executable)。</p>
 <h2 id="准备虚拟镜像"><a href="#准备虚拟镜像" class="headerlink" title="准备虚拟镜像"></a>准备虚拟镜像</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"># 创建一个空的image，大小是20G</span><br><span class="line">dd if=/dev/zero of=ubuntu19.10_rootfs.img bs=1M count=20480</span><br><span class="line">方法2：</span><br><span class="line">qemu-img create -f raw ubuntu19.10_rootfs.img 20G</span><br><span class="line"></span><br><span class="line"># 格式化</span><br><span class="line">mkfs.ext4 ubuntu19.10_rootfs.img</span><br><span class="line"></span><br><span class="line">mkdir rootfs/</span><br><span class="line">sudo mount ubuntu19.10_rootfs.img rootfs/</span><br><span class="line"></span><br><span class="line"># 下载Ubuntu 19.10文件系统(eoan)</span><br><span class="line">debootstrap --arch amd64  eoan rootfs/ http://archive.ubuntu.com/ubuntu</span><br><span class="line"></span><br><span class="line">sudo umount rootfs/</span><br></pre></td></tr></table></figure>
 <p>对镜像的一些修改：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">sudo mount ubuntu19.10_rootfs.img rootfs/</span><br><span class="line"></span><br><span class="line"># 去掉rootfs中的密码：</span><br><span class="line">vim /etc/passwd</span><br><span class="line">root:x:0:0:root:/root:/bin/bash</span><br><span class="line">取掉 root: 后面的那个x</span><br></pre></td></tr></table></figure></p>
+<p>建议尝试启动VM之前，在rootfs中安装udev 和 systemd, 似乎debootstrap创建的rootfs并没有自带这两个tool，需要自己安装下，否则启动的时候会遇到问题。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mount ubuntu19.10_rootfs.img rootfs/</span><br><span class="line">chroot rootfs</span><br><span class="line"></span><br><span class="line">apt install udev systemd</span><br><span class="line">exit</span><br><span class="line">umount rootfs</span><br></pre></td></tr></table></figure></p>
 <p>注: 如果有同学玩过Qemu，那么可以直接使用Qemu支持的raw或者qcow2格式的虚拟机镜像。</p>
 <h2 id="创建虚拟机"><a href="#创建虚拟机" class="headerlink" title="创建虚拟机"></a>创建虚拟机</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sudo LD_LIBRARY_PATH=~/project/vm/minijail/ ./target/debug/crosvm run \</span><br><span class="line">	--rwroot ubuntu19.10_rootfs.img \</span><br><span class="line">	--seccomp-policy-dir=/usr/share/policy/crosvm/x86_64/ \</span><br><span class="line">	vmlinux</span><br></pre></td></tr></table></figure>
 <p>或者，CrosVM同样支持带有initrd的内核，如果编译内核有困难或者比较“懒”的同学，可以直接把Ubuntu或者其他Linux发行版的内核拿来用下，启动时可能会有少许问题，但或许可以起来尝鲜一下虚拟机:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">sudo LD_LIBRARY_PATH=~/project/vm/minijail/ ./target/debug/crosvm run \</span><br><span class="line">	--rwroot ubuntu19.10_rootfs.img \</span><br><span class="line">	--seccomp-policy-dir=/usr/share/policy/crosvm/x86_64/ \</span><br><span class="line">	-i /boot/initrd.img-4.13.0-46-generic \</span><br><span class="line">	/boot/vmlinuz-4.13.0-46-generic</span><br></pre></td></tr></table></figure></p>
@@ -766,7 +767,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">70.4k</span>
+    <span title="Site words total count">70.5k</span>
 
   <span class="post-meta-divider">|</span>
   
