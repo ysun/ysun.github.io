@@ -78,6 +78,15 @@ root:x:0:0:root:/root:/bin/bash
 取掉 root: 后面的那个x
 
 ```
+建议尝试启动VM之前，在rootfs中安装udev 和 systemd, 似乎debootstrap创建的rootfs并没有自带这两个tool，需要自己安装下，否则启动的时候会遇到问题。
+```
+mount ubuntu19.10_rootfs.img rootfs/
+chroot rootfs
+
+apt install udev systemd
+exit
+umount rootfs
+```
 注: 如果有同学玩过Qemu，那么可以直接使用Qemu支持的raw或者qcow2格式的虚拟机镜像。
 
 ## 创建虚拟机
