@@ -16,11 +16,12 @@ CrosVM是Chrome操作系统中，用于创建虚拟机的应用。是一个Rust�
 ### 安装minijail
 这个是CrosVM 打开feature ’sandbox‘时需要的，因为是默认打开的，这里就罗列一下。如果编译有问题，或者很费劲，可以在运行crosvm的时候加上'--disable-sandbox' 参数即可。
 ```
-apt install build-essential libcap-dev libfdt-dev pkg-config python
+apt install build-essential libcap-dev libfdt-dev pkg-config python cargo repo
 git clone https://android.googlesource.com/platform/external/minijail
 cd minijail
 make
-make install
+cp libminijail.so libminijailpreload.so /usr/local/lib/
+cp minijail0 /usr/local/bin
 ```
 或者，如有有cros_sdk的话，在`~/trunk/src/aosp/external/minijail`目录中执行`cargo build`同样可以编译得到库文件，然后可以复制到/usr/local/lib/下面就好。
 
@@ -31,10 +32,11 @@ cd crosvm
 repo init -g crosvm -u https://chromium.googlesource.com/chromiumos/manifest.git --repo-url=https://chromium.googlesource.com/external/repo.git
 repo sync
 
+cd src/platform/crosvm    #sync下来的是整个ChromeOS project的目录结构，需要进到crosvm目录里面编译
 cargo build
 
 mkdir -p /usr/share/policy/crosvm/                #这里面是CrosVM运行时的一些policy配置
-cp -r src/platform/crosvm/seccomp/x86_64/* /usr/share/policy/crosvm/
+cp -r seccomp/x86_64/* /usr/share/policy/crosvm/
 ```
 
 ## 编译虚拟机的内核(Kernel)

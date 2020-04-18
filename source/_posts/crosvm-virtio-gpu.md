@@ -36,13 +36,14 @@ apt install python3-pip
 pip3 install meson
 
 # 安装依赖
-apt install libgbm-dev mesa-utils llvm llvm-9-dev libpciaccess-dev wayland-protocols libwayland-egl-backend-dev
+apt install libgbm-dev mesa-utils llvm llvm-9-dev libpciaccess-dev wayland-protocols libwayland-egl-backend-dev ninja-build libx11-dev libegl1-mesa-dev
 
 git clone https://github.com/anholt/libepoxy.git
 cd libepoxy
 mkdir build && cd build && meson .. && meson install && cd ..
 
 git clone https://gitlab.freedesktop.org/virgl/virglrenderer.git
+cd virglrenderer
 mkdir build && cd build && meson .. && meson install && cd ..
 
 git clone https://gitlab.freedesktop.org/mesa/drm.git
@@ -68,6 +69,15 @@ OpenGL renderer string: Mesa DRI Intel(R) HD Graphics 620 (Kaby Lake GT2)
 ```
 
 如果当前Mesa不支持的话，请参考Mesa的官网，[编译安装Mesa](https://www.mesa3d.org/install.html)
+跟上面一样，这里还是简述一下吧。
+```
+apt install libelf-dev libbison-dev flex libxrandr-dev
+git clone https://gitlab.freedesktop.org/mesa/mesa.git
+
+meson builddir/
+ninja -C builddir/
+ninja -C builddir/ install
+```
 
 ## 重新编译安装CrosVM
 加上参数`--features=gpu,x`
