@@ -85,7 +85,9 @@ theme: hexo-theme-next
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repository: git@github.com:ysun/blog.github.io.git
+  repository:
+    github: git@github.com:ysun/blog.github.io.git
+    coding: git@git.coding.net:ysun/ysun.coding.me.git #https://git.coding.net/ysun/ysun.coding.me.git
   branch: master
 
 search:
