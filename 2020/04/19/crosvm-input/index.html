@@ -76,7 +76,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT">
+  <meta name="keywords" content="crosvm,">
 
 
 
@@ -87,17 +87,18 @@
 
 
 
-<meta name="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
-<meta name="keywords" content="KVM Linux Kernel Qemu">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Yi颗烂樱桃">
-<meta property="og:url" content="http://www.owalle.com/archives/2019/index.html">
+<meta name="description" content="接上篇，我们起了图形以及桌面之后，发现没有办法通过虚拟机窗口与其交互。这篇文章我们简单说下如何跟虚拟机进行交互。 模拟鼠标键盘事件在用CrosVM创建虚拟机的时候，加上下面的参数--display-window-keyboard --display-window-mouse 这样，当鼠标移动到虚拟机窗口范围内的时候，所有的鼠标和键盘事件就会被映射给虚拟机的鼠标和键盘事件。 优点：参数使用方便缺点：">
+<meta name="keywords" content="crosvm">
+<meta property="og:type" content="article">
+<meta property="og:title" content="由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入">
+<meta property="og:url" content="http://www.owalle.com/2020/04/19/crosvm-input/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+<meta property="og:description" content="接上篇，我们起了图形以及桌面之后，发现没有办法通过虚拟机窗口与其交互。这篇文章我们简单说下如何跟虚拟机进行交互。 模拟鼠标键盘事件在用CrosVM创建虚拟机的时候，加上下面的参数--display-window-keyboard --display-window-mouse 这样，当鼠标移动到虚拟机窗口范围内的时候，所有的鼠标和键盘事件就会被映射给虚拟机的鼠标和键盘事件。 优点：参数使用方便缺点：">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-04-19T09:00:01.749Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Yi颗烂樱桃">
-<meta name="twitter:description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+<meta name="twitter:title" content="由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入">
+<meta name="twitter:description" content="接上篇，我们起了图形以及桌面之后，发现没有办法通过虚拟机窗口与其交互。这篇文章我们简单说下如何跟虚拟机进行交互。 模拟鼠标键盘事件在用CrosVM创建虚拟机的时候，加上下面的参数--display-window-keyboard --display-window-mouse 这样，当鼠标移动到虚拟机窗口范围内的时候，所有的鼠标和键盘事件就会被映射给虚拟机的鼠标和键盘事件。 优点：参数使用方便缺点：">
 
 
 
@@ -127,13 +128,13 @@
 
 
 
-  <link rel="canonical" href="http://www.owalle.com/archives/2019/">
+  <link rel="canonical" href="http://www.owalle.com/2020/04/19/crosvm-input/">
 
 
 
 
 
-  <title>归档 | Yi颗烂樱桃</title>
+  <title>由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入 | Yi颗烂樱桃</title>
   
 
 
@@ -152,7 +153,7 @@
     
   
 
-  <div class="container sidebar-position-left page-archive">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
@@ -298,352 +299,307 @@
           <div id="content" class="content">
             
 
-  
-  
-  
-  <div class="post-block archive">
-    <div id="posts" class="posts-collapse">
-      <span class="archive-move-on"></span>
+  <div id="posts" class="posts-expand">
+    
 
-      <span class="archive-page-counter">
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2020/04/19/crosvm-input/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+
+    
+      <header class="post-header">
+
         
         
+          <h2 class="post-title" itemprop="name headline">由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入</h2>
         
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-04-19T16:07:41+08:00">
+                2020-04-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
           
-        
-        嗯..! 目前共计 28 篇日志。 继续努力。
-      </span>
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/CrosVM/" itemprop="url" rel="index">
+                    <span itemprop="name">CrosVM</span>
+                  </a>
+                </span>
 
-      
-
-        
-        
-        
-
-        
+                
+                
+              
+            </span>
           
-          <div class="collection-title">
-            <h2 class="archive-year" id="archive-year-2019">2019</h2>
-          </div>
-        
-        
 
-        
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2020/04/19/crosvm-input/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2020/04/19/crosvm-input/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
 
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-    <header class="post-header">
+          
+          
 
-      <h3 class="post-title">
-        
-            <a class="post-title-link" href="/2019/12/26/network-in-vm/" itemprop="url">
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-wordcount">
               
-                <span itemprop="name">QEMU虚拟机网络模拟</span>
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  385
+                </span>
               
-            </a>
-        
-      </h3>
 
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2019-12-26T13:44:43+08:00" content="2019-12-26">
-          12-26
-        </time>
-      </div>
+              
+                <span class="post-meta-divider">|</span>
+              
 
-    </header>
-  </article>
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  1
+                </span>
+              
+            </div>
+          
 
+          
 
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h3 class="post-title">
-        
-            <a class="post-title-link" href="/2019/12/18/fast-restart/" itemprop="url">
-              
-                <span itemprop="name">利用虚拟机(QEMU)实现宿主机快速重启</span>
-              
-            </a>
-        
-      </h3>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2019-12-18T21:28:40+08:00" content="2019-12-18">
-          12-18
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
       
 
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h3 class="post-title">
-        
-            <a class="post-title-link" href="/2019/07/16/study-x86-fence/" itemprop="url">
-              
-                <span itemprop="name">利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令</span>
-              
-            </a>
-        
-      </h3>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2019-07-16T21:28:40+08:00" content="2019-07-16">
-          07-16
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
+      
+        <p>接上篇，我们起了图形以及桌面之后，发现没有办法通过虚拟机窗口与其交互。<br>这篇文章我们简单说下如何跟虚拟机进行交互。</p>
+<h2 id="模拟鼠标键盘事件"><a href="#模拟鼠标键盘事件" class="headerlink" title="模拟鼠标键盘事件"></a>模拟鼠标键盘事件</h2><p>在用CrosVM创建虚拟机的时候，加上下面的参数<br><code>--display-window-keyboard --display-window-mouse</code></p>
+<p>这样，当鼠标移动到虚拟机窗口范围内的时候，所有的鼠标和键盘事件就会被映射给虚拟机的鼠标和键盘事件。</p>
+<p>优点：参数使用方便<br>缺点：对于Host中已经定义过的全局快捷键，即便在虚拟机中执行，也会被Host系统捕获，比如切换终端Ctrl+Alt+F2</p>
+<h2 id="键盘和鼠标passthrough给虚拟机"><a href="#键盘和鼠标passthrough给虚拟机" class="headerlink" title="键盘和鼠标passthrough给虚拟机"></a>键盘和鼠标passthrough给虚拟机</h2><p>首先查看host OS中键盘鼠标的event:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># ls /dev/input/</span><br></pre></td></tr></table></figure></p>
+<p>确定需要passthrough的键盘和鼠标使用的是哪两个event。<br>这里我没有好方法，对input device的研究不是很深入。通过插拔键盘鼠标，确定想要passthrough给虚拟机的键盘和鼠标。<br>比如键盘和鼠标分别是<code>event3</code>和<code>evnet4</code>那么就给CrosVM添加参数:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">--evdev /dev/input/event3 --evdev /dev/input/event4</span><br></pre></td></tr></table></figure></p>
+<p>优点：虚拟机拥有全部的键盘和鼠标。<br>缺点：已经passthrough的键盘和鼠标不再控制Host，如果Host也需要交互的话，需要Host接两道键盘和鼠标。且系统中event不是固定不变的，CrosVM的相对复杂一点。</p>
+<p>这篇先写到这里吧，对于code分析，放在日后吧～ :p</p>
 
       
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h3 class="post-title">
-        
-            <a class="post-title-link" href="/2019/07/12/study-x86-using-qemu/" itemprop="url">
-              
-                <span itemprop="name">利用虚拟机(QEMU)学习X86指令集0</span>
-              
-            </a>
-        
-      </h3>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2019-07-12T13:22:15+08:00" content="2019-07-12">
-          07-12
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h3 class="post-title">
-        
-            <a class="post-title-link" href="/2019/05/22/inline-assembly/" itemprop="url">
-              
-                <span itemprop="name">C/C++ 中嵌入汇编总结</span>
-              
-            </a>
-        
-      </h3>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2019-05-22T09:03:48+08:00" content="2019-05-22">
-          05-22
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h3 class="post-title">
-        
-            <a class="post-title-link" href="/2019/05/12/sdm-8-2-memory-ordering/" itemprop="url">
-              
-                <span itemprop="name">SMD Chapter 8.2 内存存取顺序</span>
-              
-            </a>
-        
-      </h3>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2019-05-12T23:12:28+08:00" content="2019-05-12">
-          05-12
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h3 class="post-title">
-        
-            <a class="post-title-link" href="/2019/05/07/efi-shell-tftp/" itemprop="url">
-              
-                <span itemprop="name">EFI Shell中使用tfpt.efi 自动化Kernel测试方案</span>
-              
-            </a>
-        
-      </h3>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2019-05-07T09:44:48+08:00" content="2019-05-07">
-          05-07
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h3 class="post-title">
-        
-            <a class="post-title-link" href="/2019/02/20/kvm-src-analysis/" itemprop="url">
-              
-                <span itemprop="name">KVM(Kernel-based Virtual Machine)源码分析</span>
-              
-            </a>
-        
-      </h3>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2019-02-20T23:42:57+08:00" content="2019-02-20">
-          02-20
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h3 class="post-title">
-        
-            <a class="post-title-link" href="/2019/01/29/Intel-SDM/" itemprop="url">
-              
-                <span itemprop="name">英特尔®64和IA-32架构软件开发人员手册(Intel SDM)</span>
-              
-            </a>
-        
-      </h3>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2019-01-29T14:05:12+08:00" content="2019-01-29">
-          01-29
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
     </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="Yi颗烂樱桃 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.png" alt="Yi颗烂樱桃 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者：</strong>
+    Yi颗烂樱桃
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://www.owalle.com/2020/04/19/crosvm-input/" title="由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入">http://www.owalle.com/2020/04/19/crosvm-input/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>
+    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="external nofollow" target="_blank">CC BY-NC-ND 3.0</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/crosvm/" rel="tag"># crosvm</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/04/07/crosvm-network/" rel="next" title="由浅入深CrosVM（三）—— 虚拟机的网络配置">
+                <i class="fa fa-chevron-left"></i> 由浅入深CrosVM（三）—— 虚拟机的网络配置
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
   </div>
   
   
   
+  </article>
 
-  
 
+
+    <div class="post-spread">
+      
+        
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
+    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
+    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a class="bds_count" data-cmd="count"></a>
+  </div>
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "2",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "share": {
+        "bdSize": "16",
+        "bdStyle": "0"
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      }
+    }
+  </script>
+
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      
+    </div>
+  </div>
 
 
           </div>
@@ -651,6 +607,13 @@
 
 
           
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
 
         </div>
         
@@ -671,8 +634,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
             
@@ -740,6 +712,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#模拟鼠标键盘事件"><span class="nav-number">1.</span> <span class="nav-text">模拟鼠标键盘事件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#键盘和鼠标passthrough给虚拟机"><span class="nav-number">2.</span> <span class="nav-text">键盘和鼠标passthrough给虚拟机</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -928,6 +916,10 @@
   
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 
@@ -1339,26 +1331,6 @@
   
 
   
-  
-    <script type="text/x-mathjax-config">
-      MathJax.Hub.Config({
-        tex2jax: {
-          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
-          processEscapes: true,
-          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
-        }
-      });
-    </script>
-
-    <script type="text/x-mathjax-config">
-      MathJax.Hub.Queue(function() {
-        var all = MathJax.Hub.getAllJax(), i;
-        for (i=0; i < all.length; i += 1) {
-          all[i].SourceElement().parentNode.className += ' has-jax';
-        }
-      });
-    </script>
-    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
   
 
 

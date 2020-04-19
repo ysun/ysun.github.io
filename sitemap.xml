@@ -4,14 +4,21 @@
   <url>
     <loc>http://www.owalle.com/2020/04/03/crosvm-virtio-gpu/</loc>
     
-    <lastmod>2020-04-16T06:23:28.803Z</lastmod>
+    <lastmod>2020-04-19T09:00:01.753Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.owalle.com/2020/04/19/crosvm-input/</loc>
+    
+    <lastmod>2020-04-19T09:00:01.749Z</lastmod>
     
   </url>
   
   <url>
     <loc>http://www.owalle.com/2020/03/30/crosvm-setup/</loc>
     
-    <lastmod>2020-04-16T04:52:13.167Z</lastmod>
+    <lastmod>2020-04-19T09:00:01.749Z</lastmod>
     
   </url>
   
@@ -121,13 +128,6 @@
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2014/12/11/kvm-src-4-mem/</loc>
-    
-    <lastmod>2019-01-03T03:23:42.941Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://www.owalle.com/2018/12/10/kvm-boot/</loc>
     
     <lastmod>2018-12-28T06:28:13.580Z</lastmod>
@@ -152,6 +152,13 @@
     <loc>http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/</loc>
     
     <lastmod>2018-12-11T07:04:43.120Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.owalle.com/2014/12/11/kvm-src-4-mem/</loc>
+    
+    <lastmod>2018-12-11T03:27:01.008Z</lastmod>
     
   </url>
   

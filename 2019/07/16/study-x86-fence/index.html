@@ -432,7 +432,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  10
+                  9
                 </span>
               
             </div>
@@ -454,8 +454,7 @@
 
       
         <h2 id="浅谈“内存读写重排序”"><a href="#浅谈“内存读写重排序”" class="headerlink" title="浅谈“内存读写重排序”"></a>浅谈“内存读写重排序”</h2><p>在我们编写C/C++代码时，以及它在CPU上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序(又叫“程序顺序”, program ordering)会被重新排列。这个现象会在两个地方引入，编译时候由编译器引入；以及运行时由处理器引入。目的都是为了”使代码运行的更快”。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起介绍。</p>
-<div id="flowchart-0" class="flow-chart"></div>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">c_code=&gt;operation: C 语言</span><br><span class="line">asm_code=&gt;operation: 汇编语言</span><br><span class="line">cpu_instruction=&gt;operation: CPU执行序列</span><br><span class="line"></span><br><span class="line">compiler_reorder=&gt;inputoutput: 编译器重排序</span><br><span class="line">cpu_reorder=&gt;inputoutput: 处理器重排序</span><br><span class="line"></span><br><span class="line">c_code(right)-&gt;compiler_reorder(right)-&gt;asm_code(right)-&gt;cpu_reorder(right)-&gt;cpu_instruction</span><br></pre></td></tr></table></figure>
 <h3 id="X86的内存读写顺序模型"><a href="#X86的内存读写顺序模型" class="headerlink" title="X86的内存读写顺序模型"></a>X86的内存读写顺序模型</h3><p>按照内存访问重排序发生情况的多少，大概划分为下面三种“顺序模型”。</p>
 <h4 id="弱顺序模型"><a href="#弱顺序模型" class="headerlink" title="弱顺序模型"></a>弱顺序模型</h4><p>弱顺序模型中，可能会出现四种内存重排序(Load-Load, Store-Store, Load-Store 和 Store-Load)。任意读(load)操作和写(store)操作都有可能与其他读写操作重排序，只要它能保证原来程序的行为。采用弱顺序模型的处理器可以称为“weakly-order”或者”weak ordering”。<br>对于C/C++的编译器gcc(因为我只用过gcc:p)，都可以呈现弱顺序模型，稍后我们看下例子。</p>
 <h4 id="强顺序模型"><a href="#强顺序模型" class="headerlink" title="强顺序模型"></a>强顺序模型</h4><p>强顺序模型和弱顺序模型的界限可能不一定有确切的标准，但从SDM 8.2章开头可以看到，奔腾4之后的X86处理器大概属于强顺序类型：<br><em>To allow performance optimization of instruction execution, the IA-32 architecture allows departures from strongordering model called processor ordering in Pentium 4, Intel Xeon, and P6 family processors</em><br>继续读SDM8.2 可以发现如下约定：</p>
@@ -524,14 +523,6 @@
 <p>这里我利用RDTSC指令实现了LFENCE组织CPU指令的重排序，这里不列举了，大概意思是，在一个逻辑CPU上，利用两次rdtsc指令之间插入LFENCE来观察循环的周期的长短来判断LFENCE的作用。只放个链接在这里吧<a href="https://github.com/ysun/acrn-unit-test/blob/memory_ordering_LFENCE/guest/x86/memory_order.c" target="_blank" rel="noopener">memory_ordering_lfence.c</a></p>
 <p>但对于SFENCE，我按照SDM 8.2.2所述内容并没有重现MOVNTI指令的store-store重排序，所以没能确认SFENCE的作用。<br>我的MOVNTI和SFENCE的测试代码在这里<a href="https://github.com/ysun/acrn-unit-test/blob/memory_ordering_SFENCE/guest/x86/memory_order.c" target="_blank" rel="noopener">memory_ordering_sfence.c</a>，<strong>幻想着某位大牛可以回复我一下！！！</strong></p>
 <p>参考文档：<br><a href="https://preshing.com/20120930/weak-vs-strong-memory-models/" target="_blank" rel="noopener">https://preshing.com/20120930/weak-vs-strong-memory-models/</a><br><a href="https://preshing.com/20120515/memory-reordering-caught-in-the-act/" target="_blank" rel="noopener">https://preshing.com/20120515/memory-reordering-caught-in-the-act/</a><br><a href="http://dreamrunner.org/blog/2014/06/28/qian-tan-memory-reordering/" target="_blank" rel="noopener">http://dreamrunner.org/blog/2014/06/28/qian-tan-memory-reordering/</a></p>
-<p><script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.8/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.11.3/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">c_code=>operation: C 语言
-asm_code=>operation: 汇编语言
-cpu_instruction=>operation: CPU执行序列
-
-compiler_reorder=>inputoutput: 编译器重排序
-cpu_reorder=>inputoutput: 处理器重排序
-
-c_code(right)->compiler_reorder(right)->asm_code(right)->cpu_reorder(right)->cpu_instruction</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script></p>
 
       
     </div>
@@ -741,7 +732,7 @@ c_code(right)->compiler_reorder(right)->asm_code(right)->cpu_reorder(right)->cpu
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-count">28</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -752,7 +743,7 @@ c_code(right)->compiler_reorder(right)->asm_code(right)->cpu_reorder(right)->cpu
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-count">11</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -763,7 +754,7 @@ c_code(right)->compiler_reorder(right)->asm_code(right)->cpu_reorder(right)->cpu
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-count">18</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -836,7 +827,7 @@ c_code(right)->compiler_reorder(right)->asm_code(right)->cpu_reorder(right)->cpu
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">70.6k</span>
+    <span title="Site words total count">70.7k</span>
 
   <span class="post-meta-divider">|</span>
   

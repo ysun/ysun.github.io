@@ -411,7 +411,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  1.9k
+                  1.8k
                 </span>
               
 
@@ -427,7 +427,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  8
+                  7
                 </span>
               
             </div>
@@ -464,8 +464,7 @@
 <li>退出qemu，并且可以使用kexec软重启系统，同时可以升级内核、QEMU、Microcode 等。</li>
 <li>重新运行QEMU，恢复VM使其继续执行。</li>
 </ol>
-<div id="flowchart-0" class="flow-chart"></div>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">step1=&gt;operation: 创建虚拟机。</span><br><span class="line">step2=&gt;operation: 保存虚拟机到pmem。</span><br><span class="line">step3=&gt;operation: 退出QEMU、更新kernel、Microcode等升级。</span><br><span class="line">step4=&gt;operation: 重新运行QEMU，恢复VM使其继续执行。</span><br><span class="line"></span><br><span class="line">step1-&gt;step2-&gt;step3-&gt;step4</span><br></pre></td></tr></table></figure>
 <h3 id="内核准备"><a href="#内核准备" class="headerlink" title="内核准备"></a>内核准备</h3><h4 id="编译内核"><a href="#编译内核" class="headerlink" title="编译内核"></a>编译内核</h4><p>大概率需要重新编译一个内核，确保所有的所需kernel config都打开。<br>主要是三类内核Configure： NVDIMM，DAX和PMEM相关的都打开吧。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">CONFIG_X86_PMEM_LEGACY_DEVICE=y</span><br><span class="line">CONFIG_X86_PMEM_LEGACY=m</span><br><span class="line">CONFIG_BLK_DEV_PMEM=m</span><br><span class="line">CONFIG_ARCH_HAS_PMEM_API=y</span><br><span class="line"></span><br><span class="line">CONFIG_DAX_DRIVER=y</span><br><span class="line">CONFIG_DAX=y</span><br><span class="line">CONFIG_DEV_DAX=y</span><br><span class="line">CONFIG_DEV_DAX_PMEM=m</span><br><span class="line">CONFIG_DEV_DAX_KMEM=m</span><br><span class="line">CONFIG_DEV_DAX_PMEM_COMPAT=m</span><br><span class="line">CONFIG_FS_DAX=y</span><br><span class="line">CONFIG_FS_DAX_PMD=y</span><br><span class="line"></span><br><span class="line">CONFIG_LIBNVDIMM=m</span><br><span class="line">CONFIG_NVDIMM_PFN=y</span><br><span class="line">CONFIG_NVDIMM_DAX=y</span><br><span class="line">CONFIG_NVDIMM_KEYS=y</span><br></pre></td></tr></table></figure></p>
 <h4 id="内核参数"><a href="#内核参数" class="headerlink" title="内核参数"></a>内核参数</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">memmap=2G!4G</span><br></pre></td></tr></table></figure>
 <p>含义是，需要在内存中4G的位置开始，预留2G的内存空间。<a href="https://docs.pmem.io/persistent-memory/getting-started-guide/creating-development-environments/linux-environments/linux-memmap" target="_blank" rel="noopener">了解更详细的memmap用法及含义</a>。</p>
@@ -542,12 +541,6 @@
 </ol>
 <p>至此，虚拟机又可以接着之前的地方呼啸的跑下去了。效果看下面的视频吧：</p>
 <p><iframe height="360" width="640" src="https://player.youku.com/embed/XNDQ3MTkyMTYzNg==" frameborder="0" 'allowfullscreen'=""></iframe><br><a href="http://v.youku.com/v_show/id_XNDQ3MTkyMTYzNg==.html?spm=a2h3j.8428770.3416059.1" target="_blank" rel="noopener">快速启动演示</a></p>
-<p><script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.8/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.11.3/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">step1=>operation: 创建虚拟机。
-step2=>operation: 保存虚拟机到pmem。
-step3=>operation: 退出QEMU、更新kernel、Microcode等升级。
-step4=>operation: 重新运行QEMU，恢复VM使其继续执行。
-
-step1->step2->step3->step4</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script></p>
 
       
     </div>
@@ -757,7 +750,7 @@ step1->step2->step3->step4</textarea><textarea id="flowchart-0-options" style="d
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-count">28</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -768,7 +761,7 @@ step1->step2->step3->step4</textarea><textarea id="flowchart-0-options" style="d
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-count">11</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -779,7 +772,7 @@ step1->step2->step3->step4</textarea><textarea id="flowchart-0-options" style="d
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-count">18</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -852,7 +845,7 @@ step1->step2->step3->step4</textarea><textarea id="flowchart-0-options" style="d
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">70.6k</span>
+    <span title="Site words total count">70.7k</span>
 
   <span class="post-meta-divider">|</span>
   

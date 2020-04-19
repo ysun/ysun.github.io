@@ -87,18 +87,18 @@
 
 
 
-<meta name="description" content="引言对于Linux Kernel 或者OS相关的自动化测试，如何自动更新被测的Kernel以及OS image有时候是比较困难的事情。Linux社区的”老神仙”Fengguang同学牵头开发了0-day自动化测试系统，系统期初的核心功能是利用kexec加载待测的kernel image二次启动。大概流程是:   这个方法对于绝大多数kernel或者module测试中是工作的，也是非常灵活的。但有几">
+<meta name="description" content="引言对于Linux Kernel 或者OS相关的自动化测试，如何自动更新被测的Kernel以及OS image有时候是比较困难的事情。Linux社区的”老神仙”Fengguang同学牵头开发了0-day自动化测试系统，系统期初的核心功能是利用kexec加载待测的kernel image二次启动。大概流程是: 123456789st=&amp;gt;start: 系统启动op1=&amp;gt;operation:">
 <meta name="keywords" content="efi">
 <meta property="og:type" content="article">
 <meta property="og:title" content="EFI Shell中使用tfpt.efi 自动化Kernel测试方案">
 <meta property="og:url" content="http://www.owalle.com/2019/05/07/efi-shell-tftp/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="引言对于Linux Kernel 或者OS相关的自动化测试，如何自动更新被测的Kernel以及OS image有时候是比较困难的事情。Linux社区的”老神仙”Fengguang同学牵头开发了0-day自动化测试系统，系统期初的核心功能是利用kexec加载待测的kernel image二次启动。大概流程是:   这个方法对于绝大多数kernel或者module测试中是工作的，也是非常灵活的。但有几">
+<meta property="og:description" content="引言对于Linux Kernel 或者OS相关的自动化测试，如何自动更新被测的Kernel以及OS image有时候是比较困难的事情。Linux社区的”老神仙”Fengguang同学牵头开发了0-day自动化测试系统，系统期初的核心功能是利用kexec加载待测的kernel image二次启动。大概流程是: 123456789st=&amp;gt;start: 系统启动op1=&amp;gt;operation:">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:updated_time" content="2019-05-07T06:49:47.750Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="EFI Shell中使用tfpt.efi 自动化Kernel测试方案">
-<meta name="twitter:description" content="引言对于Linux Kernel 或者OS相关的自动化测试，如何自动更新被测的Kernel以及OS image有时候是比较困难的事情。Linux社区的”老神仙”Fengguang同学牵头开发了0-day自动化测试系统，系统期初的核心功能是利用kexec加载待测的kernel image二次启动。大概流程是:   这个方法对于绝大多数kernel或者module测试中是工作的，也是非常灵活的。但有几">
+<meta name="twitter:description" content="引言对于Linux Kernel 或者OS相关的自动化测试，如何自动更新被测的Kernel以及OS image有时候是比较困难的事情。Linux社区的”老神仙”Fengguang同学牵头开发了0-day自动化测试系统，系统期初的核心功能是利用kexec加载待测的kernel image二次启动。大概流程是: 123456789st=&amp;gt;start: 系统启动op1=&amp;gt;operation:">
 
 
 
@@ -411,7 +411,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  1.3k
+                  1.2k
                 </span>
               
 
@@ -449,8 +449,7 @@
 
       
         <h2 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h2><p>对于Linux Kernel 或者OS相关的自动化测试，如何自动更新被测的Kernel以及OS image有时候是比较困难的事情。<br>Linux社区的”老神仙”Fengguang同学牵头开发了0-day自动化测试系统，系统期初的核心功能是利用kexec加载待测的kernel image二次启动。大概流程是:</p>
-<div id="flowchart-0" class="flow-chart"></div>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">st=&gt;start: 系统启动</span><br><span class="line">op1=&gt;operation: 启动small size的kernel + ramfs</span><br><span class="line">op2=&gt;operation: 初始化网络并获取IP地址</span><br><span class="line">op3=&gt;operation: 从服务器上获取可用的kernel image列表</span><br><span class="line">op4=&gt;operation: 根据列表的配置获取待测的kernel image</span><br><span class="line">op5=&gt;operation: 在ramfs初始化的最后阶段使用Kexec加载待测的kernel image启动本地文件系统</span><br><span class="line">e=&gt;end: 系统启动结束</span><br><span class="line"></span><br><span class="line">st-&gt;op1-&gt;op2-&gt;op3-&gt;op4-&gt;op5-&gt;e</span><br></pre></td></tr></table></figure>
 <p>这个方法对于绝大多数kernel或者module测试中是工作的，也是非常灵活的。但有几个特例：</p>
 <ol>
 <li>由于Kexec的限制，上述方法对Xen支持的不好。</li>
@@ -479,15 +478,6 @@
 <p>当系统死掉了，并且需要更新kernel的时候，只需要覆盖tftp server上的bzimage_current或者改变其软连接的指向，然后重启系统，就可以一次性更新kernel。</p>
 <h2 id="Todo"><a href="#Todo" class="headerlink" title="Todo"></a>Todo</h2><p>目前EFI shell能做的事情相比Linux shell还相差甚远，没有太多现成的application可以直接使用。<br>tftp.efi也能是download，并不能upload，这使得EFI直接并不能对server进行通知，需要借助OS。<br>后面，可以增加application，实现类似Linux工具curl，或者patch tfpt让它可以上传文件，这样就可以双向通信了。</p>
 <h2 id="附件"><a href="#附件" class="headerlink" title="附件"></a>附件</h2><p>EDKII是不是有点bug似乎，附上我build的efi shell 以及tftp，有需要的小伙伴可以直接点击下载<br>64bit: <a href="efi_x64/Shell.efi">shell.efi</a>  <a href="efi_x64/tftp.efi">tftp.efi</a><br>32bit: <a href="efi_ia32/Shell.efi">shell.efi</a>  <a href="efi_ia32/tftp.efi">tftp.efi</a></p>
-<p><script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.8/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.11.3/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">st=>start: 系统启动
-op1=>operation: 启动small size的kernel + ramfs
-op2=>operation: 初始化网络并获取IP地址
-op3=>operation: 从服务器上获取可用的kernel image列表
-op4=>operation: 根据列表的配置获取待测的kernel image
-op5=>operation: 在ramfs初始化的最后阶段使用Kexec加载待测的kernel image启动本地文件系统
-e=>end: 系统启动结束
-
-st->op1->op2->op3->op4->op5->e</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script></p>
 
       
     </div>
@@ -697,7 +687,7 @@ st->op1->op2->op3->op4->op5->e</textarea><textarea id="flowchart-0-options" styl
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-count">28</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -708,7 +698,7 @@ st->op1->op2->op3->op4->op5->e</textarea><textarea id="flowchart-0-options" styl
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-count">11</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -719,7 +709,7 @@ st->op1->op2->op3->op4->op5->e</textarea><textarea id="flowchart-0-options" styl
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-count">18</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -792,7 +782,7 @@ st->op1->op2->op3->op4->op5->e</textarea><textarea id="flowchart-0-options" styl
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">70.6k</span>
+    <span title="Site words total count">70.7k</span>
 
   <span class="post-meta-divider">|</span>
   
