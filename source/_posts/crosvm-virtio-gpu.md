@@ -36,7 +36,7 @@ apt install python3-pip
 pip3 install meson
 
 # 安装依赖
-apt install libgbm-dev mesa-utils llvm llvm-9-dev libpciaccess-dev wayland-protocols libwayland-egl-backend-dev ninja-build libx11-dev libegl1-mesa-dev
+apt install libgbm-dev mesa-utils llvm llvm-9-dev libpciaccess-dev libwayland-egl-backend-dev ninja-build libx11-dev libegl1-mesa-dev
 
 git clone https://github.com/anholt/libepoxy.git
 cd libepoxy
@@ -71,9 +71,11 @@ OpenGL renderer string: Mesa DRI Intel(R) HD Graphics 620 (Kaby Lake GT2)
 如果当前Mesa不支持的话，请参考Mesa的官网，[编译安装Mesa](https://www.mesa3d.org/install.html)
 跟上面一样，这里还是简述一下吧。
 ```
-apt install libelf-dev libbison-dev flex libxrandr-dev
+apt install libelf-dev libbison-dev flex libxrandr-dev valgrind libunwind-dev wayland-scanner++ libwayland-bin libwayland-dev libxdamage-dev libxcb-glx0-dev libx11-xcb-dev libxcb-dri2-0-dev libxcb-dri3-dev libxcb-present-dev libxshmfence-dev libxxf86vm-dev 
+
 git clone https://gitlab.freedesktop.org/mesa/mesa.git
 
+cd mesa
 meson builddir/
 ninja -C builddir/
 ninja -C builddir/ install

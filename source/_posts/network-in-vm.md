@@ -36,7 +36,7 @@ QEMU可以模拟多种网卡设备(例如PCI或者ISA设备)，同时可将这�
 ```
 Ubuntu:
 apt-get install libvirt-clients		//使用virsh
-apt-get install libvirt-daemon		//使用libvirtd
+apt-get install libvirt-daemon libvirt-daemon-system libvirt-daemon-system-systemd		//使用libvirtd
 apt-get install qemu-system-common	//使用qemu-bridge-helper
  ```
 
@@ -85,7 +85,7 @@ add bridge failed: Package not installed
 ----------------------------------------------------------
 ```
 
-  一个比较偷懒的办法是使用现成的配置文件default.xml，内容如下:
+  一个比较偷懒的办法是使用现成的配置文件`/etc/libvirt/qemu/networks/autostart/default.xml`，内容如下:
 ```
 <network>
   <name>default</name>
@@ -100,6 +100,7 @@ add bridge failed: Package not installed
   </ip>
 </network>
 ```
+或者显示的给出default.xml
   ```
 #virsh net-define default.xml
 #virsh net-start default
@@ -122,7 +123,7 @@ qemu-system-x86_64 --enable-kvm -M q35 -m 4G -smp 1 -hda /root/ubuntu1904.qcow -
 ```
   因为使用了工具qemu-bridge-helper，它需要一个配置文件：
 ```
-/usr/local/etc/qemu/bridge.conf:
+/usr/local/etc/qemu/bridge.conf:(这个目录默认没有，创建，如果没有这个文件qemu-bridge-helper会提示的)
 
 #把我们有可能用得到的网桥名字都列在这里。
 

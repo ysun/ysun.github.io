@@ -6,7 +6,7 @@ categories: kvm
 tags: android-emulator kvm 
 ---
 
-近来研究了下Android emulator，就是使用在用Android Studio编写Android App的时候，用于调试App用的虚拟机AVD(Android Virtualized Device)。本来是件挺平淡无奇的事情，但非要给生活比个""耶....."(＾－＾)V 需求是，在Linux OS中，使用自定义的Android Kernel! 由于烂樱桃本人只是略懂虚拟化技术，对于Android算是一窍不通，所以，本文主要记录步骤为主，木有原理性的东西。
+近来研究了下Android emulator，就是Android Studio中用于调试App的虚拟机AVD(Android Virtualized Device)。本来是件挺平淡无奇的事情，但非要给生活比个""耶....."(＾－＾)V 需求是，在Linux OS中，使用自定义的Android Kernel! 由于烂樱桃本人只略懂一丢虚拟化技术，对于Android算是一窍不通，所以，本文主要记录步骤为主，木有原理性的东西。
 
 ## 0. 准备 安装Android Studio
 到Android Studio 官网[下载最新Android for Linux 64-bit](https://developer.android.com/studio#downloads) 基本上解压缩之后就能用，如果安装有问题参考[官方安装文档](https://developer.android.com/studio/install)
@@ -15,7 +15,7 @@ tags: android-emulator kvm
 ## 1. 安装AVD
 Android Studio中AVD的安装很方便，第一次创建虚拟机的时候，需要先点击那个'Download'按钮，在线下载虚拟机镜像。
 需要注意的两点：
-* 需要下载带有'google play'图标的镜像，其中有很多限制，比如无法使用adb root等。
+* 需要下载__不__带有'google play'图标的镜像，因为带有Google play log的镜像中有很多限制，比如无法使用adb root等。
 * Android Q内含Android Kernel 4.14， Android R是最新版的Android，内含Android Kernel 5.4. 硬盘空间允许的话，Android Q 和 R 都安装了，下面会分别讲述kernel 4.14 和5.4的不同玩法。
 
 直接上图一看便知
