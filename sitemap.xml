@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://www.owalle.com/2019/12/26/network-in-vm/</loc>
+    
+    <lastmod>2020-06-05T07:25:14.182Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://www.owalle.com/2020/06/03/crosvm-chromevm/</loc>
     
     <lastmod>2020-06-03T15:53:55.769Z</lastmod>
@@ -23,14 +30,14 @@
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2020/03/30/crosvm-setup/</loc>
+    <loc>http://www.owalle.com/2020/04/19/crosvm-input/</loc>
     
     <lastmod>2020-04-19T09:00:01.749Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2020/04/19/crosvm-input/</loc>
+    <loc>http://www.owalle.com/2020/03/30/crosvm-setup/</loc>
     
     <lastmod>2020-04-19T09:00:01.749Z</lastmod>
     
@@ -54,13 +61,6 @@
     <loc>http://www.owalle.com/2020/02/27/chuncheng-parking/</loc>
     
     <lastmod>2020-04-06T03:25:31.394Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://www.owalle.com/2019/12/26/network-in-vm/</loc>
-    
-    <lastmod>2020-03-27T08:04:52.242Z</lastmod>
     
   </url>
   
