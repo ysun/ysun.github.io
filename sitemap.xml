@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://www.owalle.com/2020/04/03/crosvm-virtio-gpu/</loc>
+    
+    <lastmod>2021-01-04T13:29:44.922Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://www.owalle.com/2020/03/03/chromeos-setup/</loc>
     
     <lastmod>2020-09-11T05:54:34.400Z</lastmod>
@@ -33,13 +40,6 @@
     <loc>http://www.owalle.com/2020/05/11/android-emulator/</loc>
     
     <lastmod>2020-09-11T05:51:36.272Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://www.owalle.com/2020/04/03/crosvm-virtio-gpu/</loc>
-    
-    <lastmod>2020-09-11T05:51:08.692Z</lastmod>
     
   </url>
   
