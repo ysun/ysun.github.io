@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://www.owalle.com/2021/01/09/create-mini-vm/</loc>
+    <lastmod>2021-01-09T16:27:08.276Z</lastmod>
+  </url>  <url>
     <loc>http://www.owalle.com/2020/04/03/crosvm-virtio-gpu/</loc>
     <lastmod>2021-01-04T13:29:44.922Z</lastmod>
   </url>  <url>
@@ -52,41 +55,41 @@
     <loc>http://www.owalle.com/2019/01/29/Intel-SDM/</loc>
     <lastmod>2020-09-11T05:38:06.032Z</lastmod>
   </url>  <url>
+    <loc>http://www.owalle.com/2018/12/10/kvm-overview/</loc>
+    <lastmod>2020-09-11T05:37:48.768Z</lastmod>
+  </url>  <url>
+    <loc>http://www.owalle.com/2018/12/10/kvm-memory/</loc>
+    <lastmod>2020-09-11T05:37:38.532Z</lastmod>
+  </url>  <url>
+    <loc>http://www.owalle.com/2018/12/10/kvm-boot/</loc>
+    <lastmod>2020-09-11T05:36:28.784Z</lastmod>
+  </url>  <url>
+    <loc>http://www.owalle.com/2014/12/11/kvm-src-4-mem/</loc>
+    <lastmod>2020-09-11T05:36:23.512Z</lastmod>
+  </url>  <url>
     <loc>http://www.owalle.com/2018/12/26/qemu-qom/</loc>
     <lastmod>2020-09-11T05:36:00.420Z</lastmod>
   </url>  <url>
-    <loc>http://www.owalle.com/2014/01/01/hello-world/</loc>
-    <lastmod>2019-07-16T13:02:08.585Z</lastmod>
-  </url>  <url>
-    <loc>http://www.owalle.com/2018/12/10/kvm-overview/</loc>
-    <lastmod>2019-02-19T05:25:03.141Z</lastmod>
-  </url>  <url>
-    <loc>http://www.owalle.com/2018/12/10/kvm-memory/</loc>
-    <lastmod>2019-01-03T03:24:28.489Z</lastmod>
-  </url>  <url>
-    <loc>http://www.owalle.com/2014/12/11/kvm-src-4-mem/</loc>
-    <lastmod>2019-01-03T03:23:42.941Z</lastmod>
-  </url>  <url>
-    <loc>http://www.owalle.com/2018/12/10/kvm-boot/</loc>
-    <lastmod>2018-12-28T06:28:13.580Z</lastmod>
-  </url>  <url>
     <loc>http://www.owalle.com/2018/12/24/qemu-debug/</loc>
-    <lastmod>2018-12-24T08:39:02.407Z</lastmod>
+    <lastmod>2020-09-11T05:35:43.528Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/</loc>
-    <lastmod>2018-12-11T07:04:43.120Z</lastmod>
+    <lastmod>2020-09-11T05:35:27.876Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2014/12/11/kvm-src-3-cpu/</loc>
-    <lastmod>2018-12-11T03:02:52.188Z</lastmod>
+    <lastmod>2020-09-11T05:35:15.432Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2018/12/10/kvm-cpu/</loc>
-    <lastmod>2018-12-11T02:30:26.704Z</lastmod>
+    <lastmod>2020-09-11T05:35:01.444Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2014/12/11/kvm-src-1/</loc>
-    <lastmod>2018-12-11T02:28:56.744Z</lastmod>
+    <lastmod>2020-09-11T05:34:43.472Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2018/12/10/qmp-introduction/</loc>
-    <lastmod>2018-12-10T14:15:44.125Z</lastmod>
+    <lastmod>2020-09-11T05:34:15.644Z</lastmod>
+  </url>  <url>
+    <loc>http://www.owalle.com/2014/01/01/hello-world/</loc>
+    <lastmod>2019-07-16T13:02:08.585Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2018/11/26/hexo-next%E4%B8%BB%E9%A2%98/</loc>
     <lastmod>2018-11-26T02:53:19.808Z</lastmod>
