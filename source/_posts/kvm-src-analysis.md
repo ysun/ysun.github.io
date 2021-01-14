@@ -2,7 +2,7 @@
 title: KVM(Kernel-based Virtual Machine)源码分析
 donate: true
 date: 2019-02-20 23:42:57
-categories: kvm
+categories: KVM
 tags: kvm
 ---
 (编者按：写完才发现，这篇分析写的又臭又长…… 原谅语言凝练不足和code阅读还没有炉火纯青，我会慢慢提炼，有兴趣的同学可以评论区吐槽:)

@@ -2,7 +2,7 @@
 title: 由浅入深CrosVM（二）—— 如何在虚拟机中使用3D加速(借助Virgil 3D项目)
 donate: true
 date: 2020-04-03 20:08:26
-categories: ChromeOS
+categories: CROSVM
 tags: ChromeOS crosvm
 ---
 
@@ -36,7 +36,7 @@ apt install python3-pip
 pip3 install meson
 
 # 安装依赖
-apt install libgbm-dev mesa-utils llvm llvm-9-dev libpciaccess-dev libwayland-egl-backend-dev ninja-build libx11-dev libegl1-mesa-dev
+apt install libgbm-dev mesa-utils llvm llvm-9-dev libpciaccess-dev libwayland-egl-backend-dev ninja-build libx11-dev libegl1-mesa-dev libdrm-dev cmake
 
 git clone https://github.com/anholt/libepoxy.git
 cd libepoxy

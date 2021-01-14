@@ -2,7 +2,7 @@
 title: SMD Chapter 8.2 内存存取顺序
 donate: true
 date: 2019-05-12 23:12:28
-categories: SDM
+categories: X86
 tags: SDM
 ---
 

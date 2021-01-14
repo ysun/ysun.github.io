@@ -2,7 +2,7 @@
 title: EFI Shell中使用tfpt.efi 自动化Kernel测试方案
 donate: true
 date: 2019-05-07 09:44:48
-categories: efi
+categories: OS
 tags: efi
 ---
 ## 引言

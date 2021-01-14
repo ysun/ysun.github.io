@@ -2,8 +2,8 @@
 title: 由浅入深CrosVM（三）—— 虚拟机的网络配置
 donate: true
 date: 2020-04-07 11:28:32
-categories: ChromeOS
-tags: ChromeOS CrosVM
+categories: CROSVM
+tags: [ChromeOS, CrosVM]
 ---
 
 所有虚拟机都面临的问题——网络访问。关于虚拟机的网络模型在前文 [QEMU虚拟机网络模拟](https://www.owalle.com/2019/12/26/network-in-vm/)已经有过详细的描述。基于上篇文章，这里简要说明下如何在CrosVM的虚拟机中使用网络。

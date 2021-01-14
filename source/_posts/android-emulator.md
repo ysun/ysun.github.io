@@ -2,8 +2,8 @@
 title: Ubuntu中玩转Android模拟器
 donate: true
 date: 2020-05-11 20:08:48
-categories: kvm
-tags: android-emulator kvm 
+categories: KVM
+tags: [android-emulator, kvm] 
 ---
 
 近来研究了下Android emulator，就是Android Studio中用于调试App的虚拟机AVD(Android Virtualized Device)。本来是件挺平淡无奇的事情，但非要给生活比个""耶....."(＾－＾)V 需求是，在Linux OS中，使用自定义的Android Kernel! 由于烂樱桃本人只略懂一丢虚拟化技术，对于Android算是一窍不通，所以，本文主要记录步骤为主，木有原理性的东西。

@@ -2,8 +2,8 @@
 title: QEMU虚拟机网络模拟
 donate: true
 date: 2019-12-26 13:44:43
-categories: QEMU KVM
-tags: qemu kvm network
+categories: QEMU
+tags: [qemu, kvm, network]
 ---
 
 当我们创建和使用虚拟机时，通常都伴随着虚拟机的联网问题。下面就帮大家梳理下QEMU虚拟机中几种网络的模拟和用法。

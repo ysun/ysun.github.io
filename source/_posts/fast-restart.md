@@ -3,7 +3,7 @@ title: 利用虚拟机(QEMU)实现宿主机快速重启
 donate: true
 date: 2019-12-18 21:28:40
 categories: QEMU
-tags: KVM QEMU
+tags: [KVM, QEMU]
 ---
 
 ## 为什么这么做？

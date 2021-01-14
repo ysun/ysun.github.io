@@ -3,7 +3,7 @@ title: 利用QOM(Qemu Object Model)创建虚拟设备
 donate: true
 date: 2018-12-26 09:42:27
 categories: QEMU
-tags: QEMU QOM
+tags: [QEMU, QOM]
 ---
 
 ## 什么是QOM

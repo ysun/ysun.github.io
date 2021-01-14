@@ -2,7 +2,7 @@
 title: C/C++ 中嵌入汇编总结
 donate: true
 date: 2019-05-22 09:03:48
-categories: ASM
+categories: OS
 tags: ASM
 ---
 

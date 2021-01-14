@@ -2,7 +2,7 @@
 title: 英特尔®64和IA-32架构软件开发人员手册(Intel SDM)
 donate: true
 date: 2019-01-29 14:05:12
-categories:
+categories: X86
 tags:
 ---
 

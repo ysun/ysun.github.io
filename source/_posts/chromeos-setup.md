@@ -2,7 +2,7 @@
 title: 新安装ChromeOS之后需要做的事情
 donate: true
 date: 2020-03-03 12:52:34
-categories: ChromeOS
+categories: OS
 tags: ChromeOS
 ---
 
@@ -33,7 +33,17 @@ tags: ChromeOS
 强烈推荐[Chromebrew](http://skycocker.github.io/chromebrew/) [git](https://github.com/skycocker/chromebrew.git)
 
 安装方法也很简单，切换到chronos用户，然后输入
-`curl -Ls http://skycocker.github.io/chromebrew/`
+```
+wget -q -O - https://raw.github.com/skycocker/chromebrew/master/install.sh | bash
+
+-- or --
+
+curl -Ls git.io/vddgY | bash
+
+-- or --
+
+curl -Ls https://raw.github.com/skycocker/chromebrew/master/install.sh | bash
+```
 然后等就好了。
 然后需要安装软件大概有：
 ```
@@ -64,8 +74,15 @@ startxfce4      #启动桌面
 ```
 好了现在就看像使用Debian一样，使用Chromebook了。
 如果想要退出chroot的环境，使用快捷键 CTRL+ALT+SHIFT+F1，回到native的桌面
+插一句，[crouton github](https://github.com/dnschneid/crouton) 上的wiki以及问答已经是有挺多内容参考和借鉴了。
 
 ### 读写分区
+```
+sudo su -
+cd /usr/share/vboot/bin/
+./make_dev_ssd.sh --remove_rootfs_verification --partitions 4
+reboot
+```
 默认的ChromeOS的分区是只读的，这样给他重新挂载
 ```
 mount -o remount,rw /
@@ -92,6 +109,17 @@ git clone https://github.com/apitrace/apitrace.git
 sudo apt install libx11-dev automake gcc cmake
 cmake .
 make && make install
+```
+
+### 解锁module_locking
+默认情况下，ChromeOS是不允许插入`/lib/modules/<kernel version>`之外的内核模块的，看可以通过传一个kernel option来解锁。有个网友现成的脚本：
+方式链接失效，[可以从这里下载](change-kernel-flags)
+参考链接[这里](https://github.com/divx118/crouton-packages/blob/master/README.md)
+
+```
+$ wget https://raw.githubusercontent.com/divx118/crouton-packages/master/change-kernel-flags
+$ sudo sh ./change-kernel-flags
+
 ```
 
 ## 总结

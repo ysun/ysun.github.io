@@ -3,7 +3,7 @@ title: 利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及F
 donate: true
 date: 2019-07-16 21:28:40
 categories: X86
-tags: x86 KVM QEMU
+tags: [x86, KVM, QEMU]
 ---
 
 ## 浅谈“内存读写重排序”

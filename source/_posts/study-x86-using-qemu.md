@@ -3,7 +3,7 @@ title: 利用虚拟机(QEMU)学习X86指令集0
 donate: true
 date: 2019-07-12 13:22:15
 categories: X86
-tags: X86 KVM QEMU
+tags: [X86, KVM, QEMU]
 ---
 
 ## 引言

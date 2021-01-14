@@ -2,7 +2,7 @@
 title: 创建ChromeOS虚拟机
 donate: true
 date: 2020-06-03 22:48:53
-categories:
+categories: QEMU
 tags: QEMU
 ---
 

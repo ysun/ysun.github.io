@@ -2,7 +2,7 @@
 title: 由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入
 donate: true
 date: 2020-04-19 16:07:41
-categories: CrosVM
+categories: CROSVM
 tags: crosvm
 ---
 

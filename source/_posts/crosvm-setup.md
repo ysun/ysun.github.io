@@ -2,7 +2,7 @@
 title: 由浅入深CrosVM（一）—— 如何在Ubuntu中搭建CrosVM
 donate: true
 date: 2020-03-30 10:27:44
-categories: ChromeOS
+categories: CROSVM
 tags: ChromeOS Crosvm KVM
 ---
 
