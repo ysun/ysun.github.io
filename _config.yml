@@ -3,8 +3,8 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Yi颗烂樱桃
-subtitle: 虚拟化相关技术
+title: 虚拟化烂樱桃
+subtitle: 虚拟化中文
 description: 这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员
 keywords: KVM Linux Kernel Qemu
 author: Yi颗烂樱桃
@@ -86,8 +86,10 @@ theme: hexo-theme-next
 deploy:
   type: git
   repository:
-    github: git@github.com:ysun/blog.github.io.git
-    coding: git@git.coding.net:ysun/ysun.coding.me.git #https://git.coding.net/ysun/ysun.coding.me.git
+    #github: git@github.com:ysun/blog.github.io.git
+    github: https://github.com/ysun/ysun.github.io.git
+    #coding: git@git.coding.net:ysun/ysun.coding.me.git #https://git.coding.net/ysun/ysun.coding.me.git
+    coding: https://git.coding.net/ysun/ysun.coding.me.git
   branch: master
 
 search:
