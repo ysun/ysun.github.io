@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="虚拟化烂樱桃">
 <meta property="og:description" content="很多同学可能想要着手学习Linux kernel、虚拟机，或者刚入门不久。今天写一个入门用的很有用的教程，教大家如何创建最小化的虚拟机镜像。 创建镜像文件创建一个名为rootfs-debootstrap.img 大小为20G的空文件dd if=/dev/zero of=rootfs-debootstrap.img bs=1M count=20480 下载Ubuntu 20.04 文件系统安装deb">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2021-01-09T16:27:08.276Z">
+<meta property="og:updated_time" content="2021-01-14T15:12:26.447Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="创建mini虚拟机镜像">
 <meta name="twitter:description" content="很多同学可能想要着手学习Linux kernel、虚拟机，或者刚入门不久。今天写一个入门用的很有用的教程，教大家如何创建最小化的虚拟机镜像。 创建镜像文件创建一个名为rootfs-debootstrap.img 大小为20G的空文件dd if=/dev/zero of=rootfs-debootstrap.img bs=1M count=20480 下载Ubuntu 20.04 文件系统安装deb">
@@ -411,7 +411,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  710
+                  797
                 </span>
               
 
@@ -453,10 +453,13 @@
 <h2 id="下载Ubuntu-20-04-文件系统"><a href="#下载Ubuntu-20-04-文件系统" class="headerlink" title="下载Ubuntu 20.04 文件系统"></a>下载Ubuntu 20.04 文件系统</h2><p>安装debootstrap工具<br>apt-get install -y debootstrap arch-install-scripts</p>
 <p>创建分区<br><code>gdisk /dev/sda</code></p>
 <p>在gdisk命令行中，一次执行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">创建EFI分区, 1G:</span><br><span class="line">按 n,1, [Enter]，[Enter], +1024M [Enter], ef00 [Enter]</span><br><span class="line"></span><br><span class="line">创建swap分区，2G:</span><br><span class="line">按 n, 2 [Enter], [Enter], +2G [Enter], 8200 [Enter]</span><br><span class="line"></span><br><span class="line">创建根分区:</span><br><span class="line">按 n, 3 [Enter], [Enter], [Enter], [Enter]</span><br><span class="line"></span><br><span class="line">写入分区表:</span><br><span class="line">Press w, Y [Enter]</span><br></pre></td></tr></table></figure></p>
-<p>创建Loop 设备<br><code>losetup -P rootfs-debootstrap.img</code><br>参数<code>-P</code>很重要,是直接创建带有分区信息的Loop设备。如果顺利，可以到创建了三个loop设备文件例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/dev/loop1p1</span><br><span class="line">/dev/loop1p2</span><br><span class="line">/dev/loop1p3</span><br></pre></td></tr></table></figure></p>
+<p>创建Loop 设备</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">losetup -f                                                                               </span><br><span class="line"># 返回一个空闲的loop设备，比如这里是/dev/loop12</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">losetup -P /dev/loop12 /home/works/kvm/ubuntu20.04_rootfs.img</span><br></pre></td></tr></table></figure>
+<p>为镜像中的分区创建对应的分区loop device<br>参数<code>-P</code>很重要,是直接创建带有分区信息的Loop设备。如果顺利，可以到创建了三个loop设备文件例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/dev/loop1p1</span><br><span class="line">/dev/loop1p2</span><br><span class="line">/dev/loop1p3</span><br></pre></td></tr></table></figure></p>
 <p>然后就可以格式化分区了</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkfs.vfat /dev/loop1p1</span><br><span class="line">mkswap /dev/loop1p2 &amp;&amp; swapon /dev/loop1p2</span><br><span class="line">mkfs.ext4 -F -L linuxroot rootfs-debootstrap.img</span><br></pre></td></tr></table></figure>
-<p>挂载根分区以及EFI分区<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mount /dev/loop1p3 /mnt</span><br><span class="line">mkdir -p /mnt/boot/efi &amp;&amp; mount /dev/loop1p1 /mnt/boot/efi</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mkfs.vfat /dev/loop12p1                                                                  </span><br><span class="line">mkswap /dev/loop12p2 &amp;&amp; swapon /dev/loop12p2                                             </span><br><span class="line">mkfs.ext4 /dev/loop12p3                                                                  </span><br><span class="line"># 分别格式化三个不同的分区</span><br></pre></td></tr></table></figure>
+<p>挂载根分区以及EFI分区,按习惯把efi分区挂载到/boot/下面<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mount /dev/loop12p3 /mnt/                                                                </span><br><span class="line">mkdir -p /mnt/boot/efi &amp;&amp; mount /dev/loop12p1 /mnt/boot/efi                              </span><br><span class="line">ll /mnt/boot/efi/</span><br></pre></td></tr></table></figure></p>
 <p>下载文件系统Ubuntu 20.04 (focal)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">debootstrap --arch amd64 focal /mnt http://archive.ubuntu.com/ubuntu</span><br></pre></td></tr></table></figure></p>
 <p>视网络情况，我大概用了30分钟，因为科学上网可能比较慢，大概只下载了几十兆的东西</p>
 <p>debootstrap 下载的文件系统是没有源的，给手动添加源<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">release=&quot;focal&quot;</span><br><span class="line"></span><br><span class="line">printf &quot;deb http://archive.ubuntu.com/ubuntu/ $&#123;release&#125; main restricted universe\ndeb http://security.ubuntu.com/ubuntu/ $&#123;release&#125;-security main restricted universe\ndeb http://archive.ubuntu.com/ubuntu/ $&#123;release&#125;-updates main restricted universe\n&quot; &gt; /mnt/etc/apt/sources.list</span><br></pre></td></tr></table></figure></p>
@@ -475,6 +478,7 @@
 <p>OVMF.fd是EDKII编译出来的虚拟BIOS，预编译的二进制文件在早前的博文里面有的，有需要的读者可以搜寻一下。<br>如果安装按装grub2，找不到configure文件，可以修改一下grub的这个配置文件:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">/boot/efi/EFI/ubuntu/grub.cfg</span><br><span class="line"></span><br><span class="line">search.fs_uuid xkjdiw-18e9-4d0a-ac55-2skjdh8425f root hd1,gpt5 </span><br><span class="line">set prefix=($root)&apos;/grub&apos;</span><br><span class="line">configfile $prefix/grub.cfg</span><br></pre></td></tr></table></figure>
 <p>直接修改configfile，使其直接指向你的grub.cfg, 比如 (hd1,gpt3)/boot/grub.cfg 即可。</p>
+<p>最后，安全退出<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">umount /mnt/boot/efi</span><br><span class="line">umount /mnt/</span><br><span class="line">losetup -d /dev/loop12</span><br><span class="line">kpartx -dv /dev/loop12</span><br></pre></td></tr></table></figure></p>
 
       
     </div>
@@ -775,7 +779,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">77.5k</span>
+    <span title="Site words total count">77.6k</span>
 
   <span class="post-meta-divider">|</span>
   
