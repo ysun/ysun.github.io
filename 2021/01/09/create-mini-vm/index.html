@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="虚拟化烂樱桃">
 <meta property="og:description" content="很多同学可能想要着手学习Linux kernel、虚拟机，或者刚入门不久。今天写一个入门用的很有用的教程，教大家如何创建最小化的虚拟机镜像。 创建镜像文件创建一个名为rootfs-debootstrap.img 大小为20G的空文件dd if=/dev/zero of=rootfs-debootstrap.img bs=1M count=20480 下载Ubuntu 20.04 文件系统安装deb">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2021-01-14T15:12:26.447Z">
+<meta property="og:updated_time" content="2021-01-29T06:23:49.589Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="创建mini虚拟机镜像">
 <meta name="twitter:description" content="很多同学可能想要着手学习Linux kernel、虚拟机，或者刚入门不久。今天写一个入门用的很有用的教程，教大家如何创建最小化的虚拟机镜像。 创建镜像文件创建一个名为rootfs-debootstrap.img 大小为20G的空文件dd if=/dev/zero of=rootfs-debootstrap.img bs=1M count=20480 下载Ubuntu 20.04 文件系统安装deb">
@@ -411,7 +411,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  797
+                  798
                 </span>
               
 
@@ -471,7 +471,7 @@
 <p>选择语言<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dpkg-reconfigure locales</span><br></pre></td></tr></table></figure></p>
 <p>如果有必要，设置hostname<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/hosts</span><br></pre></td></tr></table></figure></p>
 <p>很重要的一件事情，为root设置密码<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">passwd root</span><br></pre></td></tr></table></figure></p>
-<p>安装grub2<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt install grub-efi-amd64</span><br></pre></td></tr></table></figure></p>
+<p>安装grub2<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">apt install grub-efi-amd64</span><br><span class="line">grub-install</span><br></pre></td></tr></table></figure></p>
 <p>到此为止，基本上已经完成了所有的创建最小虚拟机镜像的步骤。后面就可以退出chroot了。</p>
 <p>尝试一下虚拟机镜像:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-x86_64 -m 2048 -smp 8 --enable-kvm -cpu host -bios OVMF.fd -boot order=c,menu=off -hda rootfs-debootstrap.img</span><br></pre></td></tr></table></figure>
