@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://www.owalle.com/2020/08/12/ELF-from-hex/</loc>
+    
+    <lastmod>2021-02-20T05:17:43.424Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://www.owalle.com/2021/01/09/create-mini-vm/</loc>
     
     <lastmod>2021-01-29T06:23:49.589Z</lastmod>
@@ -26,13 +33,6 @@
     <loc>http://www.owalle.com/2020/03/03/chromeos-setup/</loc>
     
     <lastmod>2020-09-11T05:54:34.400Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://www.owalle.com/2020/08/12/ELF-from-hex/</loc>
-    
-    <lastmod>2020-09-11T05:53:06.092Z</lastmod>
     
   </url>
   
