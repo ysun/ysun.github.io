@@ -98,7 +98,7 @@
 <meta property="og:image" content="http://www.owalle.com/2021/03/24/crosvm-develop-debug/vscode1.png">
 <meta property="og:image" content="http://www.owalle.com/2021/03/24/crosvm-develop-debug/vscode2.png">
 <meta property="og:image" content="http://www.owalle.com/2021/03/24/crosvm-develop-debug/vscode3.png">
-<meta property="og:updated_time" content="2021-04-06T06:39:11.647Z">
+<meta property="og:updated_time" content="2021-04-08T07:46:38.015Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="由浅入深CrosVM（五）—— Crosvm的开发和调试">
 <meta name="twitter:description" content="前面几篇文章我们完成了Crosvm的编译和安装，以及依赖库的安装。本文将详细阐述一下如何开发和调试crosvm。我的开发环境是Windows工作机+Ubuntu开发机。当然，可以仅仅用一个Ubuntu做为开发机就可以搞定所有的事情，这种情况最为简单直接。之所以这么做，因为需要使用windows的office，N多年来也习惯了Windows office。出差出门啥的，不需要带两个电脑。所以，win">
@@ -453,7 +453,7 @@
 
       
         <p>前面几篇文章我们完成了Crosvm的编译和安装，以及依赖库的安装。本文将详细阐述一下如何开发和调试crosvm。<br>我的开发环境是Windows工作机+Ubuntu开发机。当然，可以仅仅用一个Ubuntu做为开发机就可以搞定所有的事情，这种情况最为简单直接。之所以这么做，因为需要使用windows的office，N多年来也习惯了Windows office。出差出门啥的，不需要带两个电脑。<br>所以，windows中使用的IDE是MS VScode。免费软件，自行下载。</p>
-<h2 id="VSCode-插件"><a href="#VSCode-插件" class="headerlink" title="VSCode 插件"></a>VSCode 插件</h2><p>两类插件：Rust编译、调试相关，其他类。<br>编译调试相关： C/C++, CodeLLDB, Rust, Rust Assit, rust-launcher<br>其他类：Remote-SSH, Terminal, Vim</p>
+<h2 id="VSCode-插件"><a href="#VSCode-插件" class="headerlink" title="VSCode 插件"></a>VSCode 插件</h2><p>两类插件：Rust编译、调试相关，其他类。<br>编译调试相关： C/C++, CodeLLDB, Rust/Rust analyzer, Rust Assit, rust-launcher<br>其他类：Remote-SSH, Terminal, Vim</p>
 <p>直接在VSCode里面搜索安装就好了，每个插件都有介绍，都比较常用。</p>
 <h3 id="Remote-SSH"><a href="#Remote-SSH" class="headerlink" title="Remote-SSH"></a>Remote-SSH</h3><p>如果再Ubuntu本地开发调试，可以跳过这一步。对于远程调试，之前尝试过几个remote浏览code的方案，最终感觉remote-ssh最符合我的习惯。<br>安装过Remote-ssh之后，可以如下图配置:<br><img src="/2021/03/24/crosvm-develop-debug/vscode1.png" alt="vscode1"><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Host tiaoban</span><br><span class="line">    HostName 10.239.88.88</span><br><span class="line">    Port 22</span><br><span class="line">    User root</span><br><span class="line"></span><br><span class="line">Host 192.168.1.66    //需要网关跳转</span><br><span class="line">  HostName 192.168.1.66</span><br><span class="line">  User root</span><br><span class="line">  ProxyCommand ssh tiaoban -W %h:%p</span><br><span class="line"></span><br><span class="line">Host 10.239.88.111   //直接ssh</span><br><span class="line">  HostName 10.239.88.111</span><br><span class="line">  User root</span><br><span class="line">  ForwardAgent yes</span><br></pre></td></tr></table></figure></p>
 <p>而我又偏偏需要网关跳转一次。配置文件写好后，就可以看到如图所示”SSH TARGETS”里面有对应的机器出现。鼠标右键点击开发机，选择”Connect Host in New Window”，或者host name后面的图标，就弹出一个新的VSCode窗口，分别输入网关和开发机的密码，就可以连上去。然后就像在本地一样，在最上边地址栏里输入项目文件夹的地址就好了。</p>
@@ -766,7 +766,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">78.7k</span>
+    <span title="Site words total count">78.8k</span>
 
   <span class="post-meta-divider">|</span>
   

@@ -99,7 +99,7 @@
 <meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat.png">
 <meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat2.png">
 <meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-bridge.png">
-<meta property="og:updated_time" content="2020-09-11T05:52:49.956Z">
+<meta property="og:updated_time" content="2021-04-08T07:57:12.243Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="QEMU虚拟机网络模拟">
 <meta name="twitter:description" content="当我们创建和使用虚拟机时，通常都伴随着虚拟机的联网问题。下面就帮大家梳理下QEMU虚拟机中几种网络的模拟和用法。 概述QEMU可以模拟多种网卡设备(例如PCI或者ISA设备)，同时可将这些虚拟网卡与host上的虚拟网络设备(或者虚拟的hub)连接起来。各种不同类型的网络设备既可以为虚拟机提供真实的网络访问(例如TAP、SLiRP user模式)，也可以是同一个host上面的不同虚拟机之间的访问(S">
@@ -416,7 +416,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  2.2k
+                  2.3k
                 </span>
               
 
@@ -483,11 +483,12 @@
 <li><p>使用virsh配置网络<br>在没有进行任何网络配置之前，应该是这样的：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#virsh net-list --all</span><br><span class="line"></span><br><span class="line"> Name                 State      Autostart     Persistent</span><br><span class="line">----------------------------------------------------------</span><br></pre></td></tr></table></figure>
 <p>一个比较偷懒的办法是使用现成的配置文件<code>/etc/libvirt/qemu/networks/autostart/default.xml</code>，内容如下:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&lt;network&gt;</span><br><span class="line">  &lt;name&gt;default&lt;/name&gt;</span><br><span class="line">  &lt;uuid&gt;417b7ead-6342-40a4-b29f-02fa2d4df491&lt;/uuid&gt;</span><br><span class="line">  &lt;forward mode=&apos;nat&apos;/&gt;</span><br><span class="line">  &lt;bridge name=&apos;virbr0&apos; stp=&apos;on&apos; delay=&apos;0&apos;/&gt;</span><br><span class="line">  &lt;mac address=&apos;52:54:00:d3:6d:2d&apos;/&gt;</span><br><span class="line">  &lt;ip address=&apos;192.168.122.1&apos; netmask=&apos;255.255.255.0&apos;&gt;</span><br><span class="line">    &lt;dhcp&gt;</span><br><span class="line">      &lt;range start=&apos;192.168.122.2&apos; end=&apos;192.168.122.254&apos;/&gt;</span><br><span class="line">    &lt;/dhcp&gt;</span><br><span class="line">  &lt;/ip&gt;</span><br><span class="line">&lt;/network&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&lt;network&gt;</span><br><span class="line">  &lt;name&gt;default&lt;/name&gt;</span><br><span class="line">  &lt;uuid&gt;417b7ead-6342-40a4-b29f-02fa2d4df491&lt;/uuid&gt;</span><br><span class="line">  &lt;forward mode=&apos;nat&apos;/&gt;</span><br><span class="line">  &lt;bridge name=&apos;virbr0&apos; stp=&apos;off&apos; delay=&apos;0&apos;/&gt;</span><br><span class="line">  &lt;mac address=&apos;52:54:00:d3:6d:2d&apos;/&gt;</span><br><span class="line">  &lt;ip address=&apos;192.168.122.1&apos; netmask=&apos;255.255.255.0&apos;&gt;</span><br><span class="line">    &lt;dhcp&gt;</span><br><span class="line">      &lt;range start=&apos;192.168.122.2&apos; end=&apos;192.168.122.254&apos;/&gt;</span><br><span class="line">    &lt;/dhcp&gt;</span><br><span class="line">  &lt;/ip&gt;</span><br><span class="line">&lt;/network&gt;</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
 <p>或者显示的给出default.xml<br>  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#virsh net-define default.xml</span><br><span class="line">#virsh net-start default</span><br><span class="line">#virsh net-list --all</span><br><span class="line"></span><br><span class="line"> Name                 State      Autostart     Persistent</span><br><span class="line">----------------------------------------------------------</span><br><span class="line"> default              active     yes           yes</span><br></pre></td></tr></table></figure></p>
-<p>  如果看到看到上面的结果，那么“虚拟桥”（virt bridge）就配置成功了。<br>实际上虚拟机通过NAT联网的时候，各个网络设备之间的关系如图所示:<br><img src="/2019/12/26/network-in-vm/network-nat2.png" alt=""></p>
+<p>  如果看到看到上面的结果，那么“虚拟桥”（virt bridge）就配置成功了。<br>注意STP：有些公司的IT部门可能不喜欢STP，所以，一定注意default.xml中的stp=‘off’。<br>或者使用在绑定网卡之前，使用命令行关掉stp<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># brctl stp virbr0 off</span><br><span class="line"># brctl show</span><br><span class="line">bridge name     bridge id               STP enabled     interfaces</span><br><span class="line">virbr0          8000.525400b98f9a       no              virbr0-nic</span><br></pre></td></tr></table></figure></p>
+<p>实际上虚拟机通过NAT联网的时候，各个网络设备之间的关系如图所示:<br><img src="/2019/12/26/network-in-vm/network-nat2.png" alt=""></p>
 <ol start="3">
 <li><p>QEMU创建虚拟机</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-x86_64 --enable-kvm -M q35 -m 4G -smp 1 -hda /root/ubuntu1904.qcow -vnc :7 \</span><br><span class="line">	-device virtio-net-pci,netdev=nic0,mac=00:16:3e:0c:12:78 \</span><br><span class="line">	-netdev tap,id=nic0,br=br0,helper=/usr/local/libexec/qemu-bridge-helper,vhost=on</span><br></pre></td></tr></table></figure>
@@ -847,7 +848,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">78.7k</span>
+    <span title="Site words total count">78.8k</span>
 
   <span class="post-meta-divider">|</span>
   
