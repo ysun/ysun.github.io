@@ -97,7 +97,8 @@
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://www.owalle.com/2019/02/20/kvm-src-analysis/kvm-qemu-brief.svg">
 <meta property="og:image" content="http://www.owalle.com/2019/02/20/kvm-src-analysis/kvm-src-analysis-mind.svg">
-<meta property="og:updated_time" content="2021-04-09T02:24:32.178Z">
+<meta property="og:image" content="http://www.owalle.com/2019/02/20/kvm-src-analysis/perf_call_graph.png">
+<meta property="og:updated_time" content="2021-04-09T02:29:31.938Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="KVM(Kernel-based Virtual Machine)源码分析">
 <meta name="twitter:description" content="(编者按：写完才发现，这篇分析写的又臭又长…… 原谅语言凝练不足和code阅读还没有炉火纯青，我会慢慢提炼，有兴趣的同学可以评论区吐槽:) 在看code之前，先把KVM-QEMU的source code的大框架拎出来，给读者直观一点的感受，本文最后还有一个稍微详细的call graph。中间这些文字是帮助读者以及我自己阅读和理解code的，大多数是kernel source code，因为Qemu">
@@ -1014,7 +1015,7 @@ external interrupt
 <p>上面只是一个例子，运行<code>perf record -a --call-graph dwarf &lt;Your app with args&gt;</code> 所有的参数都写在同一行上。</p>
 <p>这样会在程序运行的同时，在当前目录生成一个文件<code>perf.data</code>,注意这个文件会非常大，控制程序运行时间。然后退出程序，或者Ctrl+C 杀掉进程，之后运行<code>perf report</code>就可以看到call trace了，当然是terminal 文字的树状图。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">perf --call-graph=0.5 to filter out all calls whose cost is below 0.5%. I usually use perf --call-graph=1 to filter out the noise I don&apos;t care about</span><br><span class="line">perf --call-graph=fractal to calculate overheads of a symbol relative to the symbol&apos;s caller</span><br><span class="line">The above combined is: perf --call-graph=fractal,1</span><br></pre></td></tr></table></figure>
-<p>效果如图：<br><a href="perf_call_graph.png">perf_call_graph.png</a></p>
+<p>效果如图：<br><img src="/2019/02/20/kvm-src-analysis/perf_call_graph.png" alt="perf_call_graph.png"></p>
 
       
     </div>
