@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://www.owalle.com/2020/04/03/crosvm-virtio-gpu/</loc>
+    <lastmod>2021-04-15T00:58:54.878Z</lastmod>
+  </url>  <url>
     <loc>http://www.owalle.com/2019/02/20/kvm-src-analysis/</loc>
     <lastmod>2021-04-09T02:29:31.938Z</lastmod>
   </url>  <url>
@@ -15,9 +18,6 @@
   </url>  <url>
     <loc>http://www.owalle.com/2021/01/09/create-mini-vm/</loc>
     <lastmod>2021-01-29T06:23:49.589Z</lastmod>
-  </url>  <url>
-    <loc>http://www.owalle.com/2020/04/03/crosvm-virtio-gpu/</loc>
-    <lastmod>2021-01-15T14:09:44.277Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2020/03/30/crosvm-setup/</loc>
     <lastmod>2021-01-15T02:58:54.270Z</lastmod>
