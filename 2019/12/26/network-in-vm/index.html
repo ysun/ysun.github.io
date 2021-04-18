@@ -99,7 +99,7 @@
 <meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat.png">
 <meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat2.png">
 <meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-bridge.png">
-<meta property="og:updated_time" content="2021-04-08T07:57:12.243Z">
+<meta property="og:updated_time" content="2021-04-18T05:29:33.416Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="QEMU虚拟机网络模拟">
 <meta name="twitter:description" content="当我们创建和使用虚拟机时，通常都伴随着虚拟机的联网问题。下面就帮大家梳理下QEMU虚拟机中几种网络的模拟和用法。 概述QEMU可以模拟多种网卡设备(例如PCI或者ISA设备)，同时可将这些虚拟网卡与host上的虚拟网络设备(或者虚拟的hub)连接起来。各种不同类型的网络设备既可以为虚拟机提供真实的网络访问(例如TAP、SLiRP user模式)，也可以是同一个host上面的不同虚拟机之间的访问(S">
@@ -471,7 +471,7 @@
 <h3 id="通过TAP配置NAT"><a href="#通过TAP配置NAT" class="headerlink" title="通过TAP配置NAT"></a>通过TAP配置NAT</h3><p>拓扑结构跟user模式一模一样，见下图：<br><img src="/2019/12/26/network-in-vm/network-nat.png" alt=""></p>
 <ol>
 <li><p>确保已安装libvirt-clients和libvirt-daemon</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Ubuntu:</span><br><span class="line">apt-get install libvirt-clients		//使用virsh</span><br><span class="line">apt-get install libvirt-daemon libvirt-daemon-system libvirt-daemon-system-systemd		//使用libvirtd</span><br><span class="line">apt-get install qemu-system-common	//使用qemu-bridge-helper</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Ubuntu:</span><br><span class="line">apt-get install libvirt-clients		//使用virsh</span><br><span class="line">apt-get install libvirt-daemon libvirt-daemon-system libvirt-daemon-system-systemd		//使用libvirtd</span><br><span class="line">apt-get install qemu-system-common	//使用qemu-bridge-helper</span><br><span class="line">apt-get install bridge-utils		//使用brctl</span><br></pre></td></tr></table></figure>
 <p>确保libvirt-daemon服务开启</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">systemctl start libvirtd</span><br><span class="line">systemctl enable libvirtd</span><br></pre></td></tr></table></figure>
 <p>如果遇到libvird启动失败，尝试一下:</p>
