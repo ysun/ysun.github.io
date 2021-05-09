@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://www.owalle.com/2020/03/30/crosvm-setup/</loc>
+    
+    <lastmod>2021-05-08T06:26:57.135Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://www.owalle.com/2019/12/26/network-in-vm/</loc>
     
     <lastmod>2021-04-18T05:29:33.416Z</lastmod>
@@ -40,13 +47,6 @@
     <loc>http://www.owalle.com/2021/01/09/create-mini-vm/</loc>
     
     <lastmod>2021-01-29T06:23:49.589Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://www.owalle.com/2020/03/30/crosvm-setup/</loc>
-    
-    <lastmod>2021-01-15T02:58:54.270Z</lastmod>
     
   </url>
   
