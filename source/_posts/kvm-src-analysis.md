@@ -2095,3 +2095,55 @@ external interrupt
 ##### vmcs_write64(APIC_ACCESS_ADDR, page_to_phys(vmx->vcpu.kvm->arch.apic_access_page));
 
 {% endrawclass %}
+
+
+## 调用关系图
+### Perf 简介
+补充一个可以获取内核函数间动态调用关系图(call graph)的方法。很简单借助内核中，一个功能强大的工具软件perf。通常用户可以通过apt之类的工具从系统的源内安装，但如果自己升级过内核，那就需要自己编译安装下了，并不复杂：
+```
+cd <kernel source code>
+cd tools/perf/ && make && make install
+```
+Perf是一个动态代码统计工具。它通过每秒钟多次中断或采样运行中的软件程序，所以能够知道软件里正在发生着什么，但并没有很影响软件的运行速度。
+在采样中，perf会看到函数调用栈(call stack)，来进行分析。当然perf还有其他很多功能，另外perf还有一个UI可以使用，KCacheGrind，这里不赘述了。
+
+perf中关于call-graph 的参数这里简单介绍几个：
+
+```
+--call-graph=graph: use a graph tree, displaying absolute overhead rates.
+--call-graph=fractal: like graph, but displays relative rates. Each branch of the tree is considered as a new profiled object.
+```
+### Perf 搭建
+在使用Perf之前，需要确认系统中是否支持perf：
+
+```
+$ perf record
+Error:
+You may not have permission to collect system-wide stats.
+
+Consider tweaking /proc/sys/kernel/perf_event_paranoid,
+```
+如果遇到上面的错误，在文件/etc/sysctl.conf中添加`kernel.perf_event_paranoid = -1`。然后重启系统或者，运行`sudo sysctl --system`加载配置。
+
+### Perf 运行
+
+```
+perf record -a --call-graph dwarf /home/works/crosvm_kvm/crosvm/src/platform/crosvm/target/debug/crosvm run --disable-sandbox --cpus 4 --mem 4096 --rwdisk=/home/works/kvm/ubuntu20.10_rootfs.img --params=root=/dev/vda3 --socket=/tmp/crosvm.sock /home/works/crosvm_kvm/vmlinuz-5.11.0-intel-next-adl-alpha-rc1
+
+... ...
+
+perf report
+```
+上面只是一个例子，运行`perf record -a --call-graph dwarf <Your app with args>` 所有的参数都写在同一行上。
+
+这样会在程序运行的同时，在当前目录生成一个文件`perf.data`,注意这个文件会非常大，控制程序运行时间。然后退出程序，或者Ctrl+C 杀掉进程，之后运行`perf report`就可以看到call trace了，当然是terminal 文字的树状图。
+
+```
+perf --call-graph=0.5 to filter out all calls whose cost is below 0.5%. I usually use perf --call-graph=1 to filter out the noise I don't care about
+perf --call-graph=fractal to calculate overheads of a symbol relative to the symbol's caller
+The above combined is: perf --call-graph=fractal,1
+```
+效果如图：
+![perf_call_graph.png](perf_call_graph.png)
+
+

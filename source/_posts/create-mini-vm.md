@@ -128,6 +128,7 @@ passwd root
 安装grub2
 ```
 apt install grub-efi-amd64
+grub-install
 ```
 到此为止，基本上已经完成了所有的创建最小虚拟机镜像的步骤。后面就可以退出chroot了。
 

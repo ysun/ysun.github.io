@@ -327,3 +327,4 @@ http://kevinboone.me/elfdemo.html?i=3
 [X86 Opcode and Instruction Reference Home](http://ref.x86asm.net/coder64.html)
 [ELF Hello World Tutorial](https://cirosantilli.com/elf-hello-world)
 [elf(5) — Linux manual page](https://man7.org/linux/man-pages/man5/elf.5.html)
+[Smallest x86 ELF Hello World](http://timelessname.com/elfbin/)

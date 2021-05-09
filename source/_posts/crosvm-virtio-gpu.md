@@ -36,7 +36,7 @@ apt install python3-pip
 pip3 install meson
 
 # 安装依赖
-apt install libgbm-dev mesa-utils llvm llvm-9-dev libpciaccess-dev libwayland-egl-backend-dev ninja-build libx11-dev libegl1-mesa-dev libdrm-dev cmake
+apt install libegl-dev libglvnd-dev libgbm1 libgbm-dev mesa-utils llvm llvm-9-dev libpciaccess-dev libwayland-egl-backend-dev ninja-build libx11-dev libegl1-mesa-dev libdrm-dev cmake
 
 git clone https://github.com/anholt/libepoxy.git
 cd libepoxy
@@ -82,9 +82,9 @@ ninja -C builddir/ install
 ```
 
 ## 重新编译安装CrosVM
-加上参数`--features=gpu,x`
+加上参数`--features=gpu,x,virgl_renderer`
 ```
-cargo build --features=gpu,x #BTW, 如果需要图形加速，需要打开gpu和x
+cargo build --features=gpu,x,virgl_renderer  #BTW, 如果需要图形加速，需要打开这几个参数，缺一不可！
 
 mkdir -p /usr/share/policy/crosvm/                #这里面是CrosVM运行时的一些policy配置
 cp -r src/platform/crosvm/seccomp/x86_64/* /usr/share/policy/crosvm/

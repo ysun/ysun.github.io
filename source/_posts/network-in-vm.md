@@ -38,6 +38,7 @@ Ubuntu:
 apt-get install libvirt-clients		//使用virsh
 apt-get install libvirt-daemon libvirt-daemon-system libvirt-daemon-system-systemd		//使用libvirtd
 apt-get install qemu-system-common	//使用qemu-bridge-helper
+apt-get install bridge-utils		//使用brctl
  ```
 
   确保libvirt-daemon服务开启
@@ -91,7 +92,7 @@ add bridge failed: Package not installed
   <name>default</name>
   <uuid>417b7ead-6342-40a4-b29f-02fa2d4df491</uuid>
   <forward mode='nat'/>
-  <bridge name='virbr0' stp='on' delay='0'/>
+  <bridge name='virbr0' stp='off' delay='0'/>
   <mac address='52:54:00:d3:6d:2d'/>
   <ip address='192.168.122.1' netmask='255.255.255.0'>
     <dhcp>
@@ -112,6 +113,14 @@ add bridge failed: Package not installed
 
 ```
   如果看到看到上面的结果，那么“虚拟桥”（virt bridge）就配置成功了。
+注意STP：有些公司的IT部门可能不喜欢STP，所以，一定注意default.xml中的stp=‘off'。
+或者使用在绑定网卡之前，使用命令行关掉stp
+```
+# brctl stp virbr0 off
+# brctl show
+bridge name     bridge id               STP enabled     interfaces
+virbr0          8000.525400b98f9a       no              virbr0-nic
+```
 实际上虚拟机通过NAT联网的时候，各个网络设备之间的关系如图所示:
 ![](network-nat2.png)
 

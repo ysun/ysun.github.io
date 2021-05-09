@@ -12,7 +12,7 @@ tags: crosvm ChromeOS
 
 ## VSCode 插件
 两类插件：Rust编译、调试相关，其他类。
-编译调试相关： C/C++, CodeLLDB, Rust, Rust Assit, rust-launcher
+编译调试相关： C/C++, CodeLLDB, Rust/Rust analyzer, Rust Assit, rust-launcher
 其他类：Remote-SSH, Terminal, Vim
 
 直接在VSCode里面搜索安装就好了，每个插件都有介绍，都比较常用。
@@ -76,6 +76,26 @@ Host 10.239.88.111   //直接ssh
         },
     ]
 }
+```
+下面是部分参数的说明:
+```
+// lldb的launch.json配置内容
+"version": "0.2.0",
+    "configurations": [
+        {
+            "name": "rust", // 配置名称，将会在调试配置下拉列表中显示
+            "type": "lldb", // 调试器类型：Windows表示器使用cppvsdbg；GDB和LLDB使用cppdbg。该值自动生成
+            "request": "launch", // 调试方式
+            "program": "${workspaceRoot}/target/debug/helloworld", // 要调试的程序（完整路径，支持相对路径）
+            "args": [], // 传递给上面程序的参数，没有参数留空即可
+            "stopAtEntry": false, // 是否停在程序入口点（即停在main函数开始）（目前为不停下）
+            "cwd": "${workspaceRoot}", // 调试程序时的工作目录
+            "environment": [],
+            "externalConsole": false, // 调试时是否显示控制台窗口(目前为不显示)
+            //"preLaunchTask": "build", //预先执行task.json
+            "MIMode": "lldb" //MAC下的debug程序
+        }
+    ]
 ```
 两个注意地方：
 1. key "cargo"是rust的编译语句，我这里加入了gpu和x的参数。这里等效Linux command:
