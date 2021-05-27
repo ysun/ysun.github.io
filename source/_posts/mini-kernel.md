@@ -259,3 +259,6 @@ build/arch/$(arch)/%.o: src/arch/$(arch)/%.asm
 * patsubst 操作是将src/arch/$(arch)/XYZ.asm 转变为 build/arch/$(arch)/XYZ.o
 * $< 和 $@ 是两个自动变量，分别代表输入文件和输出文件。
 命令`make iso` 会生成ISO，`make run`会直接启动QEMU虚拟机。
+
+## 参考资料
+[A minimal Multiboot Kernel](https://os.phil-opp.com/multiboot-kernel/)
