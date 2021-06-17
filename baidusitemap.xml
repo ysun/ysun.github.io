@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://www.owalle.com/2018/12/24/qemu-debug/</loc>
+    <lastmod>2021-06-17T03:12:56.306Z</lastmod>
+  </url>  <url>
     <loc>http://www.owalle.com/2021/05/09/mini-kernel/</loc>
     <lastmod>2021-05-27T07:19:52.861Z</lastmod>
   </url>  <url>
@@ -75,9 +78,6 @@
   </url>  <url>
     <loc>http://www.owalle.com/2018/12/26/qemu-qom/</loc>
     <lastmod>2020-09-11T05:36:00.420Z</lastmod>
-  </url>  <url>
-    <loc>http://www.owalle.com/2018/12/24/qemu-debug/</loc>
-    <lastmod>2020-09-11T05:35:43.528Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/</loc>
     <lastmod>2020-09-11T05:35:27.876Z</lastmod>
