@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="虚拟化烂樱桃">
 <meta property="og:description" content="很多同学可能想要着手学习Linux kernel、虚拟机，或者刚入门不久。今天写一个入门用的很有用的教程，教大家如何创建最小化的虚拟机镜像。 创建镜像文件创建一个名为rootfs-debootstrap.img 大小为20G的空文件dd if=/dev/zero of=rootfs-debootstrap.img bs=1M count=20480 下载Ubuntu 20.04 文件系统安装deb">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2021-01-29T06:23:49.589Z">
+<meta property="og:updated_time" content="2021-06-27T01:13:15.751Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="创建mini虚拟机镜像">
 <meta name="twitter:description" content="很多同学可能想要着手学习Linux kernel、虚拟机，或者刚入门不久。今天写一个入门用的很有用的教程，教大家如何创建最小化的虚拟机镜像。 创建镜像文件创建一个名为rootfs-debootstrap.img 大小为20G的空文件dd if=/dev/zero of=rootfs-debootstrap.img bs=1M count=20480 下载Ubuntu 20.04 文件系统安装deb">
@@ -411,7 +411,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  798
+                  842
                 </span>
               
 
@@ -451,7 +451,7 @@
         <p>很多同学可能想要着手学习Linux kernel、虚拟机，或者刚入门不久。今天写一个入门用的很有用的教程，教大家如何创建最小化的虚拟机镜像。</p>
 <h2 id="创建镜像文件"><a href="#创建镜像文件" class="headerlink" title="创建镜像文件"></a>创建镜像文件</h2><p>创建一个名为rootfs-debootstrap.img 大小为20G的空文件<br><code>dd if=/dev/zero of=rootfs-debootstrap.img bs=1M count=20480</code></p>
 <h2 id="下载Ubuntu-20-04-文件系统"><a href="#下载Ubuntu-20-04-文件系统" class="headerlink" title="下载Ubuntu 20.04 文件系统"></a>下载Ubuntu 20.04 文件系统</h2><p>安装debootstrap工具<br>apt-get install -y debootstrap arch-install-scripts</p>
-<p>创建分区<br><code>gdisk /dev/sda</code></p>
+<p>创建分区<br><code>gdisk &lt;path&gt;/rootfs-debootstrap.img</code></p>
 <p>在gdisk命令行中，一次执行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">创建EFI分区, 1G:</span><br><span class="line">按 n,1, [Enter]，[Enter], +1024M [Enter], ef00 [Enter]</span><br><span class="line"></span><br><span class="line">创建swap分区，2G:</span><br><span class="line">按 n, 2 [Enter], [Enter], +2G [Enter], 8200 [Enter]</span><br><span class="line"></span><br><span class="line">创建根分区:</span><br><span class="line">按 n, 3 [Enter], [Enter], [Enter], [Enter]</span><br><span class="line"></span><br><span class="line">写入分区表:</span><br><span class="line">Press w, Y [Enter]</span><br></pre></td></tr></table></figure></p>
 <p>创建Loop 设备</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">losetup -f                                                                               </span><br><span class="line"># 返回一个空闲的loop设备，比如这里是/dev/loop12</span><br></pre></td></tr></table></figure>
@@ -467,10 +467,11 @@
 <p>进入刚创建的文件系统里面<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">arch-chroot /mnt</span><br></pre></td></tr></table></figure></p>
 <p>安装必要的包<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">apt-get update</span><br><span class="line"></span><br><span class="line">apt-get install -y --no-install-recommends linux-generic linux-image-generic linux-headers-generic initramfs-tools linux-firmware efibootmgr</span><br></pre></td></tr></table></figure></p>
 <p>设置时区<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dpkg-reconfigure tzdata</span><br></pre></td></tr></table></figure></p>
-<p>我选择了<code>en_US.UTF-8</code></p>
 <p>选择语言<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dpkg-reconfigure locales</span><br></pre></td></tr></table></figure></p>
-<p>如果有必要，设置hostname<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/hosts</span><br></pre></td></tr></table></figure></p>
+<p>我选择了<code>en_US.UTF-8</code></p>
+<p>如果有必要，设置hostname<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/hostname</span><br></pre></td></tr></table></figure></p>
 <p>很重要的一件事情，为root设置密码<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">passwd root</span><br></pre></td></tr></table></figure></p>
+<p>或者如果觉得密码没有必要，可以删除<code>/etc/passwd/</code>中，root一行的第二列的字母<code>x</code>,这样root用户就没有密码了。</p>
 <p>安装grub2<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">apt install grub-efi-amd64</span><br><span class="line">grub-install</span><br></pre></td></tr></table></figure></p>
 <p>到此为止，基本上已经完成了所有的创建最小虚拟机镜像的步骤。后面就可以退出chroot了。</p>
 <p>尝试一下虚拟机镜像:</p>
@@ -783,7 +784,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">81.2k</span>
+    <span title="Site words total count">81.3k</span>
 
   <span class="post-meta-divider">|</span>
   
