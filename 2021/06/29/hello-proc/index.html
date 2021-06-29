@@ -76,7 +76,7 @@
 
 
 
-  <meta name="keywords" content="crosvm,">
+  <meta name="keywords" content="kernel,">
 
 
 
@@ -87,18 +87,18 @@
 
 
 
-<meta name="description" content="接上篇，我们起了图形以及桌面之后，发现没有办法通过虚拟机窗口与其交互。这篇文章我们简单说下如何跟虚拟机进行交互。 模拟鼠标键盘事件在用CrosVM创建虚拟机的时候，加上下面的参数--display-window-keyboard --display-window-mouse 这样，当鼠标移动到虚拟机窗口范围内的时候，所有的鼠标和键盘事件就会被映射给虚拟机的鼠标和键盘事件。 优点：参数使用方便缺点：">
-<meta name="keywords" content="crosvm">
+<meta name="description" content="一个最简单的内核模块，其中创建一个最简单的可读可写的proc fs的模板，供大家参考和备忘。首先创建一个文件，或者干脆把新模块文件放在&amp;lt;linux source&amp;gt;/fs/proc/文件夹中，命名debug_sy.c123456789101112131415161718192021222324252627282930313233343536373839404142434445464748">
+<meta name="keywords" content="kernel">
 <meta property="og:type" content="article">
-<meta property="og:title" content="由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入">
-<meta property="og:url" content="http://www.owalle.com/2020/04/19/crosvm-input/index.html">
+<meta property="og:title" content="一个可读可写的procfs模板,基于kernel-5.12">
+<meta property="og:url" content="http://www.owalle.com/2021/06/29/hello-proc/index.html">
 <meta property="og:site_name" content="虚拟化烂樱桃">
-<meta property="og:description" content="接上篇，我们起了图形以及桌面之后，发现没有办法通过虚拟机窗口与其交互。这篇文章我们简单说下如何跟虚拟机进行交互。 模拟鼠标键盘事件在用CrosVM创建虚拟机的时候，加上下面的参数--display-window-keyboard --display-window-mouse 这样，当鼠标移动到虚拟机窗口范围内的时候，所有的鼠标和键盘事件就会被映射给虚拟机的鼠标和键盘事件。 优点：参数使用方便缺点：">
+<meta property="og:description" content="一个最简单的内核模块，其中创建一个最简单的可读可写的proc fs的模板，供大家参考和备忘。首先创建一个文件，或者干脆把新模块文件放在&amp;lt;linux source&amp;gt;/fs/proc/文件夹中，命名debug_sy.c123456789101112131415161718192021222324252627282930313233343536373839404142434445464748">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2020-09-11T05:49:44.556Z">
+<meta property="og:updated_time" content="2021-06-29T02:56:06.167Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入">
-<meta name="twitter:description" content="接上篇，我们起了图形以及桌面之后，发现没有办法通过虚拟机窗口与其交互。这篇文章我们简单说下如何跟虚拟机进行交互。 模拟鼠标键盘事件在用CrosVM创建虚拟机的时候，加上下面的参数--display-window-keyboard --display-window-mouse 这样，当鼠标移动到虚拟机窗口范围内的时候，所有的鼠标和键盘事件就会被映射给虚拟机的鼠标和键盘事件。 优点：参数使用方便缺点：">
+<meta name="twitter:title" content="一个可读可写的procfs模板,基于kernel-5.12">
+<meta name="twitter:description" content="一个最简单的内核模块，其中创建一个最简单的可读可写的proc fs的模板，供大家参考和备忘。首先创建一个文件，或者干脆把新模块文件放在&amp;lt;linux source&amp;gt;/fs/proc/文件夹中，命名debug_sy.c123456789101112131415161718192021222324252627282930313233343536373839404142434445464748">
 
 
 
@@ -128,13 +128,13 @@
 
 
 
-  <link rel="canonical" href="http://www.owalle.com/2020/04/19/crosvm-input/">
+  <link rel="canonical" href="http://www.owalle.com/2021/06/29/hello-proc/">
 
 
 
 
 
-  <title>由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入 | 虚拟化烂樱桃</title>
+  <title>一个可读可写的procfs模板,基于kernel-5.12 | 虚拟化烂樱桃</title>
   
 
 
@@ -313,7 +313,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2020/04/19/crosvm-input/">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2021/06/29/hello-proc/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Yi颗烂樱桃">
@@ -330,7 +330,7 @@
 
         
         
-          <h2 class="post-title" itemprop="name headline">由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入</h2>
+          <h2 class="post-title" itemprop="name headline">一个可读可写的procfs模板,基于kernel-5.12</h2>
         
 
         <div class="post-meta">
@@ -342,8 +342,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-04-19T16:07:41+08:00">
-                2020-04-19
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-06-29T10:39:40+08:00">
+                2021-06-29
               </time>
             
 
@@ -353,28 +353,6 @@
           </span>
 
           
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/CROSVM/" itemprop="url" rel="index">
-                    <span itemprop="name">CROSVM</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
 
           
             
@@ -383,8 +361,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2020/04/19/crosvm-input/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2020/04/19/crosvm-input/" itemprop="commentCount"></span>
+                <a href="/2021/06/29/hello-proc/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2021/06/29/hello-proc/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -411,7 +389,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  385
+                  395
                 </span>
               
 
@@ -427,7 +405,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  1
+                  2
                 </span>
               
             </div>
@@ -448,14 +426,10 @@
       
 
       
-        <p>接上篇，我们起了图形以及桌面之后，发现没有办法通过虚拟机窗口与其交互。<br>这篇文章我们简单说下如何跟虚拟机进行交互。</p>
-<h2 id="模拟鼠标键盘事件"><a href="#模拟鼠标键盘事件" class="headerlink" title="模拟鼠标键盘事件"></a>模拟鼠标键盘事件</h2><p>在用CrosVM创建虚拟机的时候，加上下面的参数<br><code>--display-window-keyboard --display-window-mouse</code></p>
-<p>这样，当鼠标移动到虚拟机窗口范围内的时候，所有的鼠标和键盘事件就会被映射给虚拟机的鼠标和键盘事件。</p>
-<p>优点：参数使用方便<br>缺点：对于Host中已经定义过的全局快捷键，即便在虚拟机中执行，也会被Host系统捕获，比如切换终端Ctrl+Alt+F2</p>
-<h2 id="键盘和鼠标passthrough给虚拟机"><a href="#键盘和鼠标passthrough给虚拟机" class="headerlink" title="键盘和鼠标passthrough给虚拟机"></a>键盘和鼠标passthrough给虚拟机</h2><p>首先查看host OS中键盘鼠标的event:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># ls /dev/input/</span><br></pre></td></tr></table></figure></p>
-<p>确定需要passthrough的键盘和鼠标使用的是哪两个event。<br>这里我没有好方法，对input device的研究不是很深入。通过插拔键盘鼠标，确定想要passthrough给虚拟机的键盘和鼠标。<br>比如键盘和鼠标分别是<code>event3</code>和<code>evnet4</code>那么就给CrosVM添加参数:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">--evdev /dev/input/event3 --evdev /dev/input/event4</span><br></pre></td></tr></table></figure></p>
-<p>优点：虚拟机拥有全部的键盘和鼠标。<br>缺点：已经passthrough的键盘和鼠标不再控制Host，如果Host也需要交互的话，需要Host接两道键盘和鼠标。且系统中event不是固定不变的，CrosVM的相对复杂一点。</p>
-<p>这篇先写到这里吧，对于code分析，放在日后吧～ :p</p>
+        <p>一个最简单的内核模块，其中创建一个最简单的可读可写的proc fs的模板，供大家参考和备忘。<br>首先创建一个文件，或者干脆把新模块文件放在<code>&lt;linux source&gt;/fs/proc/</code>文件夹中，命名<code>debug_sy.c</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;linux/module.h&gt;       /* Specifically, a module */</span><br><span class="line">#include &lt;linux/kernel.h&gt;       /* We&apos;re doing kernel work */</span><br><span class="line">#include &lt;linux/proc_fs.h&gt;      /* Necessary because we use the proc fs */</span><br><span class="line">#include &lt;asm/uaccess.h&gt;        /* for copy_from_user */</span><br><span class="line">#include &lt;linux/seq_file.h&gt;     //using seq_printf</span><br><span class="line">#include &lt;linux/slab.h&gt;         // Using kzalloc</span><br><span class="line"></span><br><span class="line">#define PROCFS_NAME             &quot;debug_sy&quot;</span><br><span class="line"></span><br><span class="line">MODULE_AUTHOR(&quot;Yi Sun&quot;);</span><br><span class="line">static char *str = NULL;</span><br><span class="line"></span><br><span class="line">static int my_proc_show(struct seq_file *m,void *v)&#123;</span><br><span class="line">        seq_printf(m,&quot;%s\n&quot;,str);</span><br><span class="line">        return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static ssize_t my_proc_write(struct file* file,const char __user *buffer,size_t count,loff_t *f_pos)&#123;</span><br><span class="line">        char *tmp = kzalloc((count+1),GFP_KERNEL);</span><br><span class="line">        if(!tmp)return -ENOMEM;</span><br><span class="line">        if(copy_from_user(tmp,buffer,count))&#123;</span><br><span class="line">                kfree(tmp);</span><br><span class="line">                return EFAULT;</span><br><span class="line">        &#125;</span><br><span class="line">        kfree(str);</span><br><span class="line">        str=tmp;</span><br><span class="line">        return count;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static int my_proc_open(struct inode *inode,struct file *file)&#123;</span><br><span class="line">        return single_open(file,my_proc_show,NULL);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static const struct proc_ops my_fops=&#123;</span><br><span class="line">        .proc_open = my_proc_open,</span><br><span class="line">        .proc_release = single_release,</span><br><span class="line">        .proc_read = seq_read,</span><br><span class="line">        .proc_lseek = seq_lseek,</span><br><span class="line">        .proc_write = my_proc_write</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">static int __init hello_init(void)&#123;</span><br><span class="line">        struct proc_dir_entry *entry;</span><br><span class="line">        entry = proc_create(PROCFS_NAME,0777,NULL,&amp;my_fops);</span><br><span class="line">        if(!entry)&#123;</span><br><span class="line">                return -1;</span><br><span class="line">        &#125;else&#123;</span><br><span class="line">                printk(KERN_INFO &quot;create proc file successfully\n&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static void __exit hello_exit(void)&#123;</span><br><span class="line">        remove_proc_entry(PROCFS_NAME,NULL);</span><br><span class="line">        printk(KERN_INFO &quot;Goodbye world!\n&quot;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(hello_init);</span><br><span class="line">module_exit(hello_exit);</span><br><span class="line">MODULE_LICENSE(&quot;GPL&quot;);</span><br></pre></td></tr></table></figure></p>
+<p>如果单独的文件，创建一个<code>Makefile</code>文件：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">obj-m += debug_sy.o</span><br><span class="line"></span><br><span class="line">all:</span><br><span class="line">        make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules</span><br><span class="line">clean:</span><br><span class="line">        make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean</span><br></pre></td></tr></table></figure></p>
+<p>如果直接放在<code>fs/proc中</code>，修改文件夹中的Makefile:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"> proc-y += namespaces.o</span><br><span class="line"> proc-y += self.o</span><br><span class="line"> proc-y += thread_self.o</span><br><span class="line">+proc-y += debug_sy.o</span><br><span class="line"> proc-$(CONFIG_PROC_SYSCTL)     += proc_sysctl.o</span><br><span class="line"> proc-$(CONFIG_NET)             += proc_net.o</span><br><span class="line"> proc-$(CONFIG_PROC_KCORE)      += kcore.o</span><br></pre></td></tr></table></figure></p>
+<p>然后就可以make，insmod了。</p>
 
       
     </div>
@@ -505,7 +479,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://www.owalle.com/2020/04/19/crosvm-input/" title="由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入">http://www.owalle.com/2020/04/19/crosvm-input/</a>
+    <a href="http://www.owalle.com/2021/06/29/hello-proc/" title="一个可读可写的procfs模板,基于kernel-5.12">http://www.owalle.com/2021/06/29/hello-proc/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>
@@ -520,7 +494,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/crosvm/" rel="tag"># crosvm</a>
+            <a href="/tags/kernel/" rel="tag"># kernel</a>
           
         </div>
       
@@ -533,8 +507,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2020/04/07/crosvm-network/" rel="next" title="由浅入深CrosVM（三）—— 虚拟机的网络配置">
-                <i class="fa fa-chevron-left"></i> 由浅入深CrosVM（三）—— 虚拟机的网络配置
+              <a href="/2021/05/09/mini-kernel/" rel="next" title="创建一个mini内核">
+                <i class="fa fa-chevron-left"></i> 创建一个mini内核
               </a>
             
           </div>
@@ -542,10 +516,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2020/05/11/android-emulator/" rel="prev" title="Ubuntu中玩转Android模拟器">
-                Ubuntu中玩转Android模拟器 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -638,17 +608,8 @@
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            文章目录
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            站点概览
-          </li>
-        </ul>
-      
 
-      <section class="site-overview-wrap sidebar-panel">
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
             
@@ -716,22 +677,6 @@
         </div>
       </section>
 
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#模拟鼠标键盘事件"><span class="nav-number">1.</span> <span class="nav-text">模拟鼠标键盘事件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#键盘和鼠标passthrough给虚拟机"><span class="nav-number">2.</span> <span class="nav-text">键盘和鼠标passthrough给虚拟机</span></a></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
       
 
       

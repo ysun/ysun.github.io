@@ -76,7 +76,7 @@
 
 
 
-  <meta name="keywords" content="crosvm,">
+  <meta name="keywords" content="Hexo, NexT">
 
 
 
@@ -87,18 +87,17 @@
 
 
 
-<meta name="description" content="接上篇，我们起了图形以及桌面之后，发现没有办法通过虚拟机窗口与其交互。这篇文章我们简单说下如何跟虚拟机进行交互。 模拟鼠标键盘事件在用CrosVM创建虚拟机的时候，加上下面的参数--display-window-keyboard --display-window-mouse 这样，当鼠标移动到虚拟机窗口范围内的时候，所有的鼠标和键盘事件就会被映射给虚拟机的鼠标和键盘事件。 优点：参数使用方便缺点：">
-<meta name="keywords" content="crosvm">
-<meta property="og:type" content="article">
-<meta property="og:title" content="由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入">
-<meta property="og:url" content="http://www.owalle.com/2020/04/19/crosvm-input/index.html">
+<meta name="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+<meta name="keywords" content="KVM Linux Kernel Qemu">
+<meta property="og:type" content="website">
+<meta property="og:title" content="虚拟化烂樱桃">
+<meta property="og:url" content="http://www.owalle.com/archives/2021/06/index.html">
 <meta property="og:site_name" content="虚拟化烂樱桃">
-<meta property="og:description" content="接上篇，我们起了图形以及桌面之后，发现没有办法通过虚拟机窗口与其交互。这篇文章我们简单说下如何跟虚拟机进行交互。 模拟鼠标键盘事件在用CrosVM创建虚拟机的时候，加上下面的参数--display-window-keyboard --display-window-mouse 这样，当鼠标移动到虚拟机窗口范围内的时候，所有的鼠标和键盘事件就会被映射给虚拟机的鼠标和键盘事件。 优点：参数使用方便缺点：">
+<meta property="og:description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2020-09-11T05:49:44.556Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入">
-<meta name="twitter:description" content="接上篇，我们起了图形以及桌面之后，发现没有办法通过虚拟机窗口与其交互。这篇文章我们简单说下如何跟虚拟机进行交互。 模拟鼠标键盘事件在用CrosVM创建虚拟机的时候，加上下面的参数--display-window-keyboard --display-window-mouse 这样，当鼠标移动到虚拟机窗口范围内的时候，所有的鼠标和键盘事件就会被映射给虚拟机的鼠标和键盘事件。 优点：参数使用方便缺点：">
+<meta name="twitter:title" content="虚拟化烂樱桃">
+<meta name="twitter:description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
 
 
 
@@ -128,13 +127,13 @@
 
 
 
-  <link rel="canonical" href="http://www.owalle.com/2020/04/19/crosvm-input/">
+  <link rel="canonical" href="http://www.owalle.com/archives/2021/06/">
 
 
 
 
 
-  <title>由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入 | 虚拟化烂樱桃</title>
+  <title>归档 | 虚拟化烂樱桃</title>
   
 
 
@@ -153,7 +152,7 @@
     
   
 
-  <div class="container sidebar-position-left page-post-detail">
+  <div class="container sidebar-position-left page-archive">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
@@ -299,311 +298,71 @@
           <div id="content" class="content">
             
 
-  <div id="posts" class="posts-expand">
-    
+  
+  
+  
+  <div class="post-block archive">
+    <div id="posts" class="posts-collapse">
+      <span class="archive-move-on"></span>
 
-  
+      <span class="archive-page-counter">
+        
+        
+         
+        
+        OK! 目前共计 34 篇日志。 继续努力。
+      </span>
 
-  
-  
-  
+      
+
+        
+        
+        
+
+        
+          
+          <div class="collection-title">
+            <h2 class="archive-year" id="archive-year-2021">2021</h2>
+          </div>
+        
+        
+
+        
 
   <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2020/04/19/crosvm-input/">
+    <header class="post-header">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Yi颗烂樱桃">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="虚拟化烂樱桃">
-    </span>
-
-    
-      <header class="post-header">
-
+      <h3 class="post-title">
         
+            <a class="post-title-link" href="/2021/06/29/hello-proc/" itemprop="url">
+              
+                <span itemprop="name">一个可读可写的procfs模板,基于kernel-5.12</span>
+              
+            </a>
         
-          <h2 class="post-title" itemprop="name headline">由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入</h2>
-        
+      </h3>
 
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-04-19T16:07:41+08:00">
-                2020-04-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/CROSVM/" itemprop="url" rel="index">
-                    <span itemprop="name">CROSVM</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2020/04/19/crosvm-input/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2020/04/19/crosvm-input/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-            <span class="post-meta-divider">|</span>
-            <span class="page-pv"><i class="fa fa-file-o"></i>
-            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
-            </span>
-          
-
-          
-            <div class="post-wordcount">
-              
-                
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-file-word-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">字数统计&#58;</span>
-                
-                <span title="字数统计">
-                  385
-                </span>
-              
-
-              
-                <span class="post-meta-divider">|</span>
-              
-
-              
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-clock-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
-                
-                <span title="阅读时长">
-                  1
-                </span>
-              
-            </div>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        <p>接上篇，我们起了图形以及桌面之后，发现没有办法通过虚拟机窗口与其交互。<br>这篇文章我们简单说下如何跟虚拟机进行交互。</p>
-<h2 id="模拟鼠标键盘事件"><a href="#模拟鼠标键盘事件" class="headerlink" title="模拟鼠标键盘事件"></a>模拟鼠标键盘事件</h2><p>在用CrosVM创建虚拟机的时候，加上下面的参数<br><code>--display-window-keyboard --display-window-mouse</code></p>
-<p>这样，当鼠标移动到虚拟机窗口范围内的时候，所有的鼠标和键盘事件就会被映射给虚拟机的鼠标和键盘事件。</p>
-<p>优点：参数使用方便<br>缺点：对于Host中已经定义过的全局快捷键，即便在虚拟机中执行，也会被Host系统捕获，比如切换终端Ctrl+Alt+F2</p>
-<h2 id="键盘和鼠标passthrough给虚拟机"><a href="#键盘和鼠标passthrough给虚拟机" class="headerlink" title="键盘和鼠标passthrough给虚拟机"></a>键盘和鼠标passthrough给虚拟机</h2><p>首先查看host OS中键盘鼠标的event:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># ls /dev/input/</span><br></pre></td></tr></table></figure></p>
-<p>确定需要passthrough的键盘和鼠标使用的是哪两个event。<br>这里我没有好方法，对input device的研究不是很深入。通过插拔键盘鼠标，确定想要passthrough给虚拟机的键盘和鼠标。<br>比如键盘和鼠标分别是<code>event3</code>和<code>evnet4</code>那么就给CrosVM添加参数:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">--evdev /dev/input/event3 --evdev /dev/input/event4</span><br></pre></td></tr></table></figure></p>
-<p>优点：虚拟机拥有全部的键盘和鼠标。<br>缺点：已经passthrough的键盘和鼠标不再控制Host，如果Host也需要交互的话，需要Host接两道键盘和鼠标。且系统中event不是固定不变的，CrosVM的相对复杂一点。</p>
-<p>这篇先写到这里吧，对于code分析，放在日后吧～ :p</p>
-
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-      <div>
-        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
-  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
-  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
-    <span>打赏</span>
-  </button>
-  <div id="QR" style="display: none;">
-
-    
-      <div id="wechat" style="display: inline-block">
-        <img id="wechat_qr" src="/images/wechatpay.png" alt="Yi颗烂樱桃 微信支付">
-        <p>微信支付</p>
+      <div class="post-meta">
+        <time class="post-time" itemprop="dateCreated" datetime="2021-06-29T10:39:40+08:00" content="2021-06-29">
+          06-29
+        </time>
       </div>
-    
 
-    
-      <div id="alipay" style="display: inline-block">
-        <img id="alipay_qr" src="/images/alipay.png" alt="Yi颗烂樱桃 支付宝">
-        <p>支付宝</p>
-      </div>
-    
-
-    
-
-  </div>
-</div>
-
-      </div>
-    
-
-    
-      <div>
-        <ul class="post-copyright">
-  <li class="post-copyright-author">
-    <strong>本文作者：</strong>
-    Yi颗烂樱桃
-  </li>
-  <li class="post-copyright-link">
-    <strong>本文链接：</strong>
-    <a href="http://www.owalle.com/2020/04/19/crosvm-input/" title="由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入">http://www.owalle.com/2020/04/19/crosvm-input/</a>
-  </li>
-  <li class="post-copyright-license">
-    <strong>版权声明： </strong>
-    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="external nofollow" target="_blank">CC BY-NC-ND 3.0</a> 许可协议。转载请注明出处！
-  </li>
-</ul>
-
-      </div>
-    
-
-    <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/crosvm/" rel="tag"># crosvm</a>
-          
-        </div>
-      
-
-      
-      
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
-            
-              <a href="/2020/04/07/crosvm-network/" rel="next" title="由浅入深CrosVM（三）—— 虚拟机的网络配置">
-                <i class="fa fa-chevron-left"></i> 由浅入深CrosVM（三）—— 虚拟机的网络配置
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2020/05/11/android-emulator/" rel="prev" title="Ubuntu中玩转Android模拟器">
-                Ubuntu中玩转Android模拟器 <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
-      
-
-      
-      
-    </footer>
-  </div>
-  
-  
-  
+    </header>
   </article>
 
 
 
-    <div class="post-spread">
       
-        
-  <div class="bdsharebuttonbox">
-    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
-    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
-    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
-    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
-    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
-    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
-    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
-    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
-    <a href="#" class="bds_more" data-cmd="more"></a>
-    <a class="bds_count" data-cmd="count"></a>
-  </div>
-  <script>
-    window._bd_share_config = {
-      "common": {
-        "bdText": "",
-        "bdMini": "2",
-        "bdMiniList": false,
-        "bdPic": ""
-      },
-      "share": {
-        "bdSize": "16",
-        "bdStyle": "0"
-      },
-      "image": {
-        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
-        "viewText": "分享到：",
-        "viewSize": "16"
-      }
-    }
-  </script>
 
-<script>
-  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
-</script>
-
-      
     </div>
   </div>
+  
+  
+  
+
+  
+
 
 
           </div>
@@ -611,13 +370,6 @@
 
 
           
-
-  
-    <div class="comments" id="comments">
-    </div>
-  
-
-
 
         </div>
         
@@ -638,17 +390,8 @@
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            文章目录
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            站点概览
-          </li>
-        </ul>
-      
 
-      <section class="site-overview-wrap sidebar-panel">
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
             
@@ -716,22 +459,6 @@
         </div>
       </section>
 
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#模拟鼠标键盘事件"><span class="nav-number">1.</span> <span class="nav-text">模拟鼠标键盘事件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#键盘和鼠标passthrough给虚拟机"><span class="nav-number">2.</span> <span class="nav-text">键盘和鼠标passthrough给虚拟机</span></a></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
       
 
       
@@ -920,10 +647,6 @@
   
 
   
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
-
-
 
   
 
@@ -1335,6 +1058,26 @@
   
 
   
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
   
 
 
