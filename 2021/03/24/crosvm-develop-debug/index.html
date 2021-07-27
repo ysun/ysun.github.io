@@ -98,7 +98,7 @@
 <meta property="og:image" content="http://www.owalle.com/2021/03/24/crosvm-develop-debug/vscode1.png">
 <meta property="og:image" content="http://www.owalle.com/2021/03/24/crosvm-develop-debug/vscode2.png">
 <meta property="og:image" content="http://www.owalle.com/2021/03/24/crosvm-develop-debug/vscode3.png">
-<meta property="og:updated_time" content="2021-04-08T07:46:38.015Z">
+<meta property="og:updated_time" content="2021-07-27T02:13:01.634Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="由浅入深CrosVM（五）—— Crosvm的开发和调试">
 <meta name="twitter:description" content="前面几篇文章我们完成了Crosvm的编译和安装，以及依赖库的安装。本文将详细阐述一下如何开发和调试crosvm。我的开发环境是Windows工作机+Ubuntu开发机。当然，可以仅仅用一个Ubuntu做为开发机就可以搞定所有的事情，这种情况最为简单直接。之所以这么做，因为需要使用windows的office，N多年来也习惯了Windows office。出差出门啥的，不需要带两个电脑。所以，win">
@@ -415,7 +415,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  1.1k
+                  1.3k
                 </span>
               
 
@@ -431,7 +431,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  4
+                  5
                 </span>
               
             </div>
@@ -466,6 +466,10 @@
 </ol>
 <p>launcher的配置文件写完之后，再修改最后一个地方，如图所示，在VSCode的左下角点击setting那个小齿轮，然后搜索break，勾选”Allow setting breakpoints in any files”。不知道为何这个选项没有默认勾选，但勾选之后，就可以在source code中使用F9设断点了<br><img src="/2021/03/24/crosvm-develop-debug/vscode2.png" alt="vscode2"></p>
 <p>最后的效果如下图所示：<br><img src="/2021/03/24/crosvm-develop-debug/vscode3.png" alt="vscode3"></p>
+<h2 id="补充三个VSCode调试技巧"><a href="#补充三个VSCode调试技巧" class="headerlink" title="补充三个VSCode调试技巧"></a>补充三个VSCode调试技巧</h2><h3 id="多进程"><a href="#多进程" class="headerlink" title="多进程"></a>多进程</h3><p>VSCode可以很优雅的显示多线程，并且可以针对每一个线程分别单步调试。但对于进程(fork()) 默认只能跟踪父进程。如果想在fork()函数之后，debug子进程中的内容，这么做：<br>在程序创建多进程之前(fork)之前，设置断点，然后在执行到这个断点的时候，在debug console里输入<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-exec -gdb-set follow-fork-mode child</span><br></pre></td></tr></table></figure></p>
+<p>这样继续执行的时候，VSCode就会跟踪子进程了。</p>
+<h3 id="函数的返回值"><a href="#函数的返回值" class="headerlink" title="函数的返回值"></a>函数的返回值</h3><p>进入一个函数，然后执行<code>-exec finish</code>这样就可以看到这个执行后的返回值了。</p>
+<h3 id="查看内存地址上的值"><a href="#查看内存地址上的值" class="headerlink" title="查看内存地址上的值"></a>查看内存地址上的值</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-exec x / 4ub 0x555556e9ba10</span><br><span class="line">或者</span><br><span class="line">-exec x4xb</span><br></pre></td></tr></table></figure>
 
       
     </div>
@@ -736,7 +740,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#VSCode-插件"><span class="nav-number">1.</span> <span class="nav-text">VSCode 插件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Remote-SSH"><span class="nav-number">1.1.</span> <span class="nav-text">Remote-SSH</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#rust-launcher"><span class="nav-number">1.2.</span> <span class="nav-text">rust-launcher</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#VSCode-插件"><span class="nav-number">1.</span> <span class="nav-text">VSCode 插件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Remote-SSH"><span class="nav-number">1.1.</span> <span class="nav-text">Remote-SSH</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#rust-launcher"><span class="nav-number">1.2.</span> <span class="nav-text">rust-launcher</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#补充三个VSCode调试技巧"><span class="nav-number">2.</span> <span class="nav-text">补充三个VSCode调试技巧</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#多进程"><span class="nav-number">2.1.</span> <span class="nav-text">多进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#函数的返回值"><span class="nav-number">2.2.</span> <span class="nav-text">函数的返回值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看内存地址上的值"><span class="nav-number">2.3.</span> <span class="nav-text">查看内存地址上的值</span></a></li></ol></li></ol></div>
             
 
           </div>
@@ -770,7 +774,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">81.7k</span>
+    <span title="Site words total count">81.9k</span>
 
   <span class="post-meta-divider">|</span>
   
