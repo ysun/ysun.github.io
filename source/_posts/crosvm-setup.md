@@ -80,7 +80,7 @@ sudo umount rootfs/
 sudo mount ubuntu19.10_rootfs.img rootfs/
 
 # 去掉rootfs中的密码：
-vim /etc/passwd
+vim rootfs/etc/passwd
 root:x:0:0:root:/root:/bin/bash
 取掉 root: 后面的那个x
 

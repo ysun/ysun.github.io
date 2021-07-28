@@ -19,7 +19,7 @@ tags: 最小系统 QEMU KVM
 apt-get install -y debootstrap arch-install-scripts
 
 创建分区
-`gdisk /dev/sda`
+`gdisk <path>/rootfs-debootstrap.img`
 
 在gdisk命令行中，一次执行：
 ```
@@ -108,22 +108,23 @@ apt-get install -y --no-install-recommends linux-generic linux-image-generic lin
 ```
 dpkg-reconfigure tzdata
 ```
-我选择了`en_US.UTF-8`
 
 选择语言
 ```
 dpkg-reconfigure locales
 ```
+我选择了`en_US.UTF-8`
 
 如果有必要，设置hostname
 ```
-vi /etc/hosts
+vi /etc/hostname
 ```
 
 很重要的一件事情，为root设置密码
 ```
 passwd root
 ```
+或者如果觉得密码没有必要，可以删除`/etc/passwd/`中，root一行的第二列的字母`x`,这样root用户就没有密码了。
 
 安装grub2
 ```

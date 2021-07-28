@@ -1,5 +1,5 @@
 ---
-title: Debug QEMU with GDB
+title: 使用 QEMU 调试内核
 donate: true
 date: 2018-12-24 09:59:17
 categories: QEMU
@@ -62,8 +62,12 @@ Breakpoint 1 at 0x7c00.
 <font color=#0099ff face="黑体">(gdb) info breakpoints</font>
 Num     Type           Disp Enb Address    What
 1       breakpoint     keep y   0x00007c00
-(gdb)
+
+<font color=#0099ff face="黑体">(gdb) hbreak start_kernel</font>
+
 </pre>
+
+注意：需要在kernel的启动参数里面加上`nokaslr`!
 
 ## 顺便附上一些用到的gdb的快捷键以及命令 ##
 ### TUI 窗口
@@ -150,3 +154,9 @@ break test.c:120 if $eax == 0x0000ffaa
 ```
 
 ![](gdb_tui.png)
+
+Reference: 
+https://www.starlab.io/blog/using-gdb-to-debug-the-linux-kernel
+https://www.kernel.org/doc/html/latest/dev-tools/gdb-kernel-debugging.html
+
+
