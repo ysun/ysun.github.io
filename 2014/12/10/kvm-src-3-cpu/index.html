@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+<meta name="google-site-verification" content="MrnK1va2f2DY7TM-4onuV7g_G6yZyI3WkYbaykR0Ln0">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-minimal.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="KVM,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="在虚拟机的创建与运行章节里面笼统的介绍了KVM在qemu中的创建和运行，基本的qemu代码流程已经梳理清楚，后续主要写一些硬件虚拟化的原理和代码流程，主要写原理和qemu控制KVM运行的的ioctl接口，后续对内核代码的梳理也从这些接口下手。 QEMU：git://git.qemu.org/qemu.git v2.4.0 KVM：https://git.kernel.org/pub/scm/lin">
+<meta name="keywords" content="KVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="KVM源代码分析3:CPU虚拟化">
+<meta property="og:url" content="http://www.owalle.com/2014/12/10/kvm-src-3-cpu/index.html">
+<meta property="og:site_name" content="Yi颗烂樱桃">
+<meta property="og:description" content="在虚拟机的创建与运行章节里面笼统的介绍了KVM在qemu中的创建和运行，基本的qemu代码流程已经梳理清楚，后续主要写一些硬件虚拟化的原理和代码流程，主要写原理和qemu控制KVM运行的的ioctl接口，后续对内核代码的梳理也从这些接口下手。 QEMU：git://git.qemu.org/qemu.git v2.4.0 KVM：https://git.kernel.org/pub/scm/lin">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://www.owalle.com/2014/12/10/kvm-src-3-cpu/kvm_vmx_intel-1.jpg">
+<meta property="og:updated_time" content="2021-09-27T09:54:42.978Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="KVM源代码分析3:CPU虚拟化">
+<meta name="twitter:description" content="在虚拟机的创建与运行章节里面笼统的介绍了KVM在qemu中的创建和运行，基本的qemu代码流程已经梳理清楚，后续主要写一些硬件虚拟化的原理和代码流程，主要写原理和qemu控制KVM运行的的ioctl接口，后续对内核代码的梳理也从这些接口下手。 QEMU：git://git.qemu.org/qemu.git v2.4.0 KVM：https://git.kernel.org/pub/scm/lin">
+<meta name="twitter:image" content="http://www.owalle.com/2014/12/10/kvm-src-3-cpu/kvm_vmx_intel-1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.owalle.com/2014/12/10/kvm-src-3-cpu/">
+
+
+
+
+
+  <title>KVM源代码分析3:CPU虚拟化 | Yi颗烂樱桃</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a rel="external nofollow" href="/" class="brand">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Yi颗烂樱桃</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">虚拟化中文</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a rel="external nofollow" href="/">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a rel="external nofollow" href="/archives/">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a rel="external nofollow" href="/categories/">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a rel="external nofollow" href="/tags/">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a rel="external nofollow" href="/about/">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-sitemap">
+          <a rel="external nofollow" href="/sitemap.xml">
+            
+              <i class="menu-item-icon fa fa-fw fa-sitemap"></i> <br>
+            
+            站点地图
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a rel="external nofollow" href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2014/12/10/kvm-src-3-cpu/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">KVM源代码分析3:CPU虚拟化</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2014-12-11T10:34:48+08:00">
+                2014-12-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2014/12/10/kvm-src-3-cpu/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2014/12/10/kvm-src-3-cpu/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  4.8k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  22
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在<a href="http://www.oenhan.com/kvm-src-2-vm-run" title="KVM源代码分析2:虚拟机的创建与运行" target="_blank" rel="noopener">虚拟机的创建与运行</a>章节里面笼统的介绍了KVM在qemu中的创建和运行，基本的qemu代码流程已经梳理清楚，后续主要写一些硬件虚拟化的原理和代码流程，主要写原理和qemu控制KVM运行的的ioctl接口，后续对内核代码的梳理也从这些接口下手。</p>
+<p>QEMU：git://git.qemu.org/qemu.git v2.4.0</p>
+<p>KVM：<a href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git" target="_blank" rel="noopener">https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git</a> v4.2</p>
+<h4 id="1-VT-x-技术"><a href="#1-VT-x-技术" class="headerlink" title="1.VT-x 技术"></a>1.VT-x 技术</h4><p>Intel处理器支持的虚拟化技术即是VT-x，之所以CPU支持硬件虚拟化是因为软件虚拟化的效率太低。</p>
+<p>处理器虚拟化的本质是分时共享，主要体现在状态恢复和资源隔离，实际上每个VM对于VMM看就是一个task么，之前Intel处理器在虚拟化上没有提供默认的硬件支持，传统 x86 处理器有4个特权级，Linux使用了0,3级别，0即内核，3即用户态，（更多参考<a href="http://blog.csdn.net/drshenlei/article/details/4265101" target="_blank" rel="noopener">CPU的运行环、特权级与保护</a>）而在虚拟化架构上，虚拟机监控器的运行级别需要内核态特权级，而CPU特权级被传统OS占用，所以Intel设计了VT-x，提出了VMX模式，即VMX root operation 和 VMX non-root operation，虚拟机监控器运行在VMX root operation，虚拟机运行在VMX non-root operation。每个模式下都有相对应的0~3特权级。</p>
+<p>为什么引入这两种特殊模式，在传统x86的系统中，CPU有不同的特权级，是为了划分不同的权限指令，某些指令只能由系统软件操作，称为特权指令，这些指令只能在最高特权级上才能正确执行，反之则会触发异常，处理器会陷入到最高特权级，由系统软件处理。还有一种需要操作特权资源（如访问<a href="http://www.oenhan.com/rwsem-realtime-task-hung" title="读写信号量与实时进程阻塞挂死问题" target="_blank" rel="noopener">中断寄存器</a>）的指令，称为敏感指令。OS运行在特权级上，屏蔽掉用户态直接执行的特权指令，达到控制所有的硬件资源目的；而在虚拟化环境中，VMM控制所有所有硬件资源，VM中的OS只能占用一部分资源，OS执行的很多特权指令是不能真正对硬件生效的，所以原特权级下有了root模式，OS指令不需要修改就可以正常执行在特权级上，但这个特权级的所有敏感指令都会传递到root模式处理，这样达到了VMM的目的。</p>
+<p>在<a href="http://www.oenhan.com/kvm-src-1" target="_blank" rel="noopener">KVM源代码分析1:基本工作原理</a>章节中也说了kvm分3个模式，对应到VT-x 中即是客户模式对应vmx非root模式，内核模式对应VMX root模式下的0特权级，用户模式对应vmx root模式下的3特权级。</p>
+<p>如下图<br><img src="/2014/12/10/kvm-src-3-cpu/kvm_vmx_intel-1.jpg" alt=""></p>
+<p>在非根模式下敏感指令引发的陷入称为VM-Exit，VM-Exit发生后，CPU从非根模式切换到根模式；对应的，VM-Entry则是从根模式到非根模式，通常意味着调用VM进入运行态。VMLAUCH/VMRESUME命令则是用来发起VM-Entry。</p>
+<h4 id="2-VMCS寄存器"><a href="#2-VMCS寄存器" class="headerlink" title="2.VMCS寄存器"></a>2.VMCS寄存器</h4><p>VMCS保存虚拟机的相关CPU状态，每个VCPU都有一个VMCS（内存的），每个物理CPU都有VMCS对应的<a href="http://www.oenhan.com/gdb-principle" title="gdb工作原理和内核实现" target="_blank" rel="noopener">寄存器</a>（物理的），当CPU发生VM-Entry时，CPU则从VCPU指定的内存中读取VMCS加载到物理CPU上执行，当发生VM-Exit时，CPU则将当前的CPU状态保存到VCPU指定的内存中，即VMCS，以备下次VMRESUME。</p>
+<p>VMLAUCH指VM的第一次VM-Entry，VMRESUME则是VMLAUCH之后后续的VM-Entry。VMCS下有一些控制域：</p>
+<p><colgroup></colgroup></p>
+<p><col width="51*"></p>
+<p><col width="51*"></p>
+<p><col width="51*"></p>
+<p><col width="51*"></p>
+<p><col width="51*"> <br>col 1                  | col 2                                                    | col 3<br>———————- | ——————————————————– | —————————————————————–<br> VM-execution controls |  Determines what operations cause VM exits               |  CR0, CR3, CR4, Exceptions, IO Ports, Interrupts, Pin Events, etc<br>Guest-state area       |  Saved on VM exits，Reloaded on VM entry                  |  EIP, ESP, EFLAGS, IDTR, Segment Regs, Exit info, etc<br> Host-state area       |  Loaded on VM exits                                      |  CR3, EIP set to monitor entry point, EFLAGS hardcoded, etc<br> VM-exit controls      |  Determines which state to save, load, how to transition |  Example: MSR save-load list<br> VM-entry controls     |  Determines which state to load, how to transition       |  Including injecting events (interrupts, exceptions) on entry    </p>
+<p>关于具体控制域的细节，还是翻Intel手册吧。</p>
+<h4 id="3-VM-Entry-VM-Exit"><a href="#3-VM-Entry-VM-Exit" class="headerlink" title="3.VM-Entry/VM-Exit"></a>3.VM-Entry/VM-Exit</h4><p>VM-Entry是从根模式切换到非根模式，即VMM切换到guest上，这个状态由VMM发起，发起之前先保存VMM中的关键寄存器内容到VMCS中，然后进入到VM-Entry，VM-Entry附带参数主要有3个：1.guest是否处于64bit模式，2.MSR VM-Entry控制，3.注入事件。1应该只在VMLAUCH有意义，3更多是在VMRESUME，而VMM发起VM-Entry更多是因为3，2主要用来每次更新MSR。</p>
+<p>VM-Exit是CPU从非根模式切换到根模式，从guest切换到VMM的操作，VM-Exit触发的原因就很多了，执行敏感指令，<a href="http://www.oenhan.com/rwsem-realtime-task-hung" title="读写信号量与实时进程阻塞挂死问题" target="_blank" rel="noopener">发生中断</a>，模拟特权资源等。</p>
+<p>运行在非根模式下的敏感指令一般分为3个方面：</p>
+<p>1.行为没有变化的，也就是说该指令能够正确执行。</p>
+<p>2.行为有变化的，直接产生VM-Exit。</p>
+<p>3.行为有变化的，但是是否产生VM-Exit受到VM-Execution控制域控制。</p>
+<p>主要说一下”受到VM-Execution控制域控制”的敏感指令，这个就是针对性的硬件优化了，一般是1.产生VM-Exit；2.不产生VM-Exit，同时调用优化函数完成功能。典型的有“RDTSC指令”。除了大部分是优化性能的，还有一小部分是直接VM-Exit执行指令结果是异常的，或者说在<a href="http://www.oenhan.com/kvm-src-1" title="KVM源代码分析1:基本工作原理" target="_blank" rel="noopener">虚拟化</a>场景下是不适用的，典型的就是TSC offset了。</p>
+<p>VM-Exit发生时退出的相关信息，如退出原因、触发中断等，这些内容保存在VM-Exit信息域中。</p>
+<h4 id="4-KVM-CREATE-VM"><a href="#4-KVM-CREATE-VM" class="headerlink" title="4.KVM_CREATE_VM"></a>4.KVM_CREATE_VM</h4><p>创建VM就写这里吧，kvm_dev_ioctl_create_vm函数是主干，在kvm_create_vm中，主要有两个函数，kvm_arch_init_vm和hardware_enable_all，需要注意，但是更先一步的是KVM结构体，下面的struct是精简后的版本。</p>
+<pre class="lang:c decode:1 hljs cpp">
+struct kvm {
+    struct mm_struct *mm; /* userspace tied to this vm */
+    struct kvm_memslots *memslots;  /*qemu模拟的内存条模型*/
+    struct kvm_vcpu *vcpus[KVM_MAX_VCPUS]; /* 模拟的CPU */
+    atomic_t online_vcpus;
+    int last_boosted_vcpu;
+    struct list_head vm_list;  //HOST上VM管理链表，
+    struct kvm_io_bus *buses[KVM_NR_BUSES];
+    struct kvm_vm_stat stat;
+    struct kvm_arch arch; //这个是host的arch的一些参数
+    atomic_t users_count;
+
+    long tlbs_dirty;
+    struct list_head devices;
+};
+</pre>
+
+<p>kvm_arch_init_vm基本没有特别动作，初始化了KVM-&gt;arch，以及更新了kvmclock函数，这个另外再说。<br>而hardware_enable_all，针对于每个CPU执行“on_each_cpu(hardware_enable_nolock, NULL, 1）”，在hardware_enable_nolock中先把cpus_hardware_enabled置位，进入到kvm_arch_hardware_enable中，有hardware_enable和TSC初始化规则，主要看hardware_enable，crash_enable_local_vmclear清理<a href="http://www.oenhan.com/reiserfs_check_can_fit_pages_for_8tb" title="reiserfs分区空闲8TB写文件提示磁盘空间不足" target="_blank" rel="noopener">位图</a>，判断MSR_IA32_FEATURE_CONTROL寄存器是否满足虚拟环境，不满足则将条件写入到寄存器内，CR4将X86_CR4_VMXE置位，另外还有kvm_cpu_vmxon打开VMX操作模式，外层包了vmm_exclusive的判断，它是kvm_intel.ko的外置参数，默认唯一，可以让用户强制不使用VMM硬件支持。</p>
+<h4 id="5-KVM-CREATE-VCPU"><a href="#5-KVM-CREATE-VCPU" class="headerlink" title="5.KVM_CREATE_VCPU"></a>5.KVM_CREATE_VCPU</h4><p>kvm_vm_ioctl_create_vcpu主要有三部分，kvm_arch_vcpu_create，kvm_arch_vcpu_setup和kvm_arch_vcpu_postcreate，重点自然是kvm_arch_vcpu_create。老样子，在这之前先看一下VCPU的结构体。</p>
+<pre class="lang:c decode:1 hljs cpp">
+struct kvm_vcpu {
+    struct kvm *kvm;  //归属的KVM\#ifdef CONFIG_PREEMPT_NOTIFIERSstruct preempt_notifier preempt_notifier;
+\#endif
+    int cpu;
+    int vcpu_id;
+    int srcu_idx;
+    int mode;
+    unsigned long requests;
+    unsigned long guest_debug;
+
+    struct mutex mutex;
+    struct kvm_run *run;  //运行时的状态
+
+    int fpu_active;
+    int guest_fpu_loaded, guest_xcr0_loaded;
+    wait_queue_head_t wq; //队列
+    struct pid *pid;
+    int sigset_active;
+    sigset_t sigset;
+    struct kvm_vcpu_stat stat; //一些数据
+
+\#ifdef CONFIG_HAS_IOMEM
+    int mmio_needed;
+    int mmio_read_completed;
+    int mmio_is_write;
+    int mmio_cur_fragment;
+    int mmio_nr_fragments;
+    struct kvm_mmio_fragment mmio_fragments[KVM_MAX_MMIO_FRAGMENTS];
+\#endif
+
+\#ifdef CONFIG_KVM_ASYNC_PF
+    struct {
+        u32 queued;
+        struct list_head queue;
+        struct list_head done;
+        spinlock_t lock;
+    } async_pf;
+\#endif
+
+\#ifdef CONFIG_HAVE_KVM_CPU_RELAX_INTERCEPT
+    /*
+     \* Cpu relax intercept or pause loop exit optimization
+     \* in_spin_loop: set when a vcpu does a pause loop exit
+     \*  or cpu relax intercepted.
+     \* dy_eligible: indicates whether vcpu is eligible for directed yield.
+     \*/
+    struct {
+        bool in_spin_loop;
+        bool dy_eligible;
+    } spin_loop;
+\#endif
+    bool preempted;
+    struct kvm_vcpu_arch arch;  //当前VCPU虚拟的架构，默认介绍X86
+};
+</pre>
+
+<p>借着看kvm_arch_vcpu_create，它借助kvm_x86_ops-&gt;vcpu_create即vmx_create_vcpu完成任务，vmx是X86硬件虚拟化层，从代码看，qemu用户态是一层，kernel 中KVM通用代码是一层，类似kvm_x86_ops是一层，针对各个不同硬件架构，而vcpu_vmx则是具体架构的虚拟化方案一层。首先是kvm_vcpu_init初始化，主要是填充结构体，可以注意的是vcpu-&gt;run分派了一页内存，下面有kvm_arch_vcpu_init负责填充x86 CPU结构体，下面就是kvm_vcpu_arch：</p>
+<pre class="lang:c decode:1 hljs cpp">
+struct kvm_vcpu_arch {
+    /*
+     \* rip and regs accesses must go through
+     \* kvm_{register,rip}_{read,write} functions.
+     \*/unsignedlong regs[NR_VCPU_REGS];
+    u32 regs_avail;
+    u32 regs_dirty;
+//类似这些寄存器就是就是用来缓存真正的CPU值的unsignedlong cr0;
+    unsignedlong cr0_guest_owned_bits;
+    unsignedlong cr2;
+    unsignedlong cr3;
+    unsigned long cr4;
+    unsigned long cr4_guest_owned_bits;
+    unsigned long cr8;
+    u32 hflags;
+    u64 efer;
+    u64 apic_base;
+    struct kvm_lapic *apic;    /* kernel irqchip context */
+    unsigned long apic_attention;
+    int32_t apic_arb_prio;
+    int mp_state;
+    u64 ia32_misc_enable_msr;
+    bool tpr_access_reporting;
+    u64 ia32_xss;
+
+    /*
+     \* Paging state of the vcpu
+     \*
+     \* If the vcpu runs in guest mode with two level paging this still saves
+     \* the paging mode of the l1 guest. This context is always used to
+     \* handle faults.
+     \*/
+    struct kvm_mmu mmu; //内存管理，更多的是附带了直接操作函数
+
+    /*
+     \* Paging state of an L2 guest (used for nested npt)
+     \*
+     \* This context will save all necessary information to walk page tables
+     \* of the an L2 guest. This context is only initialized for page table
+     \* walking and not for faulting since we never handle l2 page faults on
+     \* the host.
+     \*/
+    struct kvm_mmu nested_mmu;
+
+    /*
+     \* Pointer to the mmu context currently used for
+     \* gva_to_gpa translations.
+     \*/
+    struct kvm_mmu *walk_mmu;
+
+    struct kvm_mmu_memory_cache mmu_pte_list_desc_cache;
+    struct kvm_mmu_memory_cache mmu_page_cache;
+    struct kvm_mmu_memory_cache mmu_page_header_cache;
+
+    struct fpu guest_fpu;
+    u64 xcr0;
+    u64 guest_supported_xcr0;
+    u32 guest_xstate_size;
+
+    struct kvm_pio_request pio;
+    void *pio_data;
+
+    u8 event_exit_inst_len;
+
+    struct kvm_queued_exception {
+        bool pending;
+        bool has_error_code;
+        bool reinject;
+        u8 nr;
+        u32 error_code;
+    } exception;
+
+    struct kvm_queued_interrupt {
+        bool pending;
+        bool soft;
+        u8 nr;
+    } interrupt;
+
+    int halt_request; /* real mode on Intel only */
+
+    int cpuid_nent;
+    struct kvm_cpuid_entry2 cpuid_entries[KVM_MAX_CPUID_ENTRIES];
+
+    int maxphyaddr;
+
+    /* emulate context */
+//下面是KVM的软件模拟模式，也就是没有vmx的情况，估计也没人用这一套
+    struct x86_emulate_ctxt emulate_ctxt;
+    bool emulate_regs_need_sync_to_vcpu;
+    bool emulate_regs_need_sync_from_vcpu;
+    int (*complete_userspace_io)(struct kvm_vcpu *vcpu);
+
+    gpa_t time;
+    struct pvclock_vcpu_time_info hv_clock;
+    unsigned int hw_tsc_khz;
+    struct gfn_to_hva_cache pv_time;
+    bool pv_time_enabled;
+    /* set guest stopped flag in pvclock flags field */
+    bool pvclock_set_guest_stopped_request;
+
+    struct {
+        u64 msr_val;
+        u64 last_steal;
+        u64 accum_steal;
+        struct gfn_to_hva_cache stime;
+        struct kvm_steal_time steal;
+    } st;
+
+    u64 last_guest_tsc;
+    u64 last_host_tsc;
+    u64 tsc_offset_adjustment;
+    u64 this_tsc_nsec;
+    u64 this_tsc_write;
+    u64 this_tsc_generation;
+    bool tsc_catchup;
+    bool tsc_always_catchup;
+    s8 virtual_tsc_shift;
+    u32 virtual_tsc_mult;
+    u32 virtual_tsc_khz;
+    s64 ia32_tsc_adjust_msr;
+
+    atomic_t nmi_queued;  /* unprocessed asynchronous NMIs */
+    unsigned nmi_pending; /* NMI queued after currently running handler */
+    bool nmi_injected;    /* Trying to inject an NMI this entry */
+
+    struct mtrr_state_type mtrr_state;
+    u64 pat;
+
+    unsigned switch_db_regs;
+    unsigned long db[KVM_NR_DB_REGS];
+    unsigned long dr6;
+    unsigned long dr7;
+    unsigned long eff_db[KVM_NR_DB_REGS];
+    unsigned long guest_debug_dr7;
+
+    u64 mcg_cap;
+    u64 mcg_status;
+    u64 mcg_ctl;
+    u64 *mce_banks;
+
+    /* Cache MMIO info */
+    u64 mmio_gva;
+    unsigned access;
+    gfn_t mmio_gfn;
+    u64 mmio_gen;
+
+    struct kvm_pmu pmu;
+
+    /* used for guest single stepping over the given code position */
+    unsigned long singlestep_rip;
+
+    /* fields used by HYPER-V emulation */
+    u64 hv_vapic;
+
+    cpumask_var_t wbinvd_dirty_mask;
+
+    unsigned long last_retry_eip;
+    unsigned long last_retry_addr;
+
+    struct {
+        bool halted;
+        gfn_t gfns[roundup_pow_of_two(ASYNC_PF_PER_VCPU)];
+        struct gfn_to_hva_cache data;
+        u64 msr_val;
+        u32 id;
+        bool send_user_only;
+    } apf;
+
+    /* OSVW MSRs (AMD only) */
+    struct {
+        u64 length;
+        u64 status;
+    } osvw;
+
+    struct {
+        u64 msr_val;
+        struct gfn_to_hva_cache data;
+    } pv_eoi;
+
+    /*
+     \* Indicate whether the access faults on its page table in guest
+     \* which is set when fix page fault and used to detect unhandeable
+     \* instruction.
+     \*/
+    bool write_fault_to_shadow_pgtable;
+
+    /* set at EPT violation at this point */
+    unsigned long exit_qualification;
+
+    /* pv related host specific info */
+    struct {
+        bool pv_unhalted;
+    } pv;
+};
+</pre>
+
+<p>整个arch结构真是长，很适合凑篇幅，很多结构其他过程涉及到的再提吧，反正我也不知道。<br>kvm_arch_vcpu_init初始化了x86在虚拟化底层的实现函数，首先是pv和emulate_ctxt，这些不支持VMX下的模拟虚拟化，尤其是vcpu-&gt;arch.emulate_ctxt.ops = &amp;emulate_ops，emulate_ops初始化虚拟化模拟的对象函数。</p>
+<pre class="lang:c decode:1 hljs bash">
+static struct x86_emulate_ops emulate_ops = {
+    .read_std            = kvm_read_guest_virt_system,
+    .write_std           = kvm_write_guest_virt_system,
+    .fetch               = kvm_fetch_guest_virt,
+    .read_emulated       = emulator_read_emulated,
+    .write_emulated      = emulator_write_emulated,
+    .cmpxchg_emulated    = emulator_cmpxchg_emulated,
+    .invlpg              = emulator_invlpg,
+    .pio_in_emulated     = emulator_pio_in_emulated,
+    .pio_out_emulated    = emulator_pio_out_emulated,
+    .get_segment         = emulator_get_segment,
+    .set_segment         = emulator_set_segment,
+    .get_cached_segment_base = emulator_get_cached_segment_base,
+    .get_gdt             = emulator_get_gdt,
+    .get_idt         = emulator_get_idt,
+    .set_gdt             = emulator_set_gdt,
+    .set_idt         = emulator_set_idt,
+    .get_cr              = emulator_get_cr,
+    .set_cr              = emulator_set_cr,
+    .cpl                 = emulator_get_cpl,
+    .get_dr              = emulator_get_dr,
+    .set_dr              = emulator_set_dr,
+    .set_msr             = emulator_set_msr,
+    .get_msr             = emulator_get_msr,
+    .halt                = emulator_halt,
+    .wbinvd              = emulator_wbinvd,
+    .fix_hypercall       = emulator_fix_hypercall,
+    .get_fpu             = emulator_get_fpu,
+    .put_fpu             = emulator_put_fpu,
+    .intercept           = emulator_intercept,
+    .get_cpuid           = emulator_get_cpuid,
+};
+</pre>
+
+<p>x86_emulate_ops函数看看就好，实际上也很少有人放弃vmx直接软件模拟。后面又有mp_state，给pio_data分配了一个page，kvm_set_tsc_khz设置TSC，kvm_mmu_create则是初始化MMU的函数，里面的函数都是地址转换的重点，在内存虚拟化重点提到。kvm_create_lapic初始化lapic，初始化mce_banks结构，还有pv_time,xcr0,xstat,pmu等，类似x86硬件结构上需要存在的，OS底层需要看到的硬件名称都要有对应的软件结构。<br>回到vmx_create_vcpu，vmx的guest_msrs分配得到一个page，后面是vmcs的分配，vmx-&gt;loaded_vmcs-&gt;vmcs = alloc_vmcs()，alloc_vmcs为当前cpu执行alloc_vmcs_cpu，alloc_vmcs_cpu中alloc_pages_exact_node分配给vmcs，alloc_pages_exact_node调用__alloc_pages实现，原来以为vmcs占用了一个page，但此处从<a href="http://www.oenhan.com/size-512-slab-kmalloc" title="从size-512内存泄露看slab分配" target="_blank" rel="noopener">伙伴系统</a>申请了2^vmcs_config.order页，此处vmcs_config在setup_vmcs_config中初始化，vmcs_conf-&gt;order = get_order(vmcs_config.size)，而vmcs_conf-&gt;size = vmx_msr_high &amp; 0x1fff，又rdmsr(MSR_IA32_VMX_BASIC, vmx_msr_low, vmx_msr_high)，此处size由于与0x1fff与运算，大小必然小于4k，order则为0，然来绕去还是一个page大小。这么做估计是为了兼容vmcs_config中的size计算。<br>下面根据vmm_exclusive进行kvm_cpu_vmxon，进入vmx模式，初始化loaded_vmcs，然后用kvm_cpu_vmxoff退出vmx模式。<br>vmx_vcpu_load加载VCPU的信息，切换到指定cpu，进入到vmx模式，将loaded_vmcs的vmcs和当前cpu的vmcs绑定到一起。vmx_vcpu_setup则是初始化vmcs内容，主要是赋值计算，下面的vmx_vcpu_put则是vmx_vcpu_load的反运算。下面还有一些apic，nested，pml就不说了。<br>vmx_create_vcpu结束就直接回到kvm_vm_ioctl_create_vcpu函数，下面是kvm_arch_vcpu_setup，整个就一条线到kvm_arch_vcpu_load函数，主要有kvm_x86_ops-&gt;vcpu_load(vcpu, cpu)和tsc处理，vcpu_load就是vmx_vcpu_load，刚说了，就是进入vcpu模式下准备工作。<br>kvm_arch_vcpu_setup后面是create_vcpu_fd为proc创建控制fd，让qemu使用。kvm_arch_vcpu_postcreate则是马后炮般，重新vcpu_load，写msr，tsc。<br>如此整个vcpu就创建完成了。</p>
+<p>6.KVM_RUN</p>
+<p>KVM run涉及内容也不少，先写完内存虚拟化之后再开篇专门写RUN流程。</p>
+<p>下一篇：</p>
+<p><a href="http://www.oenhan.com/kvm-src-4-mem" target="_blank" rel="noopener">KVM源代码分析4:内存虚拟化</a></p>
+<p>———-完———-</p>
+<p>——————–下面未编辑的留存————————————-<br>给vmcs分配空间并初始化，在alloc_vmcs_cpu分配一个<a href="http://www.oenhan.com/linux-kernel-khugepaged" title="hugepage内存管理机制" target="_blank" rel="noopener">页大小内存</a>，用来保存vm和vmm信息。</p>
+<pre class="lang:c decode:1 hljs php">
+    vmx->vmcs = alloc_vmcs();
+    if (!vmx->vmcs)
+        goto free_msrs;
+
+    vmcs_init(vmx->vmcs);
+</pre>
+
+<p>执行vm entry的时候将vmm状态保存到vmcs的host area，并加载对应vm的vmcs guest area信息到CPU中，vm exit的时候则反之，vmcs具体结构分配由硬件实现，程序员只需要通过VMWRITE和VMREAD指令去访问。</p>
+<p>vmx执行完后，回到kvm_vm_ioctl_create_vcpu函数。kvm_arch_vcpu_reset对vcpu的结构进行初始化，后面一些就是检查vcpu的合法性，最后和kvm串接到一起。</p>
+<p>vcpu的创建到此结束，下面说一下vcpu的运行。</p>
+<p>VCPU一旦创建成功，后续的控制基本上从kvm_vcpu_ioctl开始，控制开关有KVM_RUN，KVM_GET_REGS，KVM_SET_REGS，KVM_GET_SREGS，KVM_SET_SREGS，KVM_GET_MP_STATE，KVM_SET_MP_STATE，KVM_TRANSLATE，KVM_SET_GUEST_DEBUG，KVM_SET_SIGNAL_MASK等，如果不清楚具体开关作用，可以直接到qemu搜索对应开关代码，一目了然。</p>
+<p>KVM_RUN的实现函数是kvm_arch_vcpu_ioctl_run，进行安全检查之后进入__vcpu_run中，在while循环里面调用vcpu_enter_guest进入guest模式，首先处理vcpu-&gt;requests，对应的request做处理，kvm_mmu_reload加载mmu，通过kvm_x86_ops-&gt;prepare_guest_switch(vcpu)准备陷入到guest，prepare_guest_switch实现是vmx_save_host_state，顾名思义，就是保存host的当前状态。</p>
+<pre class="lang:c decode:1 hljs php">
+kvm_x86_ops->prepare_guest_switch(vcpu);
+    if (vcpu->fpu_active)
+        kvm_load_guest_fpu(vcpu);
+    kvm_load_guest_xcr0(vcpu);
+
+    vcpu->mode = IN_GUEST_MODE;
+
+    /* We should set ->mode before check ->requests,
+     \* see the comment in make_all_cpus_request.
+     \*/
+    smp_mb();
+
+    local_irq_disable();
+</pre>
+
+<p>然后加载guest的寄存器等信息，fpu，xcr0,将vcpu模式设置为guest状态，屏蔽中断响应，准备进入guest。但仍进行一次检查，vcpu-&gt;mode和vcpu-&gt;requests等，如果有问题，则恢复host状态。</p>
+<p>kvm_guest_enter做了两件事：account_system_vtime计算虚拟机<a href="http://www.oenhan.com/glibc_pthread_cond_timedwait_disable" title="Glibc更新导致pthread_cond_timedwait失效" target="_blank" rel="noopener">系统时间</a>；rcu_virt_note_context_switch对rcu锁数据进行保护，完成上下文切换。</p>
+<p>准备工作搞定，kvm_x86_ops-&gt;run(vcpu)，开始运行guest，由vmx_vcpu_run实现。</p>
+<pre class="lang:c decode:1 hljs php">
+if (vmx->emulation_required && emulate_invalid_guest_state)
+        return;
+
+    if (test_bit(VCPU_REGS_RSP, (unsigned long *)&vcpu->arch.regs_dirty))
+        vmcs_writel(GUEST_RSP, vcpu->arch.regs[VCPU_REGS_RSP]);
+    if (test_bit(VCPU_REGS_RIP, (unsigned long *)&vcpu->arch.regs_dirty))
+        vmcs_writel(GUEST_RIP, vcpu->arch.regs[VCPU_REGS_RIP]);
+</pre>
+
+<p>判断模拟器，RSP，RIP寄存器值。</p>
+<p>主要功能在这段内联汇编上</p>
+<pre class="lang:c decode:1 hljs cpp">
+asm(
+                /* Store host registers */
+        "push %%"R"dx; push %%"R"bp;"
+        "push %%"R"cx nt" /* placeholder for guest rcx */
+        "push %%"R"cx nt"//如果vcpu host rsp和环境不等，则将其拷贝到vpu上
+        "cmp %%"R"sp, %c[host_rsp](%0) nt""je 1f nt""mov %%"R"sp, %c[host_rsp](%0) nt"
+        __ex(ASM_VMX_VMWRITE_RSP_RDX) "nt"//__kvm_handle_fault_on_reboot write host rsp"1: nt"/* Reload cr2 if changed */
+        "mov %c[cr2](%0), %%"R"ax nt"
+        "mov %%cr2, %%"R"dx nt"
+                //环境上cr2值和vpu上的值不同，则将vpu上值拷贝到环境上
+        "cmp %%"R"ax, %%"R"dx nt"
+        "je 2f nt"
+        "mov %%"R"ax, %%cr2 nt"
+        "2: nt"
+        /* Check if vmlaunch of vmresume is needed */
+        "cmpl $0, %c[launched](%0) nt"
+        /* Load guest registers.  Don't clobber flags. */
+        "mov %c[rax](%0), %%"R"ax nt"
+        "mov %c[rbx](%0), %%"R"bx nt"
+        "mov %c[rdx](%0), %%"R"dx nt"
+        "mov %c[rsi](%0), %%"R"si nt"
+        "mov %c[rdi](%0), %%"R"di nt"
+        "mov %c[rbp](%0), %%"R"bp nt"
+\#ifdef CONFIG_X86_64
+        "mov %c[r8](%0),  %%r8  nt"
+        "mov %c[r9](%0),  %%r9  nt"
+        "mov %c[r10](%0), %%r10 nt"
+        "mov %c[r11](%0), %%r11 nt"
+        "mov %c[r12](%0), %%r12 nt"
+        "mov %c[r13](%0), %%r13 nt"
+        "mov %c[r14](%0), %%r14 nt"
+        "mov %c[r15](%0), %%r15 nt"
+\#endif
+        "mov %c[rcx](%0), %%"R"cx nt" /* kills %0 (ecx) */
+
+        /* Enter guest mode */
+                //此处和cmpl $0, %c[launched](%0)是对应的，此处选择进入guest的两种模式
+                //RESUME和LAUNCH，通过__ex  __kvm_handle_fault_on_reboot执行
+        "jne .Llaunched nt"
+        __ex(ASM_VMX_VMLAUNCH) "nt"
+        "jmp .Lkvm_vmx_return nt"
+        ".Llaunched: " __ex(ASM_VMX_VMRESUME) "nt"
+                 //退出vmx，保存guest信息，加载host信息
+        ".Lkvm_vmx_return: "
+        /* Save guest registers, load host registers, keep flags */
+        "mov %0, %c[wordsize](%%"R"sp) nt"
+        "pop %0 nt"
+        "mov %%"R"ax, %c[rax](%0) nt"
+        "mov %%"R"bx, %c[rbx](%0) nt"
+        "pop"Q" %c[rcx](%0) nt"
+        "mov %%"R"dx, %c[rdx](%0) nt"
+        "mov %%"R"si, %c[rsi](%0) nt"
+        "mov %%"R"di, %c[rdi](%0) nt"
+        "mov %%"R"bp, %c[rbp](%0) nt"
+\#ifdef CONFIG_X86_64
+        "mov %%r8,  %c[r8](%0) nt"
+        "mov %%r9,  %c[r9](%0) nt"
+        "mov %%r10, %c[r10](%0) nt"
+        "mov %%r11, %c[r11](%0) nt"
+        "mov %%r12, %c[r12](%0) nt"
+        "mov %%r13, %c[r13](%0) nt"
+        "mov %%r14, %c[r14](%0) nt"
+        "mov %%r15, %c[r15](%0) nt"
+\#endif
+        "mov %%cr2, %%"R"ax   nt"
+        "mov %%"R"ax, %c[cr2](%0) nt"
+
+        "pop  %%"R"bp; pop  %%"R"dx nt"
+        "setbe %c[fail](%0) nt"
+          : : "c"(vmx), "d"((unsigned long)HOST_RSP),
+
+//下面加了前面寄存器的指针值，对应具体结构的值
+        [launched]"i"(offsetof(struct vcpu_vmx, launched)),
+        [fail]"i"(offsetof(struct vcpu_vmx, fail)),
+        [host_rsp]"i"(offsetof(struct vcpu_vmx, host_rsp)),
+        [rax]"i"(offsetof(struct vcpu_vmx, vcpu.arch.regs[VCPU_REGS_RAX])),
+        [rbx]"i"(offsetof(struct vcpu_vmx, vcpu.arch.regs[VCPU_REGS_RBX])),
+        [rcx]"i"(offsetof(struct vcpu_vmx, vcpu.arch.regs[VCPU_REGS_RCX])),
+        [rdx]"i"(offsetof(struct vcpu_vmx, vcpu.arch.regs[VCPU_REGS_RDX])),
+        [rsi]"i"(offsetof(struct vcpu_vmx, vcpu.arch.regs[VCPU_REGS_RSI])),
+        [rdi]"i"(offsetof(struct vcpu_vmx, vcpu.arch.regs[VCPU_REGS_RDI])),
+        [rbp]"i"(offsetof(struct vcpu_vmx, vcpu.arch.regs[VCPU_REGS_RBP])),
+\#ifdef CONFIG_X86_64
+        [r8]"i"(offsetof(struct vcpu_vmx, vcpu.arch.regs[VCPU_REGS_R8])),
+        [r9]"i"(offsetof(struct vcpu_vmx, vcpu.arch.regs[VCPU_REGS_R9])),
+        [r10]"i"(offsetof(struct vcpu_vmx, vcpu.arch.regs[VCPU_REGS_R10])),
+        [r11]"i"(offsetof(struct vcpu_vmx, vcpu.arch.regs[VCPU_REGS_R11])),
+        [r12]"i"(offsetof(struct vcpu_vmx, vcpu.arch.regs[VCPU_REGS_R12])),
+        [r13]"i"(offsetof(struct vcpu_vmx, vcpu.arch.regs[VCPU_REGS_R13])),
+        [r14]"i"(offsetof(struct vcpu_vmx, vcpu.arch.regs[VCPU_REGS_R14])),
+        [r15]"i"(offsetof(struct vcpu_vmx, vcpu.arch.regs[VCPU_REGS_R15])),
+\#endif
+        [cr2]"i"(offsetof(struct vcpu_vmx, vcpu.arch.cr2)),
+        [wordsize]"i"(sizeof(ulong))
+          : "cc", "memory"
+        , R"ax", R"bx", R"di", R"si"
+\#ifdef CONFIG_X86_64
+        , "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"
+\#endif
+</pre>
+
+<p>以上代码相对容易理解的，根据注释大致清楚了具体作用。</p>
+<p>然后就是恢复系统NMI等中断:</p>
+<pre class="lang:c decode:1 hljs bash">
+vmx_complete_atomic_exit(vmx);
+vmx_recover_nmi_blocking(vmx);
+vmx_complete_interrupts(vmx);
+</pre>
+
+<p>回到vcpu_enter_guest，通过hw_breakpoint_restore恢复<a href="http://www.oenhan.com/jprobe-hw-breakpoint" title="内核调试方法:Jprobe与硬件断点" target="_blank" rel="noopener">硬件断点</a>。</p>
+<pre class="lang:c decode:1 hljs php">
+if (hw_breakpoint_active())
+        hw_breakpoint_restore();
+
+    kvm_get_msr(vcpu, MSR_IA32_TSC, &vcpu->arch.last_guest_tsc);
+
+//设置vcpu模式，恢复host相关内容
+    vcpu->mode = OUTSIDE_GUEST_MODE;
+    smp_wmb();
+    local_irq_enable();
+
+    ++vcpu->stat.exits;
+
+    /*
+     \* We must have an instruction between local_irq_enable() and
+     \* kvm_guest_exit(), so the timer interrupt isn't delayed by
+     \* the interrupt shadow.  The stat.exits increment will do nicely.
+     \* But we need to prevent reordering, hence this barrier():
+     \*/
+    barrier();
+//刷新系统时间
+    kvm_guest_exit();
+
+    preempt_enable();
+
+    vcpu->srcu_idx = srcu_read_lock(&vcpu->kvm->srcu);
+
+    /*
+     \* Profile KVM exit RIPs:
+     \*/
+    if (unlikely(prof_on == KVM_PROFILING)) {
+        unsigned long rip = kvm_rip_read(vcpu);
+        profile_hit(KVM_PROFILING, (void *)rip);
+    }
+
+    kvm_lapic_sync_from_vapic(vcpu);
+//处理vmx退出
+    r = kvm_x86_ops->handle_exit(vcpu);
+</pre>
+
+<p>handle_exit退出函数由vmx_handle_exit实现，主要设置vcpu-&gt;run-&gt;exit_reason，让外部感知退出原因，并对应处理。对于vpu而言，handle_exit只是意味着一个传统linux一个时间片的结束，后续的工作都是由handle完成的，handle_exit对应的函数集如下：</p>
+<pre class="lang:c decode:1 hljs objectivec">
+staticint (*kvm_vmx_exit_handlers[])(struct kvm_vcpu *vcpu) = {
+    [EXIT_REASON_EXCEPTION_NMI]           = handle_exception,
+    [EXIT_REASON_EXTERNAL_INTERRUPT]      = handle_external_interrupt,
+    [EXIT_REASON_TRIPLE_FAULT]            = handle_triple_fault,
+    [EXIT_REASON_NMI_WINDOW]          = handle_nmi_window,
+    [EXIT_REASON_IO_INSTRUCTION]          = handle_io,
+    [EXIT_REASON_CR_ACCESS]               = handle_cr,
+    [EXIT_REASON_DR_ACCESS]               = handle_dr,
+    [EXIT_REASON_CPUID]                   = handle_cpuid,
+    [EXIT_REASON_MSR_READ]                = handle_rdmsr,
+    [EXIT_REASON_MSR_WRITE]               = handle_wrmsr,
+    [EXIT_REASON_PENDING_INTERRUPT]       = handle_interrupt_window,
+    [EXIT_REASON_HLT]                     = handle_halt,
+    [EXIT_REASON_INVD]              = handle_invd,
+    [EXIT_REASON_INVLPG]              = handle_invlpg,
+    [EXIT_REASON_VMCALL]                  = handle_vmcall,
+    [EXIT_REASON_VMCLEAR]                  = handle_vmx_insn,
+    [EXIT_REASON_VMLAUNCH]                = handle_vmx_insn,
+    [EXIT_REASON_VMPTRLD]                 = handle_vmx_insn,
+    [EXIT_REASON_VMPTRST]                 = handle_vmx_insn,
+    [EXIT_REASON_VMREAD]                  = handle_vmx_insn,
+    [EXIT_REASON_VMRESUME]                = handle_vmx_insn,
+    [EXIT_REASON_VMWRITE]                 = handle_vmx_insn,
+    [EXIT_REASON_VMOFF]                   = handle_vmx_insn,
+    [EXIT_REASON_VMON]                    = handle_vmx_insn,
+    [EXIT_REASON_TPR_BELOW_THRESHOLD]     = handle_tpr_below_threshold,
+    [EXIT_REASON_APIC_ACCESS]             = handle_apic_access,
+    [EXIT_REASON_WBINVD]                  = handle_wbinvd,
+    [EXIT_REASON_XSETBV]                  = handle_xsetbv,
+    [EXIT_REASON_TASK_SWITCH]             = handle_task_switch,
+    [EXIT_REASON_MCE_DURING_VMENTRY]      = handle_machine_check,
+    [EXIT_REASON_EPT_VIOLATION]          = handle_ept_violation,
+    [EXIT_REASON_EPT_MISCONFIG]           = handle_ept_misconfig,
+    [EXIT_REASON_PAUSE_INSTRUCTION]       = handle_pause,
+    [EXIT_REASON_MWAIT_INSTRUCTION]          = handle_invalid_op,
+    [EXIT_REASON_MONITOR_INSTRUCTION]     = handle_invalid_op,
+};
+</pre>
+
+<p>有handle_task_switch进行<a href="http://www.oenhan.com/rwsem-realtime-task-hung" title="读写信号量与实时进程阻塞挂死问题" target="_blank" rel="noopener">任务切换</a>，handle_io处理qemu的外部模拟IO等，具体处理内容后面在写。</p>
+<p>再次退回到__vcpu_run函数，在while (r &gt; 0)中，循环受vcpu_enter_guest返回值控制，只有运行异常的时候才退出循环，否则通过kvm_resched一直运行下去。</p>
+<pre class="lang:c decode:1 hljs php">
+if (need_resched()) {
+            srcu_read_unlock(&kvm->srcu, vcpu->srcu_idx);
+            kvm_resched(vcpu);
+            vcpu->srcu_idx = srcu_read_lock(&kvm->srcu);
+        }
+</pre>
+
+<p>再退就到了kvm_arch_vcpu_ioctl_run函数，此时kvm run的执行也结束。</p>
+<p>KVM cpu虚拟化的理解基本如上，涉及到的具体细节有时间后开篇另说。</p>
+<p>KVM源代码分析未完待续</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="Yi颗烂樱桃 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.png" alt="Yi颗烂樱桃 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者：</strong>
+    Yi颗烂樱桃
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://www.owalle.com/2014/12/10/kvm-src-3-cpu/" title="KVM源代码分析3:CPU虚拟化">http://www.owalle.com/2014/12/10/kvm-src-3-cpu/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>
+    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="external nofollow" target="_blank">CC BY-NC-ND 3.0</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/KVM/" rel="tag"># KVM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2014/12/10/kvm-src-2-vm-run/" rel="next" title="KVM源代码分析2:虚拟机的创建与运行">
+                <i class="fa fa-chevron-left"></i> KVM源代码分析2:虚拟机的创建与运行
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2014/12/10/kvm-src-4-mem/" rel="prev" title="KVM源代码分析4:内存虚拟化">
+                KVM源代码分析4:内存虚拟化 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
+    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
+    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a class="bds_count" data-cmd="count"></a>
+  </div>
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "2",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "share": {
+        "bdSize": "16",
+        "bdStyle": "0"
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      }
+    }
+  </script>
+
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="Yi颗烂樱桃">
+            
+              <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">24</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+            <div class="cc-license motion-element" itemprop="license">
+              <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" class="cc-opacity" target="_blank">
+                <img src="/images/cc-by-nc-nd.svg" alt="Creative Commons">
+              </a>
+            </div>
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-VT-x-技术"><span class="nav-number">1.</span> <span class="nav-text">1.VT-x 技术</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-VMCS寄存器"><span class="nav-number">2.</span> <span class="nav-text">2.VMCS寄存器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-VM-Entry-VM-Exit"><span class="nav-number">3.</span> <span class="nav-text">3.VM-Entry/VM-Exit</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-KVM-CREATE-VM"><span class="nav-number">4.</span> <span class="nav-text">4.KVM_CREATE_VM</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-KVM-CREATE-VCPU"><span class="nav-number">5.</span> <span class="nav-text">5.KVM_CREATE_VCPU</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yi颗烂樱桃</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">85.5k</span>
+
+  <span class="post-meta-divider">|</span>
+  
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  <span class="site-uv">
+    <i class="fa fa-user"></i>
+    <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    
+  </span>
+
+
+
+  <span class="site-pv">
+    <i class="fa fa-eye"></i>
+    <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    
+  </span>
+
+</div>
+
+<div align="center">
+	<img style="display:inline-block;" src="images/icp.png"> 
+	<a href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备13030765号-8</a>
+
+	<img style="display:inline-block;text-decoration:none;height:20px;line-height:20px;" src="images/beian.png"> 
+	<a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202004052">沪公网安备 31011202004052号</a>
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+  
+  <script type="text/javascript" color="129,216,208" opacity="0.5" zindex="-2" count="50" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three.min.js"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three-waves.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kity.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kityminder.core.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/mindmap.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: true,
+        notify: false,
+        appId: 'sIDOr6ptvMjLBmxig1vHlYsG-gzGzoHsz',
+        appKey: 'c1R9jtqasnufksgJUCE3eWo5',
+        placeholder: '亲，你不想说点什么吗？？ :D',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+</body>
+</html>
