@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://www.owalle.com/2021/11/04/dsa-overview/</loc>
+    <lastmod>2021-11-05T21:49:54.051Z</lastmod>
+  </url>  <url>
     <loc>http://www.owalle.com/2021/10/31/iommu-code/</loc>
     <lastmod>2021-11-03T22:57:52.605Z</lastmod>
   </url>  <url>
@@ -16,10 +19,10 @@
     <loc>http://www.owalle.com/2021/08/11/sdm-amx/</loc>
     <lastmod>2021-09-27T09:54:43.562Z</lastmod>
   </url>  <url>
-    <loc>http://www.owalle.com/2021/06/28/hello-proc/</loc>
+    <loc>http://www.owalle.com/2018/12/23/qemu-debug/</loc>
     <lastmod>2021-09-27T09:54:43.554Z</lastmod>
   </url>  <url>
-    <loc>http://www.owalle.com/2018/12/23/qemu-debug/</loc>
+    <loc>http://www.owalle.com/2021/06/28/hello-proc/</loc>
     <lastmod>2021-09-27T09:54:43.554Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2021/05/08/mini-kernel/</loc>
@@ -43,22 +46,22 @@
     <loc>http://www.owalle.com/2020/04/19/crosvm-input/</loc>
     <lastmod>2021-09-27T09:54:43.334Z</lastmod>
   </url>  <url>
-    <loc>http://www.owalle.com/2020/05/11/android-emulator/</loc>
-    <lastmod>2021-09-27T09:54:43.334Z</lastmod>
-  </url>  <url>
     <loc>http://www.owalle.com/2020/06/03/crosvm-chromevm/</loc>
     <lastmod>2021-09-27T09:54:43.334Z</lastmod>
   </url>  <url>
-    <loc>http://www.owalle.com/2019/12/18/fast-restart/</loc>
-    <lastmod>2021-09-27T09:54:43.330Z</lastmod>
+    <loc>http://www.owalle.com/2020/05/11/android-emulator/</loc>
+    <lastmod>2021-09-27T09:54:43.334Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2019/12/25/network-in-vm/</loc>
     <lastmod>2021-09-27T09:54:43.330Z</lastmod>
   </url>  <url>
-    <loc>http://www.owalle.com/2018/12/25/qemu-qom/</loc>
-    <lastmod>2021-09-27T09:54:43.266Z</lastmod>
+    <loc>http://www.owalle.com/2019/12/18/fast-restart/</loc>
+    <lastmod>2021-09-27T09:54:43.330Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2020/03/02/chromeos-setup/</loc>
+    <lastmod>2021-09-27T09:54:43.266Z</lastmod>
+  </url>  <url>
+    <loc>http://www.owalle.com/2018/12/25/qemu-qom/</loc>
     <lastmod>2021-09-27T09:54:43.266Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2021/01/08/create-mini-vm/</loc>
@@ -67,10 +70,10 @@
     <loc>http://www.owalle.com/2019/01/28/Intel-SDM/</loc>
     <lastmod>2021-09-27T09:54:43.226Z</lastmod>
   </url>  <url>
-    <loc>http://www.owalle.com/2020/04/06/crosvm-network/</loc>
+    <loc>http://www.owalle.com/2019/07/11/study-x86-using-qemu/</loc>
     <lastmod>2021-09-27T09:54:43.210Z</lastmod>
   </url>  <url>
-    <loc>http://www.owalle.com/2019/07/11/study-x86-using-qemu/</loc>
+    <loc>http://www.owalle.com/2020/04/06/crosvm-network/</loc>
     <lastmod>2021-09-27T09:54:43.210Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2013/12/31/hello-world/</loc>
@@ -82,10 +85,10 @@
     <loc>http://www.owalle.com/2019/05/21/inline-assembly/</loc>
     <lastmod>2021-09-27T09:54:43.190Z</lastmod>
   </url>  <url>
-    <loc>http://www.owalle.com/2019/05/12/sdm-8-2-memory-ordering/</loc>
+    <loc>http://www.owalle.com/2019/05/06/efi-shell-tftp/</loc>
     <lastmod>2021-09-27T09:54:43.190Z</lastmod>
   </url>  <url>
-    <loc>http://www.owalle.com/2019/05/06/efi-shell-tftp/</loc>
+    <loc>http://www.owalle.com/2019/05/12/sdm-8-2-memory-ordering/</loc>
     <lastmod>2021-09-27T09:54:43.190Z</lastmod>
   </url>  <url>
     <loc>http://www.owalle.com/2018/12/10/kvm-boot/</loc>
