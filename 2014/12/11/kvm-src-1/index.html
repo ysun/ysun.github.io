@@ -95,14 +95,14 @@
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="原文出自：http://oenhan.com/kvm-src-1文章写作以及技术水平远远在我之上，感觉自己无力写出如此精炼的文章，膜拜并转发 1.KVM模型结构为什么有OS虚拟化？随着CPU计算能力的提高，单独的OS已不能充分利用CPU的计算能力，1.很多应用的执行需要单独占用一个OS环境，如安全测试等；2.而IAAS云计算厂商也是以OS为范围销售计算能力。那么在所有虚拟化方案中，都是由hyper">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-1/hypervisor-1.png">
-<meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-1/kvm_arch_map-1.png">
-<meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-1/kvm_process-1.png">
-<meta property="og:updated_time" content="2020-09-11T05:34:43.472Z">
+<meta property="og:image" content="http://www.owalle.com/2014/12/10/kvm-src-1/hypervisor-1.png">
+<meta property="og:image" content="http://www.owalle.com/2014/12/10/kvm-src-1/kvm_arch_map-1.png">
+<meta property="og:image" content="http://www.owalle.com/2014/12/10/kvm-src-1/kvm_process-1.png">
+<meta property="og:updated_time" content="2021-09-27T09:54:43.098Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="KVM源代码分析1:基本工作原理">
 <meta name="twitter:description" content="原文出自：http://oenhan.com/kvm-src-1文章写作以及技术水平远远在我之上，感觉自己无力写出如此精炼的文章，膜拜并转发 1.KVM模型结构为什么有OS虚拟化？随着CPU计算能力的提高，单独的OS已不能充分利用CPU的计算能力，1.很多应用的执行需要单独占用一个OS环境，如安全测试等；2.而IAAS云计算厂商也是以OS为范围销售计算能力。那么在所有虚拟化方案中，都是由hyper">
-<meta name="twitter:image" content="http://www.owalle.com/2014/12/11/kvm-src-1/hypervisor-1.png">
+<meta name="twitter:image" content="http://www.owalle.com/2014/12/10/kvm-src-1/hypervisor-1.png">
 
 
 
@@ -454,12 +454,12 @@
       
         <p>原文出自：<a href="http://oenhan.com/kvm-src-1" target="_blank" rel="noopener">http://oenhan.com/kvm-src-1</a><br>文章写作以及技术水平远远在我之上，感觉自己无力写出如此精炼的文章，膜拜并转发</p>
 <h4 id="1-KVM模型结构"><a href="#1-KVM模型结构" class="headerlink" title="1.KVM模型结构"></a>1.KVM模型结构</h4><p>为什么有OS虚拟化？随着CPU计算能力的提高，单独的OS已不能充分利用CPU的计算能力，1.很多应用的执行需要单独占用一个OS环境，如安全测试等；2.而IAAS云计算厂商也是以OS为范围销售计算能力。那么在所有虚拟化方案中，都是由hypervisor取代原生的OS去控制具体硬件资源，而同时hypervisor将资源分配具体的VM，VM中运行的是没有修改过的OS，如果让VM中的OS能正常运行，hypervisor的任务就是模拟具体的硬件资源，让OS不能识别出是真是假。</p>
-<p><img src="/2014/12/11/kvm-src-1/hypervisor-1.png" alt=""></p>
+<p><img src="/2014/12/10/kvm-src-1/hypervisor-1.png" alt=""></p>
 <p>当然上面的模型是Xen示例，OS对应用而言是硬件资源管理中心，那么hypervisor就是具体VM的OS了，KVM是就利用了这一点，利用现有的kernel代码，构建了一个hypervisor，这个样子<a href="http://www.oenhan.com/kernel-program-exec" target="_blank" rel="noopener">内存分配</a>，<a href="http://www.oenhan.com/task-group-sched" target="_blank" rel="noopener">进程调度</a>等就无需重写代码，如此hypervisor就是所谓的host，VM中的OS就是guest。</p>
 <p>guest OS保证具体运行场景中的程序正常执行，而KVM的代码则部署在HOST上，Userspace对应的是QEMU，Kernel对应的是KVM Driver，KVM Driver负责模拟虚拟机的CPU运行，<a href="http://www.oenhan.com/size-512-slab-kmalloc" title="从size-512内存泄露看slab分配" target="_blank" rel="noopener">内存管理</a>，设备管理等；QEMU则模拟虚拟机的IO设备接口以及用户态控制接口。QEMU通过KVM等fd进行IOCTL控制KVM驱动的运行过程。</p>
-<p><img src="/2014/12/11/kvm-src-1/kvm_arch_map-1.png" alt=""></p>
+<p><img src="/2014/12/10/kvm-src-1/kvm_arch_map-1.png" alt=""></p>
 <p>如上图所示，guest自身有自己的用户模式和<a href="http://www.oenhan.com/iowait-wa-vmstat" title="iowait的形成原因和内核分析" target="_blank" rel="noopener">内核模式</a>；guest是在host中是作为一个用户态进程存在的，这个进程就是qemu，qemu本身就是一个虚拟化程序，只是纯软件虚拟化效率很低，它被KVM进行改造后，作为KVM的前端存在，用来进行<a href="http://www.oenhan.com/cpu-load-balance" title="Linux内核CPU负载均衡机制" target="_blank" rel="noopener">创建进程</a>或者IO交互等；而KVM Driver则是Linux内核模式，它提供KVM fd给qemu调用，用来进行cpu虚拟化，内存虚拟化等。QEMU通KVM提供的fd接口，通过ioctl系统调用创建和运行虚拟机。KVM Driver使得整个Linux成为一个虚拟机监控器，负责接收qemu模拟效率很低的命令。</p>
-<h4 id="2-KVM工作原理"><a href="#2-KVM工作原理" class="headerlink" title="2.KVM工作原理"></a>2.KVM工作原理</h4><p><img src="/2014/12/11/kvm-src-1/kvm_process-1.png" alt=""></p>
+<h4 id="2-KVM工作原理"><a href="#2-KVM工作原理" class="headerlink" title="2.KVM工作原理"></a>2.KVM工作原理</h4><p><img src="/2014/12/10/kvm-src-1/kvm_process-1.png" alt=""></p>
 <p>上图是一个执行过程图，首先启动一个虚拟化管理软件qemu，开始启动一个虚拟机，通过ioctl等系统调用向内核中申请指定的资源，搭建好虚拟环境，启动虚拟机内的OS，执行 VMLAUCH 指令，即进入了guest代码执行过程。如果 Guest OS 发生外部中断或者影子页表缺页之类的事件，暂停 Guest OS 的执行，退出QEMU即guest VM-exit，进行一些必要的处理，然后重新进入客户模式，执行guest代码；这个时候如果是io请求，则提交给用户态下的qemu处理，qemu处理后再次通过IOCTL反馈给KVM驱动。</p>
 <h4 id="3-CPU虚拟化"><a href="#3-CPU虚拟化" class="headerlink" title="3.CPU虚拟化"></a>3.CPU虚拟化</h4><p>X86体系结构CPU虚拟化技术的称为 Intel VT-x 技术，引入了VMX，提供了两种处理器的工作环境。 VMCS 结构实现两种环境之间的切换。 VM Entry 使虚拟机进去guest模式，VM Exit 使虚拟机退出guest模式。</p>
 <p>VMM调度guest执行时，qemu 通过 ioctl <a href="http://www.oenhan.com/kernel-program-exec" target="_blank" rel="noopener">系统调用</a>进入内核模式，在 KVM Driver中获得当前物理 CPU的引用。之后将guest状态从VMCS中读出， 并装入物理CPU中。执行 VMLAUCH 指令使得物理处理器进入非根操作环境，运行guest OS代码。</p>
@@ -677,7 +677,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">37</span>
+                  <span class="site-state-item-count">40</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -688,7 +688,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">9</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -699,7 +699,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-count">26</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -772,7 +772,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">84.9k</span>
+    <span title="Site words total count">97.1k</span>
 
   <span class="post-meta-divider">|</span>
   
