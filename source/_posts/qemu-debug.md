@@ -21,22 +21,44 @@ gdb --args x86_64-softmmu/qemu-system-x86_64 --enable-kvm -m 1024 -drive file=te
 
 这部分是本文的重点。跟调试应用程序不同，调试虚拟机时gdb和qemu分开执行，似乎并不能用gdb来调用qemu。长话短说，先来看如何启动qemu：
 ```
-./x86_64-softmmu/qemu-system-x86_64 -s -S --enable-kvm -m 1024 -hda test.qcow2
-```
+qemu-system-x86_64 \
+        --enable-kvm \
+        -m 2048 -smp 1 \
+        -s -S \
+        -cpu host \
+        -hda /home/works/kvm/ubuntu20.10_mini.img \
+        -kernel /home/works/linux-stable/arch/x86/boot/bzImage \
+        -append "root=/dev/sda3 nokaslr console=ttyS0"
 
-同样，参数从--enable-kvm开始之后的参数也都不是必须的。着重了解下两个必须的参数：
+#       -bios ovmf/OVMF_CODE.fd \
+#       -boot order=c,menu=off \
+```
+注意，这里有几个小坑：
+
+* -smp 1 建议只要不是为了研究SMP并发，debug的时候就带着吧，gdb可能多线程不太能搞定的样子。
+* -enable-kvm 开启了kvm support，添加断点的时候，可能需要使用`hbreak <xxx>`
+* -kernel 如果VM镜像是UEFI support的话，那么需要使用这个参数，在vm image之外传递kernel image(bzImage)给QEMU。如果这样做了，还需要注意一点，就是跟内核匹配的模块，还是需要提前copy到vm image的`/lib/modules/`内的，否则kernel是用不了任何模块的。
+* -append 给kernel传递参数，使用-kernel时，这个是必需的，比如`root=xxx`
+* 需要在vm的kernel的启动参数里面加上`nokaslr`，关闭内核随机位置。By default, Linux® uses KASLR. Specify the nokaslr kernel parameter to disable kernel randomization, that is, cause the kernel to be loaded at its standard location.
+* 使用-kernel 时，需要去掉OVMF bios
+
 ```
 -s shorthand for -gdb tcp::1234
 -S freeze CPU at startup (use 'c' to start execution)
 ```
 
-然后新开一个终端执行gdb，这样就跟调试应用程序一样，会看到同样的'(gdb)' 提示符。
-在提示符中输入
+然后新开一个终端执行gdb，参数如下，传递与上一步bzImage同一个build的vmlinux，作为符号表。
+```
+ gdb -tui /home/works/linux-stable/vmlinux
+```
+这样就跟调试应用程序一样，会看到同样的'(gdb)' 提示符，在提示符中输入：
 ```
 target remote localhost:1234
 ```
 1234是默认用于远程调试连接的端口号。
-然后设置断点"break *0x7c00"，这样就将一个断点设置在了bootloader被加载到的内存地址，接下来就任你玩了。
+然后设置断点"hbreak *0x7c00"，这样就将一个断点设置在了bootloader被加载到的内存地址，接下来就任你玩了。
+或者设置断点到内核入口函数`hb start_kernel`等。
+
 <pre>
 [root@ccd-sdv6 ~]# gdb
 GNU gdb (GDB) Red Hat Enterprise Linux 7.6.1-100.el7
@@ -67,7 +89,6 @@ Num     Type           Disp Enb Address    What
 
 </pre>
 
-注意：需要在kernel的启动参数里面加上`nokaslr`!
 
 ## 顺便附上一些用到的gdb的快捷键以及命令 ##
 ### TUI 窗口
