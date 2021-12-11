@@ -95,15 +95,15 @@
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="当我们创建和使用虚拟机时，通常都伴随着虚拟机的联网问题。下面就帮大家梳理下QEMU虚拟机中几种网络的模拟和用法。 概述QEMU可以模拟多种网卡设备(例如PCI或者ISA设备)，同时可将这些虚拟网卡与host上的虚拟网络设备(或者虚拟的hub)连接起来。各种不同类型的网络设备既可以为虚拟机提供真实的网络访问(例如TAP、SLiRP user模式)，也可以是同一个host上面的不同虚拟机之间的访问(S">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://www.owalle.com/2019/12/25/network-in-vm/network-nat1.png">
-<meta property="og:image" content="http://www.owalle.com/2019/12/25/network-in-vm/network-nat.png">
-<meta property="og:image" content="http://www.owalle.com/2019/12/25/network-in-vm/network-nat2.png">
-<meta property="og:image" content="http://www.owalle.com/2019/12/25/network-in-vm/network-bridge.png">
+<meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat1.png">
+<meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat.png">
+<meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat2.png">
+<meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-bridge.png">
 <meta property="og:updated_time" content="2021-09-27T09:54:43.330Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="QEMU虚拟机网络模拟">
 <meta name="twitter:description" content="当我们创建和使用虚拟机时，通常都伴随着虚拟机的联网问题。下面就帮大家梳理下QEMU虚拟机中几种网络的模拟和用法。 概述QEMU可以模拟多种网卡设备(例如PCI或者ISA设备)，同时可将这些虚拟网卡与host上的虚拟网络设备(或者虚拟的hub)连接起来。各种不同类型的网络设备既可以为虚拟机提供真实的网络访问(例如TAP、SLiRP user模式)，也可以是同一个host上面的不同虚拟机之间的访问(S">
-<meta name="twitter:image" content="http://www.owalle.com/2019/12/25/network-in-vm/network-nat1.png">
+<meta name="twitter:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat1.png">
 
 
 
@@ -463,12 +463,12 @@
 </ol>
 <p>对于虚拟机上网，以上四种QEMU网络相关的模拟，这里暂时只关心前两个(3、4实际还没有用到过:p,如有必要日后补充)，User模式以及TAP接口。下面详细介绍下如何使用这两种方式搭建不同类型的网络供虚拟机使用。</p>
 <h2 id="NAT方式"><a href="#NAT方式" class="headerlink" title="NAT方式"></a>NAT方式</h2><p>如图所示，NAT方式与家里上网的方式有点类似，虚拟机在一个子网内(192.168.122.255)，宿主机看做双网卡(虚拟了一个网卡),这也是QEMU默认就支持的。</p>
-<h3 id="QEMU默认的NAT-SLiRP"><a href="#QEMU默认的NAT-SLiRP" class="headerlink" title="QEMU默认的NAT (SLiRP)"></a>QEMU默认的NAT (SLiRP)</h3><p>首先，在我们没有为QEMU指定任何网络参数的情况下，我们很多时候依然可以使用网络，拓扑结构如下图所示：<br><img src="/2019/12/25/network-in-vm/network-nat1.png" alt=""><br>  这是因为通常在编译QEMU的时候，默认会编译模块<code>SLiRP</code>(除非显式的指定<code>--disable-slirp</code>)，这样QEMU在创建虚拟机的时候，即便用户不指定，也会有默认的参数<code>-net=user</code>。user mode的NAT网络优缺点很明显：</p>
+<h3 id="QEMU默认的NAT-SLiRP"><a href="#QEMU默认的NAT-SLiRP" class="headerlink" title="QEMU默认的NAT (SLiRP)"></a>QEMU默认的NAT (SLiRP)</h3><p>首先，在我们没有为QEMU指定任何网络参数的情况下，我们很多时候依然可以使用网络，拓扑结构如下图所示：<br><img src="/2019/12/26/network-in-vm/network-nat1.png" alt=""><br>  这是因为通常在编译QEMU的时候，默认会编译模块<code>SLiRP</code>(除非显式的指定<code>--disable-slirp</code>)，这样QEMU在创建虚拟机的时候，即便用户不指定，也会有默认的参数<code>-net=user</code>。user mode的NAT网络优缺点很明显：</p>
 <ol>
 <li>设置最为简单，不需要额外的配置就能满足虚拟机最基本的网络需求。</li>
 <li>缺点是这个NAT网络也仅仅是“最基本“的需求。slirp模块有许多网络协议不支持，最常见的ICMP不支持，所以，在虚拟机中是无法使用<code>ping</code>的；另外，performance大概就更不需要奢求太多。</li>
 </ol>
-<h3 id="通过TAP配置NAT"><a href="#通过TAP配置NAT" class="headerlink" title="通过TAP配置NAT"></a>通过TAP配置NAT</h3><p>拓扑结构跟user模式一模一样，见下图：<br><img src="/2019/12/25/network-in-vm/network-nat.png" alt=""></p>
+<h3 id="通过TAP配置NAT"><a href="#通过TAP配置NAT" class="headerlink" title="通过TAP配置NAT"></a>通过TAP配置NAT</h3><p>拓扑结构跟user模式一模一样，见下图：<br><img src="/2019/12/26/network-in-vm/network-nat.png" alt=""></p>
 <ol>
 <li><p>确保已安装libvirt-clients和libvirt-daemon</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Ubuntu:</span><br><span class="line">apt-get install libvirt-clients		//使用virsh</span><br><span class="line">apt-get install libvirt-daemon libvirt-daemon-system libvirt-daemon-system-systemd		//使用libvirtd</span><br><span class="line">apt-get install qemu-system-common	//使用qemu-bridge-helper</span><br><span class="line">apt-get install bridge-utils		//使用brctl</span><br></pre></td></tr></table></figure>
@@ -488,7 +488,7 @@
 </ol>
 <p>或者显示的给出default.xml<br>  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#virsh net-define default.xml</span><br><span class="line">#virsh net-start default</span><br><span class="line">#virsh net-list --all</span><br><span class="line"></span><br><span class="line"> Name                 State      Autostart     Persistent</span><br><span class="line">----------------------------------------------------------</span><br><span class="line"> default              active     yes           yes</span><br></pre></td></tr></table></figure></p>
 <p>  如果看到看到上面的结果，那么“虚拟桥”（virt bridge）就配置成功了。<br>注意STP：有些公司的IT部门可能不喜欢STP，所以，一定注意default.xml中的stp=‘off’。<br>或者使用在绑定网卡之前，使用命令行关掉stp<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># brctl stp virbr0 off</span><br><span class="line"># brctl show</span><br><span class="line">bridge name     bridge id               STP enabled     interfaces</span><br><span class="line">virbr0          8000.525400b98f9a       no              virbr0-nic</span><br></pre></td></tr></table></figure></p>
-<p>实际上虚拟机通过NAT联网的时候，各个网络设备之间的关系如图所示:<br><img src="/2019/12/25/network-in-vm/network-nat2.png" alt=""></p>
+<p>实际上虚拟机通过NAT联网的时候，各个网络设备之间的关系如图所示:<br><img src="/2019/12/26/network-in-vm/network-nat2.png" alt=""></p>
 <ol start="3">
 <li><p>QEMU创建虚拟机</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-x86_64 --enable-kvm -M q35 -m 4G -smp 1 -hda /root/ubuntu1904.qcow -vnc :7 \</span><br><span class="line">	-device virtio-net-pci,netdev=nic0,mac=00:16:3e:0c:12:78 \</span><br><span class="line">	-netdev tap,id=nic0,br=br0,helper=/usr/local/libexec/qemu-bridge-helper,vhost=on</span><br></pre></td></tr></table></figure>
@@ -497,7 +497,7 @@
 <p>顺利的话，虚拟机起来之后会DHCP得到一个IP例如<code>192.168.122.177</code>。</p>
 </li>
 </ol>
-<h2 id="Bridge方式"><a href="#Bridge方式" class="headerlink" title="Bridge方式"></a>Bridge方式</h2><p>如图所示，bridge方式是让虚拟机获得跟host一样网段的IP地址，就像是host的一个“网上邻居”一样。既然是使用TAP那么思路跟上面”通过TAP配置NAT”是一样的，配置”网桥“。但区别是这个网桥是需要跟网卡”绑定“的。下面用两种方法做网卡和网桥的”绑定“，但最后的效果是一样的。<br><img src="/2019/12/25/network-in-vm/network-bridge.png" alt=""></p>
+<h2 id="Bridge方式"><a href="#Bridge方式" class="headerlink" title="Bridge方式"></a>Bridge方式</h2><p>如图所示，bridge方式是让虚拟机获得跟host一样网段的IP地址，就像是host的一个“网上邻居”一样。既然是使用TAP那么思路跟上面”通过TAP配置NAT”是一样的，配置”网桥“。但区别是这个网桥是需要跟网卡”绑定“的。下面用两种方法做网卡和网桥的”绑定“，但最后的效果是一样的。<br><img src="/2019/12/26/network-in-vm/network-bridge.png" alt=""></p>
 <h3 id="通过TAP配置Bridge方法1"><a href="#通过TAP配置Bridge方法1" class="headerlink" title="通过TAP配置Bridge方法1"></a>通过TAP配置Bridge方法1</h3><p>首先使用’ip’工具来配置，注意这种方法是临时的，一旦重启系统，这些配置需要重新做。</p>
 <ol>
 <li><p>创建一个“网桥”(bridge),取名br0</p>
@@ -753,7 +753,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">40</span>
+                  <span class="site-state-item-count">41</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -848,7 +848,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">97.1k</span>
+    <span title="Site words total count">98.7k</span>
 
   <span class="post-meta-divider">|</span>
   

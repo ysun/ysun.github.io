@@ -1,5 +1,12 @@
-#<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>http://www.owalle.com/2021/12/09/qemu-pci/</loc>
+    
+    <lastmod>2021-12-11T06:59:46.539Z</lastmod>
+    
+  </url>
   
   <url>
     <loc>http://www.owalle.com/2018/12/24/qemu-debug/</loc>
@@ -142,13 +149,6 @@
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2019/12/26/network-in-vm/</loc>
-    
-    <lastmod>2021-09-27T09:54:43.330Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://www.owalle.com/2019/12/18/fast-restart/</loc>
     
     <lastmod>2021-09-27T09:54:43.330Z</lastmod>
@@ -156,14 +156,21 @@
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2020/03/03/chromeos-setup/</loc>
+    <loc>http://www.owalle.com/2019/12/26/network-in-vm/</loc>
+    
+    <lastmod>2021-09-27T09:54:43.330Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.owalle.com/2018/12/26/qemu-qom/</loc>
     
     <lastmod>2021-09-27T09:54:43.266Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2018/12/26/qemu-qom/</loc>
+    <loc>http://www.owalle.com/2020/03/03/chromeos-setup/</loc>
     
     <lastmod>2021-09-27T09:54:43.266Z</lastmod>
     
@@ -184,14 +191,14 @@
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2019/07/12/study-x86-using-qemu/</loc>
+    <loc>http://www.owalle.com/2020/04/07/crosvm-network/</loc>
     
     <lastmod>2021-09-27T09:54:43.210Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2020/04/07/crosvm-network/</loc>
+    <loc>http://www.owalle.com/2019/07/12/study-x86-using-qemu/</loc>
     
     <lastmod>2021-09-27T09:54:43.210Z</lastmod>
     
@@ -205,13 +212,6 @@
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2019/05/12/sdm-8-2-memory-ordering/</loc>
-    
-    <lastmod>2021-09-27T09:54:43.190Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://www.owalle.com/2019/07/16/study-x86-fence/</loc>
     
     <lastmod>2021-09-27T09:54:43.190Z</lastmod>
@@ -219,14 +219,21 @@
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2019/05/07/efi-shell-tftp/</loc>
+    <loc>http://www.owalle.com/2019/05/22/inline-assembly/</loc>
     
     <lastmod>2021-09-27T09:54:43.190Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2019/05/22/inline-assembly/</loc>
+    <loc>http://www.owalle.com/2019/05/12/sdm-8-2-memory-ordering/</loc>
+    
+    <lastmod>2021-09-27T09:54:43.190Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.owalle.com/2019/05/07/efi-shell-tftp/</loc>
     
     <lastmod>2021-09-27T09:54:43.190Z</lastmod>
     
@@ -254,14 +261,14 @@
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2018/12/10/kvm-memory/</loc>
+    <loc>http://www.owalle.com/2018/12/10/kvm-cpu/</loc>
     
     <lastmod>2021-09-27T09:54:43.062Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2018/12/10/kvm-cpu/</loc>
+    <loc>http://www.owalle.com/2018/12/10/kvm-memory/</loc>
     
     <lastmod>2021-09-27T09:54:43.062Z</lastmod>
     
