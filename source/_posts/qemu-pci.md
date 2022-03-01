@@ -10,7 +10,7 @@ PCI以及PCIE设备非常普遍，其驱动也是内核中非常重要的一部�
 为了简单，这里使用virtio-scsi-pci HBA (host bus adapter)作为例子，分别来探究PCI和PCIE两种不同类型的总线。
 ## PCI
 先来PCI3.0文档里的拓扑图
-![pci-topology.png](pci-topology.png)
+![pci-topology.png](qemu-pci/pci-topology.png)
 
 ### PCI Root Bus (PXB, PCI Expander Bridge)
 如上图所示，左上角的Processor/cache/DRAM 都经过一个Bridge，链接在了PCI 总线上。(忽略掉Aduio和Motion Video两个设备)，图的左下的Lan 和SCSI两个设备直接连在了PCI总线上。
@@ -87,7 +87,7 @@ pci.0 bus
 
 ## PCIE
 先来PCIE5.0文档里的拓扑结构图。
-![pcie-topology.png](pcie-topology.png)
+![pcie-topology.png](qemu-pci/pcie-topology.png)
 
 PCIE分两个小结来探讨。
 ### PCIE root complex / PCIE-PCI bridge / PCIE / PCI
@@ -160,7 +160,7 @@ pci.0 bus
 
 ### PCIE SWITCH
 对于switch，这里特别的拎出来说下。PCIE5 spec文档的图是这样的。
-![pcie-switch-topology.png](pcie-switch-topology.png)
+![pcie-switch-topology.png](qemu-pci/pcie-switch-topology.png)
 ```
 qemu-system-x86_64 \
     -m 2048 -smp 1 \
@@ -229,8 +229,7 @@ pci.0 bus
 
 ## 参考文档
 
-[NCB-PCI_Express_Base_5.0r1.0-2019-05-22.pdf](NCB-PCI_Express_Base_5.0r1.0-2019-05-22.pdf)
-[PCI_LB3.0-2-6-04.pdf](PCI_LB3.0-2-6-04.pdf)
+[NCB-PCI_Express_Base_5.0r1.0-2019-05-22.pdf](qemu-pci/NCB-PCI_Express_Base_5.0r1.0-2019-05-22.pdf)
+[PCI_LB3.0-2-6-04.pdf](qemu-pci/PCI_LB3.0-2-6-04.pdf)
 [qemu-6.1.0/docs/pcie.txt](https://fossies.org/linux/qemu/docs/pcie.txt)
 [A study of the Linux kernel PCI subsystem with QEMU](https://blogs.oracle.com/linux/post/a-study-of-the-linux-kernel-pci-subsystem-with-qemu)
-
