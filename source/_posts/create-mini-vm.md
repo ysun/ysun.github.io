@@ -159,3 +159,51 @@ umount /mnt/
 losetup -d /dev/loop12
 kpartx -dv /dev/loop12
 ```
+
+## 虚拟机镜像扩容
+虚拟机总是过一段时间就发现，容量不够了，如何扩容？
+* 扩大"硬盘"
+```
+qemu-img resize ubuntu22.04.img +5G
+```
+* 重建分区表
+```
+# sgdisk  -p rootfs.img
+
+Disk rootfs.img: 31457280 sectors, 15.0 GiB                   
+Sector size (logical): 512 bytes                              
+Disk identifier (GUID): CD8CB7A7-2DDE-4F82-9846-AF68BEC44245  
+Partition table holds up to 128 entries                       
+Main partition table begins at sector 2 and ends at sector 33 
+First usable sector is 34, last usable sector is 31457246     
+Partitions will be aligned on 2048-sector boundaries          
+Total free space is 2014 sectors (1007.0 KiB)                 
+                                                              
+Number  Start (sector)    End (sector)  Size       Code  Name 
+   1            2048         2099199   1024.0 MiB  EF00       
+   2         2099200         4196351   1024.0 MiB  8200       
+   3         4196352        31457246   13.0 GiB    8300       
+```
+上面的信息里找到这行“First usable sector is 34, last usable sector is 31457246”
+最后那个数字就是分区最大sector，记住这个数字。
+```
+sgdisk -d 3 -n 3:0:$newsize -t 3:8300 ubuntu22.04.img -p
+resize2fs ${devnode}p3 13G
+```
+`-d`: 删除之前第3个分区，如果按照上面步骤安装，3就是/根分区。
+`3:0:size`：重建第3个分区，分区从默认sector开始，最大sector结束。
+
+也可以参考下面这句：
+```
+newsize=`sgsgdisk  -p rootfs.img  |grep 'last usable sector is'|grep -o -E '[^ ]*$'`
+sgdisk -d 3 -n 3:0:$newsize -t 3:8300 ubuntu22.04.img -p
+```
+
+* 最后需要在虚拟机里面再执行一次:
+```
+(in vm) resize2fs /dev/sda3
+```
+
+## 自动创建
+很不厚道的把这个脚本放在最后面，这里有个全自动的脚本，当然步骤都是上面已经涉及到的，仅仅是把他们罗列在一块了，请参考。
+[create-vm.sh](https://raw.githubusercontent.com/ysun/scripts/master/create-vm.sh)

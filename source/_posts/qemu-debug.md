@@ -176,8 +176,146 @@ break test.c:120 if $eax == 0x0000ffaa
 
 ![](gdb_tui.png)
 
+
+## VSCode 远程debug
+gdb只有TUI，并且对于多线程程序支持并不是很理想，相比之下vscode更为现代一些。
+大概只需要两个配置文件，和一个启动虚拟机的脚本就好：
+`launch.json`:
+```
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "(gdb) linux",
+        "type": "cppdbg",
+        "request": "launch",
+        "preLaunchTask": "vm", //if you don't want to launch vm via vscode, common this line!
+        "program": "${workspaceRoot}/vmlinux",
+        "miDebuggerServerAddress": "localhost:1234",
+        "args": [],
+        "stopAtEntry": true,
+        "cwd": "${workspaceFolder}",
+        "environment": [],
+        "externalConsole": false,
+        "MIMode": "gdb",
+        "miDebuggerArgs": "-n",
+        "targetArchitecture": "x64",
+        "hardwareBreakpoints": { "require": true},
+        //"logging": { "engineLogging": true },
+        "setupCommands": [
+          {
+            "description": "Hardware breakpoint at start",
+            "text": "-break-insert -h -f start_kernel", // specify your entry point label, mine wa
+s 'start_kernel'
+            "ignoreFailures": true
+          },
+          {
+            "text": "set arch i386:x86-64:intel",
+            "ignoreFailures": false
+          },
+          {
+            "text": "dir .",
+            "ignoreFailures": false
+          },
+          {
+            "text": "add-auto-load-safe-path ./",
+            "ignoreFailures": false
+          },
+          {
+            "text": "-enable-pretty-printing",
+            "ignoreFailures": true
+          }
+        ]
+      }                                                                                           
+   ]
+}
+
+```
+
+`tasks.josn`:
+```
+{                                                                                                 
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "vm",
+      "type": "shell",
+      "command": "`pwd`/.vscode/start_vm_qemu_mini_iommu.sh",
+      "presentation": {
+        "echo": true,
+        "clear": true,
+        "group": "vm"
+      },
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": ".",
+          }
+        }
+      ]
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "make",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": false,
+        "group": "build"
+      }
+    }
+  ]
+}
+
+```
+
+`start_vm_qemu_mini_iommu.sh`:
+
+```
+#!/bin/bash
+
+qemu-system-x86_64 \
+        -m 2048 -smp 1 \
+        -enable-kvm \
+        -cpu max \
+        -vga none -nodefaults -nographic \
+        -serial mon:stdio \
+        -hda /home/works/kvm/ubuntu20.10_mini.img \
+        -append "root=/dev/sda3 nokaslr console=ttyS0"  \
+        -kernel /home/works/linux-stable/arch/x86/boot/bzImage \
+        -net nic -net user,hostfwd=tcp::5028-:22 \
+        -s -S \
+        -machine q35,kernel-irqchip=split \
+        -device intel-iommu,intremap=on
+```
+
+快速下载链接:
+[launch.json](launch.json.sample)
+[tasks.json](tasks.json.sample)
+[start_vm_qemu_mini_iommu.sh](start_vm_qemu_mini_iommu.sh)
+[c_cpp_properties.json](c_cpp_properties.json.sample)
+[settings.json](settings.json.sample)
+
+效果如图：
+![vscode.png](vscode.png)
+![vscode2.png](vscode2.png)
+
 Reference: 
 https://www.starlab.io/blog/using-gdb-to-debug-the-linux-kernel
 https://www.kernel.org/doc/html/latest/dev-tools/gdb-kernel-debugging.html
-
-
