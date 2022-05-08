@@ -319,3 +319,5 @@ qemu-system-x86_64 \
 Reference: 
 https://www.starlab.io/blog/using-gdb-to-debug-the-linux-kernel
 https://www.kernel.org/doc/html/latest/dev-tools/gdb-kernel-debugging.html
+[使用 VSCode + qemu 搭建 Linux 内核调试环境](https://blog.csdn.net/eydwyz/article/details/114019532)
+
