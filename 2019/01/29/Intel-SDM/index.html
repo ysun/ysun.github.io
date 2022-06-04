@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+<meta name="google-site-verification" content="MrnK1va2f2DY7TM-4onuV7g_G6yZyI3WkYbaykR0Ln0">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-minimal.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="23.1 概述本章介绍虚拟机体系结构的基础知识和虚拟机扩展的概述(VMX),支持多个软件环境的处理器硬件虚拟化。关于VMX指令的信息参考英特尔®64和IA-32架构软件开发人员手册中的第2B卷。其他关于VMX和系统编程参考SDM 第3B卷 23.2虚拟机器结构虚拟机扩展为IA-32处理器上的虚拟机定义了处理器级支持。两个重要支持的软件类别：  虚拟机监视器(VMM)VMM充当主机，可以完全控制处理">
+<meta name="keywords" content="KVM Linux Kernel Qemu">
+<meta property="og:type" content="article">
+<meta property="og:title" content="英特尔®64和IA-32架构软件开发人员手册(Intel SDM)">
+<meta property="og:url" content="http://www.owalle.com/2019/01/29/Intel-SDM/index.html">
+<meta property="og:site_name" content="Yi颗烂樱桃">
+<meta property="og:description" content="23.1 概述本章介绍虚拟机体系结构的基础知识和虚拟机扩展的概述(VMX),支持多个软件环境的处理器硬件虚拟化。关于VMX指令的信息参考英特尔®64和IA-32架构软件开发人员手册中的第2B卷。其他关于VMX和系统编程参考SDM 第3B卷 23.2虚拟机器结构虚拟机扩展为IA-32处理器上的虚拟机定义了处理器级支持。两个重要支持的软件类别：  虚拟机监视器(VMM)VMM充当主机，可以完全控制处理">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://www.owalle.com/2019/01/29/Intel-SDM/figure23-1.png">
+<meta property="og:image" content="http://www.owalle.com/2019/01/29/Intel-SDM/figure24-1.png">
+<meta property="og:updated_time" content="2021-09-27T09:54:43.226Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="英特尔®64和IA-32架构软件开发人员手册(Intel SDM)">
+<meta name="twitter:description" content="23.1 概述本章介绍虚拟机体系结构的基础知识和虚拟机扩展的概述(VMX),支持多个软件环境的处理器硬件虚拟化。关于VMX指令的信息参考英特尔®64和IA-32架构软件开发人员手册中的第2B卷。其他关于VMX和系统编程参考SDM 第3B卷 23.2虚拟机器结构虚拟机扩展为IA-32处理器上的虚拟机定义了处理器级支持。两个重要支持的软件类别：  虚拟机监视器(VMM)VMM充当主机，可以完全控制处理">
+<meta name="twitter:image" content="http://www.owalle.com/2019/01/29/Intel-SDM/figure23-1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.owalle.com/2019/01/29/Intel-SDM/">
+
+
+
+
+
+  <title>英特尔®64和IA-32架构软件开发人员手册(Intel SDM) | Yi颗烂樱桃</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a rel="external nofollow" href="/" class="brand">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Yi颗烂樱桃</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">虚拟化中文</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a rel="external nofollow" href="/">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a rel="external nofollow" href="/archives/">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a rel="external nofollow" href="/categories/">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a rel="external nofollow" href="/tags/">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a rel="external nofollow" href="/about/">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-sitemap">
+          <a rel="external nofollow" href="/sitemap.xml">
+            
+              <i class="menu-item-icon fa fa-fw fa-sitemap"></i> <br>
+            
+            站点地图
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a rel="external nofollow" href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2019/01/29/Intel-SDM/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">英特尔®64和IA-32架构软件开发人员手册(Intel SDM)</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-29T14:05:12+08:00">
+                2019-01-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/X86/" itemprop="url" rel="index">
+                    <span itemprop="name">X86</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/01/29/Intel-SDM/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/01/29/Intel-SDM/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  3.2k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  11
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="23-1-概述"><a href="#23-1-概述" class="headerlink" title="23.1 概述"></a>23.1 概述</h3><p>本章介绍虚拟机体系结构的基础知识和虚拟机扩展的概述(VMX),支持多个软件环境的处理器硬件虚拟化。<br>关于VMX指令的信息参考英特尔®64和IA-32架构软件开发人员手册中的第2B卷。其他关于VMX和系统编程参考SDM 第3B卷</p>
+<h3 id="23-2虚拟机器结构"><a href="#23-2虚拟机器结构" class="headerlink" title="23.2虚拟机器结构"></a>23.2虚拟机器结构</h3><p>虚拟机扩展为IA-32处理器上的虚拟机定义了处理器级支持。两个重要支持的软件类别：</p>
+<ul>
+<li><p>虚拟机监视器(VMM)<br>VMM充当主机，可以完全控制处理器和其他处理器平台硬件。 VMM使用虚拟的抽象来呈现客户软件(参见下一段)<br>处理器并允许它直接在逻辑处理器上执行。 VMM能够保留选择性控制处理器资源，物理内存，中断管理和I / O。</p>
+</li>
+<li><p>Guest- 每个虚拟机(VM)<br>是一个支持堆栈组成的客户软件环境,操作系统(OS)和应用程序软件。每个都独立于其他虚拟机运行在物理的处理器上，内存，存储器，图形和I / O的相同接口上使用平台。软件堆栈就像在没有VMM的平台上运行一样。软件执行中虚拟机必须以降低的权限运行，以便VMM可以保留对平台资源的控制。</p>
+</li>
+</ul>
+<h3 id="23-3-VMX操作简介"><a href="#23-3-VMX操作简介" class="headerlink" title="23.3 VMX操作简介"></a>23.3 VMX操作简介</h3><p>虚拟化的处理器支持由称为VMX操作的处理器操作形式提供。有两种VMX操作：VMX root和VMX non-root操作。通常，VMM运行在VMX root模式下，同时将guest 软件运行在non-root模式下。<br>VMX root操作和VMX non-root操作的转换称为VMX转换。有两种VMX转换:</p>
+<ul>
+<li>从VMX root过渡到VMX non-root模式称为VM entry； </li>
+<li>从VMX not-root操作到VMX root的转换成为VM exit。<br>VMX root操作中的处理器行为与VMX操作之外的处理器行为非常相似。主要区别是一组新指令(VMX指令)（见第23.8节）。<br>VMX non-root操作中的处理器行为受到限制和修改，以便于虚拟化。那些指令（包括新的VMCALL指令）和事件会导致VM EXIT的发生，而不仅仅是他们原来的操作。由于这些VM Exit取代了普通行为，因此VMX non-root操作中的软件功能是有限制的。正是这种限制允许VMM保持对处理器资源的控制。<br>并不存在用于通知guest“是否处于VMX non-root”的寄存器。这一事实可以防止guest软件察觉它正在虚拟机中运行。<br>因为VMX操作对(CPL)Level 0做了限制，guest的软件可以在最初设计的权限级别运行。这样就可以简化VMM的开发。</li>
+</ul>
+<h3 id="23-4-VMM软件的生命周期"><a href="#23-4-VMM软件的生命周期" class="headerlink" title="23.4 VMM软件的生命周期"></a>23.4 VMM软件的生命周期</h3><p>图23-1说明了VMM及其客户软件的生命周期以及它们之间的交互。以下项目总结了生命周期：<br><img src="/2019/01/29/Intel-SDM/figure23-1.png" alt=""></p>
+<ul>
+<li>软件通过执行VMXON指令进入VMX操作</li>
+<li>使用VM entry，VMM可以执行guest，一次一个。</li>
+<li>VMM通过使用VMLAUNCH和VMRESUME指令干预虚拟机。通过VM EXIT，VMM重新获得控制权。</li>
+<li>VM移交控制权到VMM指定的入口点。VMM可以采取适当的措施使得VM exit发生，然后可以使用VM entry返回到虚拟机。</li>
+<li>最终，VMM可以通过执行VMXOFF自行决定关闭并离开VMX操作。</li>
+</ul>
+<h3 id="23-5虚拟机控制结构"><a href="#23-5虚拟机控制结构" class="headerlink" title="23.5虚拟机控制结构"></a>23.5虚拟机控制结构</h3><p>VMX non-root的操作以及VMX转换由名为“虚拟机控制”(VMCS)的数据结构控制。<br>通过VMCS指针(每个逻辑CPU一个)来管理对VMCS的访问。VMCS指针的值是64位地址。读取和写入VMCS指针使用指令VMPTRST和VMPTRLD。并且VMM使用VMREAD，VMWRITE和VMCLEAR指令来配置VMCS。<br>VMM可以为其支持的每个虚拟机使用不同的VMCS。对于具有多个的虚拟机在逻辑处理器（虚拟处理器）中，VMM可以为每个虚拟处理器使用不同的VMCS。</p>
+<h3 id="23-6-发现对VMX的支持"><a href="#23-6-发现对VMX的支持" class="headerlink" title="23.6 发现对VMX的支持"></a>23.6 发现对VMX的支持</h3><p>在系统软件进入VMX操作之前，它必须检查处理器中是否存在VMX支持。系统软件可以使用CPUID确定处理器是否支持VMX操作。如果<code>CPUID.1：ECX.VMX [bit 5] = 1</code>那么当前平台支持VMX操作。请参见第3章“指令集参考，A-L”英特尔®64和IA-32架构软件开发人员手册，第2A卷。<br>VMX体系结构旨在实现可扩展性，以便VMX操作中的未来处理器可以支持VMX体系结构的第一代实现中不存在的其他功能。使用一组VMX功能MSR向软件报告可扩展VMX功能的可用性（参见附录A，“VMX功能”)。</p>
+<h3 id="23-7启用和进入VMX操作"><a href="#23-7启用和进入VMX操作" class="headerlink" title="23.7启用和进入VMX操作"></a>23.7启用和进入VMX操作</h3><p>在系统软件进入VMX操作之前，它通过设置<code>CR4.VMXE [bit 13] = 1</code> VMX操作来启用VMX。然后通过执行VMXON指令进入。当’CR4.VMXE = 0’时，如果执行指令VMXON会导致无效操作码异常（#UD)；一旦执行过VMX操作，就无法清除CR4.VMXE（参见第23.8节）。系统软件通过执行VMXOFF指令离开VMX操作。执行VMXOFF后，可以在VMX操作之外清除CR4.VMXE。<br>VMXON也由IA32_FEATURE_CONTROL MSR（MSR地址3AH）控制。该MSR清零重置逻辑处理器时MSR的相关位是：</p>
+<ul>
+<li>位0是锁定位。如果该位清零，则VMXON会导致general-protection异常。如果设置了锁定位，WRMSR到此MSR会导致general-protection异常;在上电复位之前，不能修改MSR。系统BIOS可以使用此位为BIOS提供设置选项以禁用对VMX的支持。在平台中启用VMX支持，BIOS必须设置位1或者位2或两者（见下文）以及锁定位。</li>
+<li>位1在SMX操作中启用VMXON。如果该位清零，则在SMX操作中执行VMXON会导致general-protection expection。尝试在不支持两个VMX的逻辑处理器上设置此位操作（参见第23.6节）和SMX操作（参见英特尔®中的第6章“安全模式扩展参考”第2D卷）导致general-proction异常。</li>
+<li>位2在SMX操作之外启用VMXON。如果该位清零，则在SMX外部执行VMXON操作会导致general-proction异常。尝试在没有的逻辑处理器上设置此位支持VMX操作（参见第23.6节）导致general-proction异常。</li>
+</ul>
+<p>在执行VMXON之前，软件应该分配一个逻辑上自然对齐的4 KB内存区域,处理器可用于支持VMX操作.1该区域称为VMXON region。VMXON zone的地址区域（VMXON指针）在VMXON的操作数中提供。第24节</p>
+<h3 id="23-8-VMX操作限制"><a href="#23-8-VMX操作限制" class="headerlink" title="23.8 VMX操作限制"></a>23.8 VMX操作限制</h3><p>（作者：限制还有很有一些的，暂且不一一列举了吧，这里挑1-2点）</p>
+<ul>
+<li>当逻辑处理器在VMX root操作时，中断信号是被block的。但当在VMX non-root模式的时候，不会被block，相反中断信号会触发VM exit。</li>
+</ul>
+<h3 id="24-1-虚拟机控制结构-VMCS"><a href="#24-1-虚拟机控制结构-VMCS" class="headerlink" title="24.1 虚拟机控制结构(VMCS)"></a>24.1 虚拟机控制结构(VMCS)</h3><p>逻辑处理器在VMX操作中使用”虚拟机控制结构”（VMCS）。这些管理VMX进出非root与root操作（VM entry和VM exit）以及处理器在VMX non-root时的行为。这个结构由新指令VMCLEAR，VMPTRLD，VMREAD, VMWRITE操纵。<br>VMM可以为其支持的每个虚拟机使用不同的VMCS。对于具有多个的虚拟机在逻辑处理器（虚拟处理器）中，VMM可以为每个虚拟处理器使用不同的VMCS。<br>逻辑处理器将存储器中的区域与每个VMCS相关联。该区域称为VMCS region。软件使用区域的64位物理地址（VMCS指针）引用特定VMCS。 VMCS指针必须在4 KB边界上对齐（位11：0必须为零）。这些指针不能设置超出理器的物理地址宽度。<br>逻辑处理器可以维护多个活动的VMCS。处理器通过维护内存中活跃VMCS的状态来优化VMX操作。在任何给定时间，最多一个活动VMCS的数量是当前VMCS。 （本文档经常使用术语“VMCS”来指代当前VMCS。）VMLAUNCH，VMREAD，VMRESUME和VMWRITE指令仅对当前操作VMCS。<br>以下各项描述了逻辑处理器如何确定哪些VMCS处于活动状态以及哪些VMCS处于当前状态：</p>
+<ul>
+<li>VMPTRLD指令的内存操作数是VMCS的地址。执行完指令后VMCS在逻辑处理器上既是活动的和也是当前的。任何其他活动的VMCS都不是当前VMCS。</li>
+<li>VMCS中的VMCS链接指针字段（参见第24.4.2节）本身就是VMCS的地址。如果VM entry正确执行了，并且“VMCS shadow”VM执行控制（VMCS）的1设置成功，那么VMCS链接指针字段引用的字符在逻辑处理器上变为活动状态。当前VMCS不会改变。</li>
+<li>VMCLEAR指令的内存操作数也是VMCS的地址。执行完毕后指令，VMCS在逻辑处理器上既不是活动的也不是当前的。如果VMCS已经开启逻辑处理器，逻辑处理器不再具有当前的VMCS。</li>
+</ul>
+<p>VMPTRST指令将逻辑处理器的当前VMCS的地址存储到指定的存储器位置（如果没有当前的VMCS，则存储值FFFFFFFF_FFFFFFFFH）。<br>VMCS的启动状态确定哪个VM-entry指令应该与该VMCS一起使用：VMLAUNCH指令需要VMCS，其启动状态为“清除”; VMRESUME指令需要VMCS，其发射状态是“发射”。逻辑处理器在相应的VMCS中维护VMCS的启动状态区域。以下各项描述了逻辑处理器如何管理VMCS的启动状态：</p>
+<ul>
+<li>如果当前VMCS的启动状态为“clear”，则VMLAUNCH指令的成功执行会发生变化发射状态为“launched”。</li>
+<li>VMCLEAR指令的内存操作数是VMCS的地址。执行完指令后VMCS的启动状态是“clear”。</li>
+<li>没有其他方法可以修改VMCS的启动状态（无法使用VMWRITE进行修改）也没有直接的方法来发现它（它无法使用VMREAD读取）</li>
+</ul>
+<p>图24-1说明了VMCS的不同状态。它使用“X”表示VMCS，使用“Y”表示任何其他VMCS。因此：“VMPTRLD X”总是使得VMCS变为当前和活动状态; “VMPTRLD Y”让X不再是当前状态（因为它使Y变为当前状态）;如果X是当前的并且其启动状态时，则VMLAUNCH的会将X变为“launched”; VMCLEAR X总是使X处于非活动状态而不是当前状态，并使其启动状态“clear”。<br>该图未示出相对于这些参数不修改VMCS状态的操作（例如，当X已经是当前时执行VMPTRLD X）。请注意，VMCLEAR X使X“处于非活动状态，非当前状态，并且clear。即使X的当前状态未定义（例如，即使X尚未初始化）。见24.11.3节。<br>由于影子VMCS（请参阅第24.10节）不能用于VM条目，因此影子VMCS的启动状态为没有意义。图24-1未说明可以使影子VMCS处于活动状态的所有方式。<br><img src="/2019/01/29/Intel-SDM/figure24-1.png" alt=""></p>
+<h3 id="24-2-VMCS-Region的格式"><a href="#24-2-VMCS-Region的格式" class="headerlink" title="24.2 VMCS Region的格式"></a>24.2 VMCS Region的格式</h3><p>VMCS的格式包含了4K，VMCS的格式如表24-1</p>
+<table>
+<thead>
+<tr>
+<th>byte offside</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0~30位 VMCS保留，识别符<br>31位: shadow-VMCS标识位</td>
+</tr>
+<tr>
+<td>4</td>
+<td>VMCS终止位</td>
+</tr>
+<tr>
+<td>8</td>
+<td>VMCS 数据</td>
+</tr>
+</tbody>
+</table>
+<p>VMCS区域的前4个字节包含位30：0的VMCS修订标识符。维护的处理器不同格式的VMCS数据（见下文）使用不同的VMCS修订标识符。位31：shadow-VMCS指标（参见第24.10节）</p>
+<p>在将该区域用于VMCS之前，软件应将VMCS标识符写入VMCS区域。该VMCS标识符永远不会被处理器写入;如果VMPTRLD的操作数引用VMCS区域的标识符与处理器正在使用的VMCS不同，则VMPTRLD会失败。 （如果是影子VMCS，并且处理器不支持shadow-VMCS，那么VMPTRLD也会失败）软件可以通过读取VMX相关MSR IA32_VMX_BASIC来检查处理器VMCS标识符。<br>软件应根据VMCS是否为普通还是shadow-vmcs来设置或者清楚shadow-VMCS标识符.不支持“VMCS阴影”VM执行控件的1设置。软件可以通过读取VMX功能MSR IA32_VMX_PROCBASED_CTLS2来检查是否支持。<br>VMCS区域的接下来的4个字节用于VMX中止指示符。这些位的内容没有控制处理器。当VMX中止发生时，逻辑处理器将非零值写入这些位。软件也可以写入此字段。<br>VMCS区域的其余部分用于VMCS数据（控制VMX non-root操作以及VMX转换）。这些数据的格式是特定的。写回可缓存内存中的VMCS区域和相关结构（在第24.11.4节中列举）。未来实现可以允许或要求不同的存储器类型。软件应参考VMX功能MSR<br>IA32_VMX_BASIC（见附录A.1）</p>
+<p>未完待续…… </p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="Yi颗烂樱桃 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.png" alt="Yi颗烂樱桃 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者：</strong>
+    Yi颗烂樱桃
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://www.owalle.com/2019/01/29/Intel-SDM/" title="英特尔®64和IA-32架构软件开发人员手册(Intel SDM)">http://www.owalle.com/2019/01/29/Intel-SDM/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>
+    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="external nofollow" target="_blank">CC BY-NC-ND 3.0</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/12/26/qemu-qom/" rel="next" title="利用QOM(Qemu Object Model)创建虚拟设备">
+                <i class="fa fa-chevron-left"></i> 利用QOM(Qemu Object Model)创建虚拟设备
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/02/20/kvm-src-analysis/" rel="prev" title="KVM(Kernel-based Virtual Machine)源码分析">
+                KVM(Kernel-based Virtual Machine)源码分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
+    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
+    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a class="bds_count" data-cmd="count"></a>
+  </div>
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "2",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "share": {
+        "bdSize": "16",
+        "bdStyle": "0"
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      }
+    }
+  </script>
+
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="Yi颗烂樱桃">
+            
+              <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">46</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+            <div class="cc-license motion-element" itemprop="license">
+              <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" class="cc-opacity" target="_blank">
+                <img src="/images/cc-by-nc-nd.svg" alt="Creative Commons">
+              </a>
+            </div>
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#23-1-概述"><span class="nav-number">1.</span> <span class="nav-text">23.1 概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-2虚拟机器结构"><span class="nav-number">2.</span> <span class="nav-text">23.2虚拟机器结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-3-VMX操作简介"><span class="nav-number">3.</span> <span class="nav-text">23.3 VMX操作简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-4-VMM软件的生命周期"><span class="nav-number">4.</span> <span class="nav-text">23.4 VMM软件的生命周期</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-5虚拟机控制结构"><span class="nav-number">5.</span> <span class="nav-text">23.5虚拟机控制结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-6-发现对VMX的支持"><span class="nav-number">6.</span> <span class="nav-text">23.6 发现对VMX的支持</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-7启用和进入VMX操作"><span class="nav-number">7.</span> <span class="nav-text">23.7启用和进入VMX操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#23-8-VMX操作限制"><span class="nav-number">8.</span> <span class="nav-text">23.8 VMX操作限制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#24-1-虚拟机控制结构-VMCS"><span class="nav-number">9.</span> <span class="nav-text">24.1 虚拟机控制结构(VMCS)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#24-2-VMCS-Region的格式"><span class="nav-number">10.</span> <span class="nav-text">24.2 VMCS Region的格式</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yi颗烂樱桃</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">106.6k</span>
+
+  <span class="post-meta-divider">|</span>
+  
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  <span class="site-uv">
+    <i class="fa fa-user"></i>
+    <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    
+  </span>
+
+
+
+  <span class="site-pv">
+    <i class="fa fa-eye"></i>
+    <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    
+  </span>
+
+</div>
+
+<div align="center">
+	<img style="display:inline-block;" src="images/icp.png"> 
+	<a href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备13030765号-8</a>
+
+	<img style="display:inline-block;text-decoration:none;height:20px;line-height:20px;" src="images/beian.png"> 
+	<a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202004052">沪公网安备 31011202004052号</a>
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+  
+  <script type="text/javascript" color="129,216,208" opacity="0.5" zindex="-2" count="50" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three.min.js"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three-waves.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kity.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kityminder.core.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/mindmap.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: true,
+        notify: false,
+        appId: 'sIDOr6ptvMjLBmxig1vHlYsG-gzGzoHsz',
+        appKey: 'c1R9jtqasnufksgJUCE3eWo5',
+        placeholder: '亲，你不想说点什么吗？？ :D',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+</body>
+</html>

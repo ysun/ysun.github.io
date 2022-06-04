@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+<meta name="google-site-verification" content="MrnK1va2f2DY7TM-4onuV7g_G6yZyI3WkYbaykR0Ln0">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-minimal.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="x86,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="玩了这么久的Intel CPU，今天一个问题忽然闪现在我脑海：“X86_64到底有多少个寄存器”？ 带着知识的渴求，我们来掰一下手指头。 通用寄存器 (general register)通用寄存器(general-purpose registers, GPRs) 可能是读书是最早接触的寄存器。每一个用户空间的程序，或者内核程序都用到的，基本的寄存器。因为X86-64是从32位的X86，甚至16位、">
+<meta name="keywords" content="x86">
+<meta property="og:type" content="article">
+<meta property="og:title" content="X86_64 机器上一共有多少个寄存器">
+<meta property="og:url" content="http://www.owalle.com/2021/12/26/all-registers-x86-64/index.html">
+<meta property="og:site_name" content="Yi颗烂樱桃">
+<meta property="og:description" content="玩了这么久的Intel CPU，今天一个问题忽然闪现在我脑海：“X86_64到底有多少个寄存器”？ 带着知识的渴求，我们来掰一下手指头。 通用寄存器 (general register)通用寄存器(general-purpose registers, GPRs) 可能是读书是最早接触的寄存器。每一个用户空间的程序，或者内核程序都用到的，基本的寄存器。因为X86-64是从32位的X86，甚至16位、">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2021-12-27T07:36:04.496Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="X86_64 机器上一共有多少个寄存器">
+<meta name="twitter:description" content="玩了这么久的Intel CPU，今天一个问题忽然闪现在我脑海：“X86_64到底有多少个寄存器”？ 带着知识的渴求，我们来掰一下手指头。 通用寄存器 (general register)通用寄存器(general-purpose registers, GPRs) 可能是读书是最早接触的寄存器。每一个用户空间的程序，或者内核程序都用到的，基本的寄存器。因为X86-64是从32位的X86，甚至16位、">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.owalle.com/2021/12/26/all-registers-x86-64/">
+
+
+
+
+
+  <title>X86_64 机器上一共有多少个寄存器 | Yi颗烂樱桃</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a rel="external nofollow" href="/" class="brand">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Yi颗烂樱桃</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">虚拟化中文</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a rel="external nofollow" href="/">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a rel="external nofollow" href="/archives/">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a rel="external nofollow" href="/categories/">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a rel="external nofollow" href="/tags/">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a rel="external nofollow" href="/about/">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-sitemap">
+          <a rel="external nofollow" href="/sitemap.xml">
+            
+              <i class="menu-item-icon fa fa-fw fa-sitemap"></i> <br>
+            
+            站点地图
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a rel="external nofollow" href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2021/12/26/all-registers-x86-64/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">X86_64 机器上一共有多少个寄存器</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-12-26T23:01:32+08:00">
+                2021-12-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/X86/" itemprop="url" rel="index">
+                    <span itemprop="name">X86</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2021/12/26/all-registers-x86-64/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2021/12/26/all-registers-x86-64/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  3k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  12
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>玩了这么久的Intel CPU，今天一个问题忽然闪现在我脑海：“X86_64到底有多少个寄存器”？ 带着知识的渴求，我们来掰一下手指头。</p>
+<h2 id="通用寄存器-general-register"><a href="#通用寄存器-general-register" class="headerlink" title="通用寄存器 (general register)"></a>通用寄存器 (general register)</h2><p>通用寄存器(general-purpose registers, GPRs) 可能是读书是最早接触的寄存器。每一个用户空间的程序，或者内核程序都用到的，基本的寄存器。<br>因为X86-64是从32位的X86，甚至16位、8位演变而来的，为了软件可以向前兼容，所以，这些寄存器都有不同的版本。话不多说，看下表：</p>
+<table>
+<thead>
+<tr>
+<th>64-bit</th>
+<th>32-bit</th>
+<th>16-bit</th>
+<th>8-bit (low)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RAX</td>
+<td>EAX</td>
+<td>AX</td>
+<td>AL         </td>
+</tr>
+<tr>
+<td>RBX</td>
+<td>EBX</td>
+<td>BX</td>
+<td>BL         </td>
+</tr>
+<tr>
+<td>RCX</td>
+<td>ECX</td>
+<td>CX</td>
+<td>CL         </td>
+</tr>
+<tr>
+<td>RDX</td>
+<td>EDX</td>
+<td>DX</td>
+<td>DL         </td>
+</tr>
+<tr>
+<td>RSI</td>
+<td>ESI</td>
+<td>SI</td>
+<td>SIL        </td>
+</tr>
+<tr>
+<td>RDI</td>
+<td>EDI</td>
+<td>DI</td>
+<td>DIL        </td>
+</tr>
+<tr>
+<td>RBP</td>
+<td>EBP</td>
+<td>BP</td>
+<td>BPL        </td>
+</tr>
+<tr>
+<td>RSP</td>
+<td>ESP</td>
+<td>SP</td>
+<td>SPL        </td>
+</tr>
+<tr>
+<td>R8</td>
+<td>R8D</td>
+<td>R8W</td>
+<td>R8B        </td>
+</tr>
+<tr>
+<td>R9</td>
+<td>R9D</td>
+<td>R9W</td>
+<td>R9B        </td>
+</tr>
+<tr>
+<td>R10</td>
+<td>R10D</td>
+<td>R10W</td>
+<td>R10B       </td>
+</tr>
+<tr>
+<td>R11</td>
+<td>R11D</td>
+<td>R11W</td>
+<td>R11B       </td>
+</tr>
+<tr>
+<td>R12</td>
+<td>R12D</td>
+<td>R12W</td>
+<td>R12B       </td>
+</tr>
+<tr>
+<td>R13</td>
+<td>R13D</td>
+<td>R13W</td>
+<td>R13B       </td>
+</tr>
+<tr>
+<td>R14</td>
+<td>R14D</td>
+<td>R14W</td>
+<td>R14B       </td>
+</tr>
+<tr>
+<td>R15</td>
+<td>R15D</td>
+<td>R15W</td>
+<td>R15B       </td>
+</tr>
+</tbody>
+</table>
+<p>其中，16位的寄存器中的AX, BX, CX, DX 可以高低位分别访问，所以又增加4个</p>
+<table>
+<thead>
+<tr>
+<th>16-bit</th>
+<th>8-bit (high)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AX</td>
+<td>AH         </td>
+</tr>
+<tr>
+<td>BX</td>
+<td>BH         </td>
+</tr>
+<tr>
+<td>CX</td>
+<td>CH         </td>
+</tr>
+<tr>
+<td>DX</td>
+<td>DH         </td>
+</tr>
+</tbody>
+</table>
+<p><strong>通用寄存器总共: 68</strong>.</p>
+<p><strong>到目前为止一共: 68</strong>.</p>
+<h2 id="特殊寄存器-Special-registers"><a href="#特殊寄存器-Special-registers" class="headerlink" title="特殊寄存器 (Special registers)"></a>特殊寄存器 (Special registers)</h2><ul>
+<li><p>指针寄存器(<em>instruction pointer</em>, <code>RIP</code>.)<br>X86-64的RIP可以切分成32位的EIP 和 16位IP，但他们不可以同时使用，所以这里不重复计数。</p>
+</li>
+<li><p>状态寄存器(<em>status register</em>, <code>RFLAGS</code>)<br>就像上面的RIP一样，RFLAGS也有32位和16位版本，分别是EFLAGS 和 FLAGS，但不同的是PUSHF 和 PUSHFQ可以在<code>长模式</code>下同时使用，以及LAHF 和 SAHF可以同时在一个CPU上使用，这里计数。</p>
+</li>
+</ul>
+<p><strong>本部分寄存器总共: 4</strong>.</p>
+<p><strong>到目前为止一共: 72</strong>.</p>
+<h2 id="段寄存器-Segment-registers"><a href="#段寄存器-Segment-registers" class="headerlink" title="段寄存器 (Segment registers)"></a>段寄存器 (Segment registers)</h2><p>X86-64一共有6个段寄存器: <code>CS</code>, <code>SS</code>, <code>DS</code>, <code>ES</code>, <code>FS</code>, and <code>GS</code>。</p>
+<ul>
+<li><p>除了<code>长模式</code>以外的所有CPU运行模式里，都有一个段<code>选择器 selector</code>, 表示当前使用<a href="https://en.wikipedia.org/wiki/Global_Descriptor_Table" target="_blank" rel="noopener">GDT</a> 还是 <a href="https://en.wikipedia.org/wiki/Global_Descriptor_Table#Local_Descriptor_Table" target="_blank" rel="noopener">LDT</a>。 同时，还需要一个<code>段描述符descriptor</code>, 提供了段的基址和范围。</p>
+</li>
+<li><p><code>长模式</code>中，除了 FS 和 GS 之外的所有内容都被视为在一个具有零基地址和64位范围的平面地址空间中。 FS 和 GS 作为特殊情况保留，但不再使用段描述符表，取而代之的是，访问保存在 FSBASE 和 GSBASE 中的MSR寄存器中的基地址。</p>
+</li>
+</ul>
+<p><strong>本部分寄存器总共: 6</strong>.</p>
+<p><strong>到目前为止一共: 78</strong>.</p>
+<h2 id="单指令多数据SIMD-和浮点运算指令FP"><a href="#单指令多数据SIMD-和浮点运算指令FP" class="headerlink" title="单指令多数据SIMD 和浮点运算指令FP"></a>单指令多数据SIMD 和浮点运算指令FP</h2><p>X86家族经历了几代 SIMD 和浮点指令，每一代都引入、扩展或重新定义各种各样的指令：</p>
+<ul>
+<li>x87</li>
+<li>MMX</li>
+<li>SSE (SSE2, SSE3, SSE4, SSE4, …)</li>
+<li>AVX (AVX2, AVX512)</li>
+<li>AMX</li>
+</ul>
+<h3 id="x87"><a href="#x87" class="headerlink" title="x87"></a>x87</h3><p>X87最初是一个独立的协处理器，有自己的指令集和寄存器，从80486开始，x87指令就经常被植入x86内核本身。<br>由于其协处理器的历史，x87定义了正常的寄存器（类似于GPR）和控制FPU状态所需的各种特殊寄存器。</p>
+<ul>
+<li>ST0到ST7：8个80位浮点寄存器</li>
+<li>FPSW, FPCW, FPTW 7：控制、状态和标签字寄存器</li>
+<li>“数据操作数指针Data operand pointer”。我不知道这个是做什么的，但英特尔SDM规定了它</li>
+<li>指令指针Instruction pointer：x87状态机显然持有它自己的当前x87指令的拷贝。</li>
+<li>最后一条指令的操作码Last instruction opcode：与x87操作码不同，并且有它自己的寄存器。</li>
+</ul>
+<p><strong>本部分寄存器总共: 14</strong>.</p>
+<p><strong>到目前为止一共: 92</strong>.</p>
+<h3 id="MMX"><a href="#MMX" class="headerlink" title="MMX"></a>MMX</h3><p>MMX是Intel在X86芯片上添加SIMD指令的第一次尝试，发布于1997年。MMX寄存器实际上是x87 STn寄存器的子集。每个64位MMn占用其相应STn的尾数部分。因此，x86（和x86-64）CPU不能同时执行MMX和x87指令。<br>MMX定义了MM0到MM7，8个寄存器，另外还有一个新的状态寄存器（MXCSR），以及用于操作它的加载/存储指令对（LDMXCSR和STMXCSR）。</p>
+<p><strong>本部分寄存器总共: 9</strong>.</p>
+<p><strong>到目前为止一共: 101</strong>.</p>
+<h3 id="SSE-and-AVX"><a href="#SSE-and-AVX" class="headerlink" title="SSE and AVX"></a>SSE and AVX</h3><p>为了简单起见，我打算把SSE和AVX包成一个部分：它们使用与GPR和x87/MMX相同的子寄存器模式，所以放在一个表中。</p>
+<table>
+<thead>
+<tr>
+<th>AVX-512 (512-bit)</th>
+<th>AVX-2 (256-bit)</th>
+<th>SSE (128-bit)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ZMM0</td>
+<td>YMM0</td>
+<td>XMM0         </td>
+</tr>
+<tr>
+<td>ZMM1</td>
+<td>YMM1</td>
+<td>XMM1         </td>
+</tr>
+<tr>
+<td>ZMM2</td>
+<td>YMM2</td>
+<td>XMM2         </td>
+</tr>
+<tr>
+<td>ZMM3</td>
+<td>YMM3</td>
+<td>XMM3         </td>
+</tr>
+<tr>
+<td>ZMM4</td>
+<td>YMM4</td>
+<td>XMM4         </td>
+</tr>
+<tr>
+<td>ZMM5</td>
+<td>YMM5</td>
+<td>XMM5         </td>
+</tr>
+<tr>
+<td>ZMM6</td>
+<td>YMM6</td>
+<td>XMM6         </td>
+</tr>
+<tr>
+<td>ZMM7</td>
+<td>YMM7</td>
+<td>XMM7         </td>
+</tr>
+<tr>
+<td>ZMM8</td>
+<td>YMM8</td>
+<td>XMM8         </td>
+</tr>
+<tr>
+<td>ZMM9</td>
+<td>YMM9</td>
+<td>XMM9         </td>
+</tr>
+<tr>
+<td>ZMM10</td>
+<td>YMM10</td>
+<td>XMM10        </td>
+</tr>
+<tr>
+<td>ZMM11</td>
+<td>YMM11</td>
+<td>XMM11        </td>
+</tr>
+<tr>
+<td>ZMM12</td>
+<td>YMM12</td>
+<td>XMM12        </td>
+</tr>
+<tr>
+<td>ZMM13</td>
+<td>YMM13</td>
+<td>XMM13        </td>
+</tr>
+<tr>
+<td>ZMM14</td>
+<td>YMM14</td>
+<td>XMM14        </td>
+</tr>
+<tr>
+<td>ZMM15</td>
+<td>YMM15</td>
+<td>XMM15        </td>
+</tr>
+<tr>
+<td>ZMM16</td>
+<td>YMM16</td>
+<td>XMM16        </td>
+</tr>
+<tr>
+<td>ZMM17</td>
+<td>YMM17</td>
+<td>XMM17        </td>
+</tr>
+<tr>
+<td>ZMM18</td>
+<td>YMM18</td>
+<td>XMM18        </td>
+</tr>
+<tr>
+<td>ZMM19</td>
+<td>YMM19</td>
+<td>XMM19        </td>
+</tr>
+<tr>
+<td>ZMM20</td>
+<td>YMM20</td>
+<td>XMM20        </td>
+</tr>
+<tr>
+<td>ZMM21</td>
+<td>YMM21</td>
+<td>XMM21        </td>
+</tr>
+<tr>
+<td>ZMM22</td>
+<td>YMM22</td>
+<td>XMM22        </td>
+</tr>
+<tr>
+<td>ZMM23</td>
+<td>YMM23</td>
+<td>XMM23        </td>
+</tr>
+<tr>
+<td>ZMM24</td>
+<td>YMM24</td>
+<td>XMM24        </td>
+</tr>
+<tr>
+<td>ZMM25</td>
+<td>YMM25</td>
+<td>XMM25        </td>
+</tr>
+<tr>
+<td>ZMM26</td>
+<td>YMM26</td>
+<td>XMM26        </td>
+</tr>
+<tr>
+<td>ZMM27</td>
+<td>YMM27</td>
+<td>XMM27        </td>
+</tr>
+<tr>
+<td>ZMM28</td>
+<td>YMM28</td>
+<td>XMM28        </td>
+</tr>
+<tr>
+<td>ZMM29</td>
+<td>YMM29</td>
+<td>XMM29        </td>
+</tr>
+<tr>
+<td>ZMM30</td>
+<td>YMM30</td>
+<td>XMM30        </td>
+</tr>
+<tr>
+<td>ZMM31</td>
+<td>YMM31</td>
+<td>XMM31        </td>
+</tr>
+</tbody>
+</table>
+<p>换句话说：每个ZMMn的低字节部分是YMMn，而每个YMMn的低字节部分是XMMn。没有直接的寄存器可以只访问YMMn的高字节部分，或者ZMMn的高128位或者256位字部分。<br>SSE还定义了一个新的状态寄存器MXCSR，它包含的标志与RFLAGS中的算术标志大致平行（与x87状态字中的浮点标志一起）。<br>AVX-512还引入了8个OPMask寄存器，k0到k7。k0是一个特殊的情况，它的行为很像一些RISC ISA上的 “零 “寄存器：它不能被存储到，而且从它的加载总是产生一个全部为1的位掩码。</p>
+<p><strong>本部分寄存器总共: 33</strong>.</p>
+<p><strong>到目前为止一共: 134</strong>.</p>
+<h2 id="边界寄存器-Bounds-registers"><a href="#边界寄存器-Bounds-registers" class="headerlink" title="边界寄存器(Bounds registers)"></a>边界寄存器(Bounds registers)</h2><p>英特尔在<a href="https://en.wikipedia.org/wiki/Intel_MPX" target="_blank" rel="noopener">MPX</a>中加入了BR，其目的是提供硬件加速的边界检查。但好像名声并不是很大，暂且放这里把。<br>BND0 - BND3：单独的128位寄存器，每个都包含一对绑定的地址。<br>BNDCFG: 绑定配置，内核模式。<br>BNDCFU: 绑定配置，用户模式。<br>BNDSTATUS: 绑定状态，在一个#BR被提出后。</p>
+<p><strong>本部分寄存器总共: 7</strong>.</p>
+<p><strong>到目前为止一共: 141</strong>.</p>
+<h2 id="调试寄存器-Debug-registers"><a href="#调试寄存器-Debug-registers" class="headerlink" title="调试寄存器(Debug registers)"></a>调试寄存器(Debug registers)</h2><p>正如他们的名字那样，帮助和加速软件调试器的寄存器，如GDB。<br>有6个调试寄存器，分为两种类型：</p>
+<ul>
+<li>DR0到DR3包含线性地址，每个地址都与一个断点条件相关。</li>
+<li>DR6和DR7是调试状态和控制寄存器。DR6的低位表示遇到了哪些调试条件（在进入调试异常处理程序时），而DR7控制哪些断点地址被启用以及它们的断点条件（例如，当某一地址被写入时）。</li>
+<li>那么，DR4和DR5呢？不清楚! 但它们确实有编码，但分别被当做DR6和DR7，或者在CR4.DE[位3]=1时产生#UD异常。</li>
+</ul>
+<p><strong>本部分寄存器总共: 6</strong>.</p>
+<p><strong>到目前为止一共: 147</strong>.</p>
+<h2 id="控制寄存器-Control-registers"><a href="#控制寄存器-Control-registers" class="headerlink" title="控制寄存器 (Control registers)"></a>控制寄存器 (Control registers)</h2><p>x86-64 定义了一组控制寄存器，可用于管理和检查 CPU 的状态。有 16 个“主”控制寄存器，所有这些都可以通过<a href="https://www.felixcloutier.com/x86/mov-1" target="_blank" rel="noopener"><code>MOV</code> variant</a>变体访问:</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Purpose                       </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CR0</td>
+<td>Basic CPU operation flags     </td>
+</tr>
+<tr>
+<td>CR1</td>
+<td>Reserved                      </td>
+</tr>
+<tr>
+<td>CR2</td>
+<td>Page-fault linear address     </td>
+</tr>
+<tr>
+<td>CR3</td>
+<td>Virtual addressing state      </td>
+</tr>
+<tr>
+<td>CR4</td>
+<td>Protected mode operation flags</td>
+</tr>
+<tr>
+<td>CR5</td>
+<td>Reserved                      </td>
+</tr>
+<tr>
+<td>CR6</td>
+<td>Reserved                      </td>
+</tr>
+<tr>
+<td>CR7</td>
+<td>Reserved                      </td>
+</tr>
+<tr>
+<td>CR8</td>
+<td>Task priority register (TPR)  </td>
+</tr>
+<tr>
+<td>CR9</td>
+<td>Reserved                      </td>
+</tr>
+<tr>
+<td>CR10</td>
+<td>Reserved                      </td>
+</tr>
+<tr>
+<td>CR11</td>
+<td>Reserved                      </td>
+</tr>
+<tr>
+<td>CR12</td>
+<td>Reserved                      </td>
+</tr>
+<tr>
+<td>CR13</td>
+<td>Reserved                      </td>
+</tr>
+<tr>
+<td>CR14</td>
+<td>Reserved                      </td>
+</tr>
+<tr>
+<td>CR15</td>
+<td>Reserved                      </td>
+</tr>
+</tbody>
+</table>
+<p>所有reserved的控制寄存器在访问时都会产生#UD，不把它们算在本文里。<br>除了 “主 “CRn控制寄存器之外，还有 “扩展 “控制寄存器，由XSAVE功能集引入。截至目前，XCR0是唯一指定的扩展控制寄存器。<br>扩展控制寄存器使用<a href="https://www.felixcloutier.com/x86/xgetbv" target="_blank" rel="noopener"><code>XGETBV</code></a> 和 <a href="https://www.felixcloutier.com/x86/xsetbv" target="_blank" rel="noopener"><code>XSETBV</code></a>而不是MOV的变种。</p>
+<p><strong>本部分寄存器总共: 6</strong>.</p>
+<p><strong>到目前为止一共: 153</strong>.</p>
+<h2 id="“System-table-pointer-registers”"><a href="#“System-table-pointer-registers”" class="headerlink" title="“System table pointer registers”"></a>“System table pointer registers”</h2><p>这就是英特尔SDM对这些寄存器的称呼。这些寄存器保存着各种保护模式表的大小和指针。<br>据我所知，它们有四个：</p>
+<ul>
+<li>GDTR：存放GDT的大小和基址。</li>
+<li>LDTR：保存LDT的大小和基址。</li>
+<li>IDTR：保存IDT的大小和基址。</li>
+<li>TR：保存TSS的选择器和TSS的基址。</li>
+</ul>
+<p>GDTR、LDTR和IDTR在64位模式下都是80位：16个低位是寄存器的表的大小，高64位是表的其实地址。<br>TR同样也是80位。16位用于选择器（其行为与段选择器相同），然后另外64位用于TSS的基本地址。</p>
+<p><strong>本部分寄存器总共: 4</strong>.</p>
+<p><strong>到目前为止一共: 157</strong>.</p>
+<h2 id="Memory-type-ranger-registers"><a href="#Memory-type-ranger-registers" class="headerlink" title="Memory-type-ranger registers"></a>Memory-type-ranger registers</h2><p>这些是有趣的例子：与到目前为止所涉及的所有其他寄存器不同，这些不是多核芯片中某个特定CPU所独有的，相反，它们是所有内核共享的。<br>MTTR的数量似乎因CPU型号而异，并且在很大程度上被页中的所取代<a href="https://en.wikipedia.org/wiki/Page_attribute_table" target="_blank" rel="noopener">page attribute table</a>，该表是用MSR编程的。</p>
+<p><strong>本部分寄存器总共: ?</strong>.</p>
+<p><strong>到目前为止一共: &gt;157</strong>.</p>
+<h2 id="MSR-Model-specific-registers"><a href="#MSR-Model-specific-registers" class="headerlink" title="MSR Model specific registers"></a>MSR Model specific registers</h2><p>像XCR一样，MSR可以通过一对指令间接地（通过标识符）访问，RDMSR和WRMSR。<br>MSR本身是64位的，但起源于32位的时代，所以RDMSR和WRMSR从两个32位的寄存器中读取和写入。EDX和EAX。<br>举个例子：下面是访问IA32_MTRRCAP MSR的设置和RDMSR调用，其中包括（除其他外）系统上可用的MTRR的实际数量。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MOV ECX, 0xFE ; 0xFE = IA32_MTRRCAP</span><br><span class="line">RDMSR  ; The bits of IA32_MTRRCAP are now in EDX:EAX</span><br></pre></td></tr></table></figure>
+<p>RDMSR和WRMSR是特权指令，所以Ring 3代码不能直接访问MSR。我知道的一个例外是时间戳计数器（TSC），它存储在IA32_TSC MSR中，但是可以通过RDTSC和RDTSCP从非特权上下文中读取。<br>另外两个是FSBASE和GSBASE，除非启用了 FSGSBASE 支持，否则可以直接从环 3 修改 FSBASE 和 GSBASE。Linux 在 5.9 中启用了 FSGSBASE。它们分别存储为IA32_FS_BASE和IA32_GS_BASE。正如在段寄存器部分所提到的，这些存储在x86-64 CPU上的FS和GS段基。这使得它们成为相对频繁使用的目标（根据MSR标准），所以它们有自己专门的R/W操作码。</p>
+<ul>
+<li>RDFSBASE和RDGSBASE用于读取</li>
+<li>WRFSBASE和WRGSBASE用于写入<br>但回到本文主题：有多少个MSR？ 我们从<a href="335592-sdm-vol-4.pdf">SDM 335592-sdm-vol-4</a>中寻找答案。</li>
+</ul>
+<p>许多MSRs已经从一代IA-32处理器延续到下一代，并延续到Intel 64处理器。MSR的一个子集和相关的位域，被认为是架构MSR。由于历史原因（从奔腾4处理器开始），这些 “架构性MSR “被赋予 “IA32_”的前缀。<br>根据SDM中的Table 2-2， 最高序号的MSR是6097/17D1H，即IA32_HW_FEEDBACK_CONFIG。<br>然而，在记录的MSR序号是存在着明显的洞。SDM直接从3506/DB2H（IA32_THREAD_STALL）跳到6096/17D0H（IA32_HW_FEEDBACK_PTR）。在空的范围之上，还有一些范围被明确地标记为保留的范围。<br>为了计算MSR的实际数量，只提取SDM第4卷中的<a href="ia32-architectural-msrs.txt">表2-2中的值</a>。</p>
+<ul>
+<li><p>解压缩 SDM</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ pdfjam 335592-sdm-vol-4.pdf 19-67 -o 2-2.pdf</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>利用pdftotext，把PDF转换为纯文本。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ pdftotext 2-2.pdf table.txt</span><br><span class="line"># edit table.txt by hand</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用 IA32_ 前缀，筛选字符串</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ tr -s &apos;[:space:]&apos; &apos;\n&apos; &lt; table.txt \</span><br><span class="line">    | grep &apos;IA32_&apos; \</span><br><span class="line">    | tr -d &apos;.&apos; \</span><br><span class="line">    | sed &apos;s/\[.*$//&apos; \</span><br><span class="line">    | sort | uniq | wc -l</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>最后得到400个MSR，这要比6096合理多了。</p>
+<p><strong>本部分寄存器总共: 400</strong>.</p>
+<p><strong>到目前为止一共: &gt;557</strong>.</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://sandpile.org/x86/msr.htm" target="_blank" rel="noopener">sandpile.org</a> MSR 可视化。</li>
+<li>Vol. 3A § 8.7.1 (“State of the Logical Processors”) of the Intel SDM has a useful list of<br>  nearly all of the registers that are either unique to or shared between x86-64 cores.</li>
+<li>The <a href="https://wiki.osdev.org/" target="_blank" rel="noopener">OSDev Wiki</a> has collection of helpful pages on various x86-64<br>  registers, including a <a href="https://wiki.osdev.org/SWAPGS" target="_blank" rel="noopener">great page</a> on the behavior of the segment<br>  base MSRs.</li>
+</ul>
+<p>总而言之，在相对较新的x86-64 CPU内核上大约有557个寄存器。但一些我不确定的外设情况。<br>现代英特尔CPU使用集成的APICs作为其SMT实现的一部分。这些APICs有自己的寄存器库，可以被内存映射，以便由x86 CPU读取和潜在的修改。本文没有计算它们，因为(1)它们是内存映射的，因此表现得更像来自任意硬件的映射寄存器，而不是CPU寄存器<br>英特尔的SDM 说<a href="https://lwn.net/Articles/680996/" target="_blank" rel="noopener">Last Branch Records</a> 存储在离散的非MSR寄存器中，本文也没有单独计算这些。</p>
+<p><a href="https://blog.yossarian.net/2020/11/30/How-many-registers-does-an-x86-64-cpu-have" target="_blank" rel="noopener">https://blog.yossarian.net/2020/11/30/How-many-registers-does-an-x86-64-cpu-have</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="Yi颗烂樱桃 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.png" alt="Yi颗烂樱桃 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者：</strong>
+    Yi颗烂樱桃
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://www.owalle.com/2021/12/26/all-registers-x86-64/" title="X86_64 机器上一共有多少个寄存器">http://www.owalle.com/2021/12/26/all-registers-x86-64/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>
+    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="external nofollow" target="_blank">CC BY-NC-ND 3.0</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/x86/" rel="tag"># x86</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/12/09/qemu-pci/" rel="next" title="用QEMU来体会PCI/PCIE设备">
+                <i class="fa fa-chevron-left"></i> 用QEMU来体会PCI/PCIE设备
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/12/30/function-calling-sequence/" rel="prev" title="函数调用序列">
+                函数调用序列 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
+    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
+    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a class="bds_count" data-cmd="count"></a>
+  </div>
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "2",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "share": {
+        "bdSize": "16",
+        "bdStyle": "0"
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      }
+    }
+  </script>
+
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="Yi颗烂樱桃">
+            
+              <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">46</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+            <div class="cc-license motion-element" itemprop="license">
+              <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" class="cc-opacity" target="_blank">
+                <img src="/images/cc-by-nc-nd.svg" alt="Creative Commons">
+              </a>
+            </div>
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#通用寄存器-general-register"><span class="nav-number">1.</span> <span class="nav-text">通用寄存器 (general register)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#特殊寄存器-Special-registers"><span class="nav-number">2.</span> <span class="nav-text">特殊寄存器 (Special registers)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#段寄存器-Segment-registers"><span class="nav-number">3.</span> <span class="nav-text">段寄存器 (Segment registers)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#单指令多数据SIMD-和浮点运算指令FP"><span class="nav-number">4.</span> <span class="nav-text">单指令多数据SIMD 和浮点运算指令FP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#x87"><span class="nav-number">4.1.</span> <span class="nav-text">x87</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MMX"><span class="nav-number">4.2.</span> <span class="nav-text">MMX</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SSE-and-AVX"><span class="nav-number">4.3.</span> <span class="nav-text">SSE and AVX</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#边界寄存器-Bounds-registers"><span class="nav-number">5.</span> <span class="nav-text">边界寄存器(Bounds registers)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#调试寄存器-Debug-registers"><span class="nav-number">6.</span> <span class="nav-text">调试寄存器(Debug registers)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#控制寄存器-Control-registers"><span class="nav-number">7.</span> <span class="nav-text">控制寄存器 (Control registers)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#“System-table-pointer-registers”"><span class="nav-number">8.</span> <span class="nav-text">“System table pointer registers”</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Memory-type-ranger-registers"><span class="nav-number">9.</span> <span class="nav-text">Memory-type-ranger registers</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MSR-Model-specific-registers"><span class="nav-number">10.</span> <span class="nav-text">MSR Model specific registers</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">11.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yi颗烂樱桃</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">106.6k</span>
+
+  <span class="post-meta-divider">|</span>
+  
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  <span class="site-uv">
+    <i class="fa fa-user"></i>
+    <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    
+  </span>
+
+
+
+  <span class="site-pv">
+    <i class="fa fa-eye"></i>
+    <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    
+  </span>
+
+</div>
+
+<div align="center">
+	<img style="display:inline-block;" src="images/icp.png"> 
+	<a href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备13030765号-8</a>
+
+	<img style="display:inline-block;text-decoration:none;height:20px;line-height:20px;" src="images/beian.png"> 
+	<a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202004052">沪公网安备 31011202004052号</a>
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+  
+  <script type="text/javascript" color="129,216,208" opacity="0.5" zindex="-2" count="50" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three.min.js"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three-waves.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kity.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kityminder.core.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/mindmap.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: true,
+        notify: false,
+        appId: 'sIDOr6ptvMjLBmxig1vHlYsG-gzGzoHsz',
+        appKey: 'c1R9jtqasnufksgJUCE3eWo5',
+        placeholder: '亲，你不想说点什么吗？？ :D',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+</body>
+</html>

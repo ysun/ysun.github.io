@@ -1,0 +1,108 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "vm",
+      "type": "shell",
+      "command": "`pwd`/.vscode/start_vm_qemu_mini_iommu.sh",
+      //"command": "qemu-system-x86_64 -enable-kvm -m 2048 -smp 1 -cpu max -s -S -kernel /home/works/linux-stable/arch/x86/boot/bzImage -hda /home/works/kvm/ubuntu20.10_mini.img -vga none -nodefaults -nographic -append \"root=/dev/sda3 nokaslr console=ttyS0\" -serial mon:stdio -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5555-:22",
+      "presentation": {
+        "echo": true,
+        "clear": true,
+        "group": "vm"
+      },
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": ".",
+          }
+        }
+      ]
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "make",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": false,
+        "group": "build"
+      }
+    }
+  ]
+}
+
+
+//{
+//    "tasks": [
+//        {
+//            "type": "cppbuild",
+//            "label": "Build kernel",
+//            "command": "make",
+//            "args": [
+//                "bzImage"
+//            ],
+//            "options": {
+//                "cwd": "${workspaceFolder}"
+//            },
+//            "problemMatcher": [
+//                "$gcc"
+//            ],
+////            "group": {
+////                "kind": "build",
+////                "isDefault": true
+////            }
+//        },
+//        {
+//            //"type": "process",
+//            "type": "shell",
+//            "label": "Launch Qemu",
+//            "isBackground": true,
+//            //"command": "/home/works/crosvm_kvm/start_vm_qemu_mini_debug.sh",
+//            "command": "bash",
+//            //"command": "/home/works/crosvm_kvm/./start_vm_qemu_mini_debug.sh",
+//            "args": [
+//               "/home/works/crosvm_kvm/start_vm_qemu_mini_debug.sh",
+//               // "run.bat"
+//            ],
+//            "options": {
+//                "cwd": "${workspaceFolder}"
+//            },
+//            "problemMatcher": [
+//                {
+//                  "pattern": [
+//                    {
+//                      "regexp": "(gdb)",
+//                      "file": 1,
+//                      "location": 2,
+//                      "message": 3
+//                    }
+//                  ],
+//                  "background": {
+//                    "activeOnStart": true,
+//                    "beginsPattern": ".",
+//                    "endsPattern": ".",
+//                  }
+//                }
+//            ]
+////            "dependsOn": "Build kernel"
+//        }
+//    ],
+//    "version": "2.0.0"
+//}

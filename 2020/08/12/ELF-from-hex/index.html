@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+<meta name="google-site-verification" content="MrnK1va2f2DY7TM-4onuV7g_G6yZyI3WkYbaykR0Ln0">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-minimal.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="ELF,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="本文我们来一起探索下ELF的真容。我们将尝试从头开始以十六进制生成Linux的”Hello world”程序。为了讲解最底层的ELF原理，我们这里尽量不使用gcc,ld等编译工具。希望通过本文，让读者对操作系统如何加载和运行程序的原理有所了解。 为了使生活更轻松，本文将仅关注一种体系结构：AMD64（x64）和一种操作系统Linux。不需要编译器、链接器甚至标准库。我们创建最简单的ELF可执行程序">
+<meta name="keywords" content="ELF">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ELF可执行文件详解">
+<meta property="og:url" content="http://www.owalle.com/2020/08/12/ELF-from-hex/index.html">
+<meta property="og:site_name" content="Yi颗烂樱桃">
+<meta property="og:description" content="本文我们来一起探索下ELF的真容。我们将尝试从头开始以十六进制生成Linux的”Hello world”程序。为了讲解最底层的ELF原理，我们这里尽量不使用gcc,ld等编译工具。希望通过本文，让读者对操作系统如何加载和运行程序的原理有所了解。 为了使生活更轻松，本文将仅关注一种体系结构：AMD64（x64）和一种操作系统Linux。不需要编译器、链接器甚至标准库。我们创建最简单的ELF可执行程序">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://www.owalle.com/2020/08/12/ELF-from-hex/elfdemo1.png">
+<meta property="og:updated_time" content="2021-09-27T09:54:43.490Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ELF可执行文件详解">
+<meta name="twitter:description" content="本文我们来一起探索下ELF的真容。我们将尝试从头开始以十六进制生成Linux的”Hello world”程序。为了讲解最底层的ELF原理，我们这里尽量不使用gcc,ld等编译工具。希望通过本文，让读者对操作系统如何加载和运行程序的原理有所了解。 为了使生活更轻松，本文将仅关注一种体系结构：AMD64（x64）和一种操作系统Linux。不需要编译器、链接器甚至标准库。我们创建最简单的ELF可执行程序">
+<meta name="twitter:image" content="http://www.owalle.com/2020/08/12/ELF-from-hex/elfdemo1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.owalle.com/2020/08/12/ELF-from-hex/">
+
+
+
+
+
+  <title>ELF可执行文件详解 | Yi颗烂樱桃</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a rel="external nofollow" href="/" class="brand">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Yi颗烂樱桃</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">虚拟化中文</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a rel="external nofollow" href="/">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a rel="external nofollow" href="/archives/">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a rel="external nofollow" href="/categories/">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a rel="external nofollow" href="/tags/">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a rel="external nofollow" href="/about/">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-sitemap">
+          <a rel="external nofollow" href="/sitemap.xml">
+            
+              <i class="menu-item-icon fa fa-fw fa-sitemap"></i> <br>
+            
+            站点地图
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a rel="external nofollow" href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2020/08/12/ELF-from-hex/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">ELF可执行文件详解</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-08-12T22:28:04+08:00">
+                2020-08-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/OS/" itemprop="url" rel="index">
+                    <span itemprop="name">OS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2020/08/12/ELF-from-hex/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2020/08/12/ELF-from-hex/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  3.4k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  14
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>本文我们来一起探索下ELF的真容。我们将尝试从头开始以十六进制生成Linux的”Hello world”程序。为了讲解最底层的ELF原理，我们这里尽量不使用gcc,ld等编译工具。希望通过本文，让读者对操作系统如何加载和运行程序的原理有所了解。</p>
+<p>为了使生活更轻松，本文将仅关注一种体系结构：AMD64（x64）和一种操作系统Linux。不需要编译器、链接器甚至标准库。我们创建最简单的ELF可执行程序，直接使用系统调用。我将详细介绍并描述所有“源代码”，即十六进制的文件。然后使用工具’xxd’将其转换为二进制文件。</p>
+<h2 id="输入和输出"><a href="#输入和输出" class="headerlink" title="输入和输出"></a>输入和输出</h2><p>本文讲解过程的输入将是一个或多个文本文件，其中包含ASCII格式的十六进制数字。示例中包括注释，但是，这些注释不会对输出有影响。<br>输出将是ELF格式的可执行程序文件。同时，可以借助<code>objdump -a</code> 来反汇编ELF，学习内部结构。</p>
+<h2 id="最小ELF可执行文件的结构"><a href="#最小ELF可执行文件的结构" class="headerlink" title="最小ELF可执行文件的结构"></a>最小ELF可执行文件的结构</h2><p>尽管这里所谓的“最小ELF”距离真正意义上的“最小ELF”还是有段差距，需要进一步的裁剪。但按照ELF的文档来说，已经是“最小ELF”了。<br>ELF可执行文件需要以下组件：</p>
+<ul>
+<li>ELF header。这始终是ELF文件的第一部分，长度固定64字节。 ELF header是ELF文件中唯一具有固定位置的部分,文件其他所有部分的位置都在ELF header中列出。</li>
+<li>program header（允许多个）。program header的主要作用是说明当前ELF文件有多少个部分需要加载到内存中。</li>
+<li>.text section。含有预编译程序代码的section，被命名为.text，一般ELF里面允许多个，但我们只需要一个。</li>
+<li>.shstrtab section。字符串表。跟程序数据无关，用于保存各section的名称，包括其本身。我们的字符串表将包含两个条目：.text用于程序代码，.shstrtab用于自身。</li>
+<li>三个64字节长的section header。第一个为零，空section header，不明觉厉！第二个section header定义.text section在文件中的位置和大小。第三个section header定义字符串表的位置和大小。</li>
+</ul>
+<p>重要的是要理解，ELF文件中唯一位于固定位置的部分是ELF header。所有其他部分可以按任何顺序出现在任何地方。本文选用一种很典型的布局，但不是唯一的（见图）。要构建文件，我们需要知道每个组件的位置（文件中的偏移）。让我们看看如何计算这些偏移量。<br><img src="/2020/08/12/ELF-from-hex/elfdemo1.png" alt="elfdemo1.png"></p>
+<h2 id="构建可执行文件"><a href="#构建可执行文件" class="headerlink" title="构建可执行文件"></a>构建可执行文件</h2><p>本节中，描述如何用十六进制代码构建上图概述的可执行文件的各个组件。为了直观和方便，我会反复的来参考上图，来计算偏移量等。</p>
+<h3 id="计算section的大小和偏移量"><a href="#计算section的大小和偏移量" class="headerlink" title="计算section的大小和偏移量"></a>计算section的大小和偏移量</h3><p>首先是简单的：ELF header，program header和section header都是固定大小的。我将program header直接放在ELF header之后，所以program header的偏移量是0x40 (十进制64)。这里使用十六进制数字，因为这些偏移量后面会直接写到ELF文件中。</p>
+<p>预先编译的程序代码长42个字节(后面解释)，紧跟在program header的后面，因此它的偏移量为0x78(0x40 + program header的大小，固定56字节)。<br>字符串“Hello world”(14字节)紧接在程序代码后，因此其偏移量为0xA2(0x78 + 42字节)。字符串末尾有一个’\0’的终止符(这里实际上并不是必需的)，所以它的大小是14个字节。字符串表(.shstrtab)的开始位置紧跟在0xB0(0xA2 + 14)之后。</p>
+<p>字符串表具有两个字符串：.shstrtab和.text。都以’\0’结尾，因此总大小为9+1+5+1 = 16字节。第二个字符串的偏移量.text为10个字节-设置其section header时将需要用到这个offset。</p>
+<p>在字符串表的起始偏移量上加上16，就得到第一个section的其实地址0xC0。我们不需要知道其他section的偏移量，因为所有section header的大小都相同(64字节)，我们将在ELF Header中指定section header的数量，将所有这些section header大小放在一起，得出的ELF文件的总大小为384个字节。</p>
+<p>我们还需要了解一件事，需要加载到内存中的量，也就是需要占用内存的大小。在运行时，我们仅需要文件的开头也就是ELF header的开头处，加载到字符串表的开头。其他的部分在运行时不需要。因此，我们需要从文件开头开始加载64 + 56 + 42 + 14 + 16 = 192 = 0xC0字节。</p>
+<h2 id="关于内存映射的说明"><a href="#关于内存映射的说明" class="headerlink" title="关于内存映射的说明"></a>关于内存映射的说明</h2><p>为了编写实际的应用程序(或针对它们的编译器)，我们需要详细了解适用于目标体系结构的内存映射模型。但是，对于本示例，我们只需要知道AMD64体系结构假定可执行代码将从虚拟地址0x400000（4 MiB）开始。出于各种技术和历史原因。本质上，此地址是从零开始的第一个最大的内存页面。</p>
+<p>一般情况下，不希望任何程序从0x0开始。现在，尽管AMD64体系结构名义上具有48位虚拟地址空间，但大多数指令仅采用32位直接操作数（如我们稍后将在程序代码中看到的）。需要特殊的技术来处理超出32位偏移范围的内存。因此，我们希望将程序代码放在除了0页面意外的尽可能低的虚拟内存页面中。</p>
+<p>无论出于何种原因，我们都需要设置program header，以将二进制文件的相关部分加载到内存中，起始地址为0x400000。因为这将包括ELF header和program header，以及程序代码。程序代码这里以偏移量0x78开始，因此虚拟地址中将在0x400078开始。</p>
+<p>0x400078是一个常见的起始地址，通常在未指定称为_start的符号，则GNU链接程序ld会默认使用这个地址。当然，本文没有使用链接器，而是我们自己做了链接器做的工作，指定程序的起始地址。</p>
+<h3 id="创建ELF-header"><a href="#创建ELF-header" class="headerlink" title="创建ELF header"></a>创建ELF header</h3><p>现在，我们有了填充ELF header所需的所有信息：我们知道所有相关的偏移量是什么，我们知道在哪里加载二进制数据以及加载多少。我们知道有三个section header，并且第二个section包含字符串表。</p>
+<p>ELF header有据可查，这里不描述每个成员的作用，具体可以参考文末的ELF官方文档。我在下面的十六进制数据中添加了注释，以解释各种设置，这些注释不会成为可执行文件的一部分，在生成可执行程序之前，我们会将其删除。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"># ELF header -- always 64 bytes</span><br><span class="line"></span><br><span class="line"># Magic number</span><br><span class="line">7f 45 4c 46 </span><br><span class="line"></span><br><span class="line"># 02 = 64 bit</span><br><span class="line">02</span><br><span class="line"></span><br><span class="line"># 01 = little-endian</span><br><span class="line">01</span><br><span class="line"></span><br><span class="line"># 01 = ELF version</span><br><span class="line">01</span><br><span class="line"></span><br><span class="line"># 00 = Target ABI -- usually left at zero for static executables</span><br><span class="line">00</span><br><span class="line"></span><br><span class="line"># 00 = Target ABI version -- usually left at zero for static executables</span><br><span class="line">00</span><br><span class="line"></span><br><span class="line"># 7 bytes undefined</span><br><span class="line">00 00 00 00 00 00 00 </span><br><span class="line"></span><br><span class="line"># 02 = executable binary</span><br><span class="line">02 00 </span><br><span class="line"></span><br><span class="line"># 3E = amd64 architecture</span><br><span class="line">3e 00</span><br><span class="line"></span><br><span class="line"># 1 = ELF version</span><br><span class="line">01 00 00 00 </span><br><span class="line"></span><br><span class="line"># 0x400078 = start address: right after this header and the program</span><br><span class="line">#  header, which take 0x78 bytes, if the binary is mapped into </span><br><span class="line">#  memory at address 0x400000)</span><br><span class="line">78 00 40 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># 0x40 = offset to program header, right after this header which is 0x40 bytes long </span><br><span class="line">40 00 00 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># 0xC0 = offset to section header, which is after the program text and the </span><br><span class="line">#  string table</span><br><span class="line">c0 00 00 00 00 00 00 00 </span><br><span class="line"></span><br><span class="line"># 0x00000000 = architecture specific flags</span><br><span class="line">00 00 00 00</span><br><span class="line"></span><br><span class="line"># 0x40 = size of this header, always 64 bytes</span><br><span class="line">40 00</span><br><span class="line"></span><br><span class="line"># 0x38 = size of a program header, always 56 bytes</span><br><span class="line">38 00</span><br><span class="line"></span><br><span class="line"># 1 = number of program header</span><br><span class="line">01 00</span><br><span class="line"></span><br><span class="line"># 0x40 = size of a section header, always 64 bytes</span><br><span class="line">40 00</span><br><span class="line"></span><br><span class="line"># 3 = number of sections headers </span><br><span class="line">03 00</span><br><span class="line"></span><br><span class="line"># 2 = index of the section header that references the string table</span><br><span class="line">02 00</span><br></pre></td></tr></table></figure>
+<h3 id="构建program-header"><a href="#构建program-header" class="headerlink" title="构建program header"></a>构建program header</h3><p>我们此时同样有足够的信息构建program header了。注意，有些重复的信息已经在ELF header中出现过了。同样，我们在十六进制中放置了一些注释，这里不再解释每个设置。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"># Program header -- always 56 bytes</span><br><span class="line"></span><br><span class="line"># 1 = type of entry: loadable segment</span><br><span class="line">01 00 00 00 </span><br><span class="line"></span><br><span class="line"># 0x05 = segment-dependent flags: executable | readable</span><br><span class="line">05 00 00 00 </span><br><span class="line"></span><br><span class="line"># 0x0 = Offset within file</span><br><span class="line">00 00 00 00 00 00 00 00 </span><br><span class="line"></span><br><span class="line"># 0x400000 = load position in virtual memory</span><br><span class="line">00 00 40 00 00 00 00 00 </span><br><span class="line"></span><br><span class="line"># 0x400000 = load position in physical memory</span><br><span class="line">00 00 40 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># 0xB0 = size of the loaded section the file</span><br><span class="line">B0 00 00 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># 0xB0 = size of the loaded section in memory </span><br><span class="line">B0 00 00 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># 0x200000 = alignment boundary for sections</span><br><span class="line">00 00 20 00 00 00 00 00</span><br></pre></td></tr></table></figure>
+<h3 id="“编译”程序"><a href="#“编译”程序" class="headerlink" title="“编译”程序"></a>“编译”程序</h3><p>我们自己创建的可执行程序做两件事：</p>
+<ul>
+<li>打印“ Hello，world”到标准输出。</li>
+<li>退出。</li>
+</ul>
+<p>对于编程语言，我们通常不必将“退出”视为强制性操作，程序通常在执行完之后就会停止并返回。但是，在机器语言中，需要特定的退出操作。<br>打印和退出都通过“syscalls”实现，即调用内核。参考，<a href="https://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64/" target="_blank" rel="noopener">Ryan Chapman的这篇文章</a>。</p>
+<p>syscall的工作方式非常简单，将syscall编号加载到％rax寄存器中，将参数加载到其他各个寄存器中(所有信息都记录在上一个链接中)，然后执行syscall函数。<br>对于我们构建的应用程序，我们只需要两个syscall：sys_write（1）和exit（60）。</p>
+<p>用GNU汇编语言编写代码，我们有：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">mov     $1, %rax     # sys_write</span><br><span class="line">mov     $1, %rdi     # file descriptor, 1=stdout</span><br><span class="line">mov     $hello, %rsi # buffer</span><br><span class="line">mov     $13, %rdx    # byte count</span><br><span class="line">syscall</span><br><span class="line"></span><br><span class="line">mov     $60, %rax    # exit</span><br><span class="line">xor     %rdi, %rdi   # return value, 0</span><br><span class="line">syscall</span><br></pre></td></tr></table></figure></p>
+<p>来看下上面的汇编，除了$hello外，所有放入寄存器的值都是确定的。在这里，我们可以扮演”链接器”(linker)的角色了。我们需要将$hello的值替换为字符串“Hello，world”的（32位）内存地址。还记得我将此字符串直接放在程序代码之后吗？！程序代码的长度为42个字节，从0x40078开始。因此，字符串的位置是0x40078+42 = 0x4000A2。我们需要将其手动插入十六进制代码中的适当位置。<br>将汇编代码转换为真实的十六进制机器指令有两种方法。一种是花大量时间研究<a href="http://ref.x86asm.net/coder64.html" target="_blank" rel="noopener">x86参考资料</a>。第二放法是偷懒，使用真正的汇编程序<code>gcc -S</code>得到相对应的机器指令。</p>
+<p>这之后，程序代码和文本字符串如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"># Program code -- 42 bytes</span><br><span class="line"></span><br><span class="line"># mov 0x01,%rax -- sys_write</span><br><span class="line">48 c7 c0 01 00 00 00 </span><br><span class="line"></span><br><span class="line"># mov 0x01,%rdi -- file descriptor, stdout</span><br><span class="line">48 c7 c7 01 00 00 00</span><br><span class="line"></span><br><span class="line"># mov 0x4000a2,%rsi -- location of string (see text above)</span><br><span class="line">48 c7 c6 a2 00 40 00</span><br><span class="line"></span><br><span class="line"># mov 0x0d,%rdx -- size of string, 13 bytes</span><br><span class="line">48 c7 c2 0d 00 00 00</span><br><span class="line"></span><br><span class="line"># syscall</span><br><span class="line">0f 05</span><br><span class="line"></span><br><span class="line"># mov 0x3c,$rax -- exit program</span><br><span class="line">48 c7 c0 3c 00 00 00 </span><br><span class="line"></span><br><span class="line"># xor %rdi,%rdi -- exit code, 0</span><br><span class="line">48 31 ff </span><br><span class="line"></span><br><span class="line"># syscall</span><br><span class="line">0f 05 </span><br><span class="line"></span><br><span class="line"># Text &quot;Hello, world\n\0&quot; -- total 14 bytes including the null</span><br><span class="line">48 65 6c 6c 6f 2c 20 77 6f 72 6c 64 0a 00</span><br></pre></td></tr></table></figure>
+<h2 id="构造字符串表"><a href="#构造字符串表" class="headerlink" title="构造字符串表"></a>构造字符串表</h2><p>目前，字符串标里，只有两个字符串 .shstrtab和.text的ASCII值，以null(/0)结尾，一个接一个。这里是：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># String table. &quot;.shstrab\0.text\0&quot; -- 16 bytes</span><br><span class="line">2e 73 68 73 74 72 74 61 62 00 2e 74 65 78 74 00</span><br></pre></td></tr></table></figure></p>
+<h2 id="构造section-header-table"><a href="#构造section-header-table" class="headerlink" title="构造section header table"></a>构造section header table</h2><p>如上面所描述，共有三个section header，全部为64自己长度。<br>第一个很简单,全为零。第二个section header 描述了.text segment，如下所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"># Section header table, section 1 -- program text -- 64 bytes</span><br><span class="line"></span><br><span class="line"># 0x0A = offset to the name of the section in the string table</span><br><span class="line">0a 00 00 00</span><br><span class="line"></span><br><span class="line"># 1 = type: program data</span><br><span class="line">01 00 00 00</span><br><span class="line"></span><br><span class="line"># 0x06 flags = executable | occupies memory</span><br><span class="line">06 00 00 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># 0x400078 address in virtual memory of this section</span><br><span class="line">78 00 40 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># 0x78 = offset in the file of this section (start of program code)</span><br><span class="line">78 00 00 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># 0x38 = size of this section in the file: 56 bytes</span><br><span class="line">38 00 00 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># sh_link -- not used for this section</span><br><span class="line">00 00 00 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># 0x01 = alignment code: default??</span><br><span class="line">01 00 00 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># sh_entsize: not used</span><br><span class="line">00 00 00 00 00 00 00 00</span><br></pre></td></tr></table></figure></p>
+<p>注意，section header描述了section在文件中的位置，它的大小以及将其加载到内存中的位置。</p>
+<p>这是字符串表的section header：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"># Section header table, section 2 -- string table</span><br><span class="line"></span><br><span class="line"># 0x0 = offset to the name of the section in the string table</span><br><span class="line">00 00 00 00</span><br><span class="line"></span><br><span class="line"># 3 = type: string table</span><br><span class="line">03 00 00 00</span><br><span class="line"></span><br><span class="line"># 0x0 = flags</span><br><span class="line">00 00 00 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># 0x0 = address in virtual memory (not used)</span><br><span class="line">00 00 00 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># 0xB0 = offset in the file of this section (start of string table)</span><br><span class="line">b0 00 00 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># 0x10 = size of this section in the file: 16 bytes</span><br><span class="line">10 00 00 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># sh_link -- not used for this section</span><br><span class="line">00 00 00 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># 0x01 = alignment code: default??</span><br><span class="line">01 00 00 00 00 00 00 00</span><br><span class="line"></span><br><span class="line"># sh_entsize: not used</span><br><span class="line">00 00 00 00 00 00 00 00</span><br></pre></td></tr></table></figure></p>
+<p>注意，字符表section header里面没有内存地址，它不会被加载到内存。</p>
+<h3 id="放在一起"><a href="#放在一起" class="headerlink" title="放在一起"></a>放在一起</h3><p>我们可以使用工具xxd，把前面我们用文字描述的十六进制代码转换为二进制文件，但我们需要先删除注释。一个很简单的脚本如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">BINARY=elfdemo</span><br><span class="line">cat 0_elf_header.hex \</span><br><span class="line">  1_program_header.hex \</span><br><span class="line">  2_program_code.hex \</span><br><span class="line">  3_string_table.hex \</span><br><span class="line">  4_section_header_0.hex \</span><br><span class="line">  5_section_header_1.hex \</span><br><span class="line">  6_section_header_2.hex \</span><br><span class="line">  | grep -v &quot;#&quot; &gt; $$.hex</span><br><span class="line">xxd -p -r $$.hex $BINARY</span><br><span class="line">chmod 755 $BINARY</span><br><span class="line">rm $$.hex</span><br></pre></td></tr></table></figure>
+<p>该脚本仅将所有单个十六进制文件串联为一个大文件，过滤掉注释，然后将结果传递给xxd转换为二进制文件。如果一切顺利，则生成的elfdemo将为384个字节长，这个我们前面已经计算过。运行生成的二进制文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ ./elfdemo</span><br><span class="line">Hello, world</span><br></pre></td></tr></table></figure>
+<h2 id="鸣谢Kevin-Boone教授的指导"><a href="#鸣谢Kevin-Boone教授的指导" class="headerlink" title="鸣谢Kevin Boone教授的指导"></a>鸣谢Kevin Boone教授的指导</h2><p><a href="https://github.com/ysun/elfdemo" target="_blank" rel="noopener">https://github.com/ysun/elfdemo</a><br><a href="http://kevinboone.me/elfdemo.html?i=3" target="_blank" rel="noopener">http://kevinboone.me/elfdemo.html?i=3</a></p>
+<p><a href="https://bbs.pediy.com/thread-255670.htm" target="_blank" rel="noopener">ELF文件结构详解</a><br><a href="https://www.jianshu.com/p/3ac0fd7eaa31" target="_blank" rel="noopener">图解 Linux 程序的链接原理</a><br><a href="https://www.cnblogs.com/jiqingwu/p/elf_format_research_01.html" target="_blank" rel="noopener">ELF文件解析（一）：Segment和Section</a><br><a href="https://www.jianshu.com/p/132412ca73ce" target="_blank" rel="noopener">目标文件和ELF格式详解</a><br><a href="http://tinylab.org/the-smallest-elf-executable-hello-world/" target="_blank" rel="noopener">史上最小可执行 ELF 文件</a><br><a href="https://stackoverflow.com/questions/14361248/whats-the-difference-of-section-and-segment-in-elf-file-format" target="_blank" rel="noopener">What’s the difference of section and segment in ELF file format</a><br><a href="https://sourceware.org/binutils/docs/ld/Simple-Example.html#Simple-Example" target="_blank" rel="noopener">Simple Linker Script Example</a><br><a href="http://ref.x86asm.net/index.html" target="_blank" rel="noopener">X86 Opcode and Instruction Reference</a><br><a href="http://ref.x86asm.net/coder64.html" target="_blank" rel="noopener">X86 Opcode and Instruction Reference Home</a><br><a href="https://cirosantilli.com/elf-hello-world" target="_blank" rel="noopener">ELF Hello World Tutorial</a><br><a href="https://man7.org/linux/man-pages/man5/elf.5.html" target="_blank" rel="noopener">elf(5) — Linux manual page</a><br><a href="http://timelessname.com/elfbin/" target="_blank" rel="noopener">Smallest x86 ELF Hello World</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="Yi颗烂樱桃 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.png" alt="Yi颗烂樱桃 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者：</strong>
+    Yi颗烂樱桃
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://www.owalle.com/2020/08/12/ELF-from-hex/" title="ELF可执行文件详解">http://www.owalle.com/2020/08/12/ELF-from-hex/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>
+    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="external nofollow" target="_blank">CC BY-NC-ND 3.0</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/ELF/" rel="tag"># ELF</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/06/03/crosvm-chromevm/" rel="next" title="创建ChromeOS虚拟机">
+                <i class="fa fa-chevron-left"></i> 创建ChromeOS虚拟机
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/01/09/create-mini-vm/" rel="prev" title="创建mini虚拟机镜像">
+                创建mini虚拟机镜像 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
+    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
+    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a class="bds_count" data-cmd="count"></a>
+  </div>
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "2",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "share": {
+        "bdSize": "16",
+        "bdStyle": "0"
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      }
+    }
+  </script>
+
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="Yi颗烂樱桃">
+            
+              <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">46</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+            <div class="cc-license motion-element" itemprop="license">
+              <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" class="cc-opacity" target="_blank">
+                <img src="/images/cc-by-nc-nd.svg" alt="Creative Commons">
+              </a>
+            </div>
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#输入和输出"><span class="nav-number">1.</span> <span class="nav-text">输入和输出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最小ELF可执行文件的结构"><span class="nav-number">2.</span> <span class="nav-text">最小ELF可执行文件的结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#构建可执行文件"><span class="nav-number">3.</span> <span class="nav-text">构建可执行文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#计算section的大小和偏移量"><span class="nav-number">3.1.</span> <span class="nav-text">计算section的大小和偏移量</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于内存映射的说明"><span class="nav-number">4.</span> <span class="nav-text">关于内存映射的说明</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#创建ELF-header"><span class="nav-number">4.1.</span> <span class="nav-text">创建ELF header</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#构建program-header"><span class="nav-number">4.2.</span> <span class="nav-text">构建program header</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#“编译”程序"><span class="nav-number">4.3.</span> <span class="nav-text">“编译”程序</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#构造字符串表"><span class="nav-number">5.</span> <span class="nav-text">构造字符串表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#构造section-header-table"><span class="nav-number">6.</span> <span class="nav-text">构造section header table</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#放在一起"><span class="nav-number">6.1.</span> <span class="nav-text">放在一起</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#鸣谢Kevin-Boone教授的指导"><span class="nav-number">7.</span> <span class="nav-text">鸣谢Kevin Boone教授的指导</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yi颗烂樱桃</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">106.6k</span>
+
+  <span class="post-meta-divider">|</span>
+  
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  <span class="site-uv">
+    <i class="fa fa-user"></i>
+    <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    
+  </span>
+
+
+
+  <span class="site-pv">
+    <i class="fa fa-eye"></i>
+    <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    
+  </span>
+
+</div>
+
+<div align="center">
+	<img style="display:inline-block;" src="images/icp.png"> 
+	<a href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备13030765号-8</a>
+
+	<img style="display:inline-block;text-decoration:none;height:20px;line-height:20px;" src="images/beian.png"> 
+	<a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202004052">沪公网安备 31011202004052号</a>
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+  
+  <script type="text/javascript" color="129,216,208" opacity="0.5" zindex="-2" count="50" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three.min.js"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three-waves.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kity.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kityminder.core.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/mindmap.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: true,
+        notify: false,
+        appId: 'sIDOr6ptvMjLBmxig1vHlYsG-gzGzoHsz',
+        appKey: 'c1R9jtqasnufksgJUCE3eWo5',
+        placeholder: '亲，你不想说点什么吗？？ :D',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+</body>
+</html>

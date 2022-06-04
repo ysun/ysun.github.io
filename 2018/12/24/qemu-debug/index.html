@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+<meta name="google-site-verification" content="MrnK1va2f2DY7TM-4onuV7g_G6yZyI3WkYbaykR0Ln0">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-minimal.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="QEMU,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="学习Qemu-KVM虚拟机最重要的一步——调试QEMU，我们这里提前帮大家简单的总结归纳一下。Qemu的调试稍微有点特殊的地方就是，除了Qemu程序自身源代码的调试以外，我们可以通过Qemu+GDB来调试我们虚拟机程序。下面将两个不同方面的调试方法介绍一下。 1. 调试QEMU源码1gdb --args x86_64-softmmu/qemu-system-x86_64 --enable-kvm">
+<meta name="keywords" content="QEMU">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用 QEMU 调试内核">
+<meta property="og:url" content="http://www.owalle.com/2018/12/24/qemu-debug/index.html">
+<meta property="og:site_name" content="Yi颗烂樱桃">
+<meta property="og:description" content="学习Qemu-KVM虚拟机最重要的一步——调试QEMU，我们这里提前帮大家简单的总结归纳一下。Qemu的调试稍微有点特殊的地方就是，除了Qemu程序自身源代码的调试以外，我们可以通过Qemu+GDB来调试我们虚拟机程序。下面将两个不同方面的调试方法介绍一下。 1. 调试QEMU源码1gdb --args x86_64-softmmu/qemu-system-x86_64 --enable-kvm">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://www.owalle.com/2018/12/24/qemu-debug/gdb_tui.png">
+<meta property="og:image" content="http://www.owalle.com/2018/12/24/qemu-debug/vscode.png">
+<meta property="og:image" content="http://www.owalle.com/2018/12/24/qemu-debug/vscode2.png">
+<meta property="og:updated_time" content="2022-05-08T15:41:22.361Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用 QEMU 调试内核">
+<meta name="twitter:description" content="学习Qemu-KVM虚拟机最重要的一步——调试QEMU，我们这里提前帮大家简单的总结归纳一下。Qemu的调试稍微有点特殊的地方就是，除了Qemu程序自身源代码的调试以外，我们可以通过Qemu+GDB来调试我们虚拟机程序。下面将两个不同方面的调试方法介绍一下。 1. 调试QEMU源码1gdb --args x86_64-softmmu/qemu-system-x86_64 --enable-kvm">
+<meta name="twitter:image" content="http://www.owalle.com/2018/12/24/qemu-debug/gdb_tui.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.owalle.com/2018/12/24/qemu-debug/">
+
+
+
+
+
+  <title>使用 QEMU 调试内核 | Yi颗烂樱桃</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a rel="external nofollow" href="/" class="brand">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Yi颗烂樱桃</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">虚拟化中文</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a rel="external nofollow" href="/">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a rel="external nofollow" href="/archives/">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a rel="external nofollow" href="/categories/">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a rel="external nofollow" href="/tags/">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a rel="external nofollow" href="/about/">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-sitemap">
+          <a rel="external nofollow" href="/sitemap.xml">
+            
+              <i class="menu-item-icon fa fa-fw fa-sitemap"></i> <br>
+            
+            站点地图
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a rel="external nofollow" href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2018/12/24/qemu-debug/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">使用 QEMU 调试内核</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-12-24T09:59:17+08:00">
+                2018-12-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/QEMU/" itemprop="url" rel="index">
+                    <span itemprop="name">QEMU</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/12/24/qemu-debug/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2018/12/24/qemu-debug/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  2.2k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  9
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>学习Qemu-KVM虚拟机最重要的一步——调试QEMU，我们这里提前帮大家简单的总结归纳一下。<br>Qemu的调试稍微有点特殊的地方就是，除了Qemu程序自身源代码的调试以外，我们可以通过Qemu+GDB来调试我们虚拟机程序。下面将两个不同方面的调试方法介绍一下。</p>
+<h2 id="1-调试QEMU源码"><a href="#1-调试QEMU源码" class="headerlink" title="1. 调试QEMU源码"></a>1. 调试QEMU源码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gdb --args x86_64-softmmu/qemu-system-x86_64 --enable-kvm -m 1024 -drive file=test.qcow2 -append console=ttyS0 -kernel /boot/vmlinuz -initrd /boot/initrd.gz</span><br></pre></td></tr></table></figure>
+<p>当然以上参数中从–enable-kvm开始之后的参数因人而异，不尽相同。执行过之后，就会进入gdb界面，就可以跟其他普通应用程序一样，进行单步调试、设置断点、查看栈、寄存器内容等</p>
+<h2 id="2-调试虚拟机"><a href="#2-调试虚拟机" class="headerlink" title="2. 调试虚拟机"></a>2. 调试虚拟机</h2><p>这部分是本文的重点。跟调试应用程序不同，调试虚拟机时gdb和qemu分开执行，似乎并不能用gdb来调用qemu。长话短说，先来看如何启动qemu：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-x86_64 \</span><br><span class="line">        --enable-kvm \</span><br><span class="line">        -m 2048 -smp 1 \</span><br><span class="line">        -s -S \</span><br><span class="line">        -cpu host \</span><br><span class="line">        -hda /home/works/kvm/ubuntu20.10_mini.img \</span><br><span class="line">        -kernel /home/works/linux-stable/arch/x86/boot/bzImage \</span><br><span class="line">        -append &quot;root=/dev/sda3 nokaslr console=ttyS0&quot;</span><br><span class="line"></span><br><span class="line">#       -bios ovmf/OVMF_CODE.fd \</span><br><span class="line">#       -boot order=c,menu=off \</span><br></pre></td></tr></table></figure></p>
+<p>注意，这里有几个小坑：</p>
+<ul>
+<li>-smp 1 建议只要不是为了研究SMP并发，debug的时候就带着吧，gdb可能多线程不太能搞定的样子。</li>
+<li>-enable-kvm 开启了kvm support，添加断点的时候，可能需要使用<code>hbreak &lt;xxx&gt;</code></li>
+<li>-kernel 如果VM镜像是UEFI support的话，那么需要使用这个参数，在vm image之外传递kernel image(bzImage)给QEMU。如果这样做了，还需要注意一点，就是跟内核匹配的模块，还是需要提前copy到vm image的<code>/lib/modules/</code>内的，否则kernel是用不了任何模块的。</li>
+<li>-append 给kernel传递参数，使用-kernel时，这个是必需的，比如<code>root=xxx</code></li>
+<li>需要在vm的kernel的启动参数里面加上<code>nokaslr</code>，关闭内核随机位置。By default, Linux® uses KASLR. Specify the nokaslr kernel parameter to disable kernel randomization, that is, cause the kernel to be loaded at its standard location.</li>
+<li>使用-kernel 时，需要去掉OVMF bios</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-s shorthand for -gdb tcp::1234</span><br><span class="line">-S freeze CPU at startup (use &apos;c&apos; to start execution)</span><br></pre></td></tr></table></figure>
+<p>然后新开一个终端执行gdb，参数如下，传递与上一步bzImage同一个build的vmlinux，作为符号表。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gdb -tui /home/works/linux-stable/vmlinux</span><br></pre></td></tr></table></figure></p>
+<p>这样就跟调试应用程序一样，会看到同样的’(gdb)’ 提示符，在提示符中输入：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">target remote localhost:1234</span><br></pre></td></tr></table></figure></p>
+<p>1234是默认用于远程调试连接的端口号。<br>然后设置断点”hbreak *0x7c00”，这样就将一个断点设置在了bootloader被加载到的内存地址，接下来就任你玩了。<br>或者设置断点到内核入口函数<code>hb start_kernel</code>等。</p>
+<pre>
+[root@ccd-sdv6 ~]# gdb
+GNU gdb (GDB) Red Hat Enterprise Linux 7.6.1-100.el7
+Copyright (C) 2013 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http: gnu.org="" licenses="" gpl.html="">
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "x86_64-redhat-linux-gnu".
+For bug reporting instructions, please see:
+<http: www.gnu.org="" software="" gdb="" bugs="">.
+<font color="#0099ff" face="黑体">(gdb) target remote localhost:1234</font>
+Remote debugging using localhost:1234
+0x0000fff0 in ?? ()
+(gdb) c
+Continuing.
+
+Program received signal SIGINT, Interrupt.
+0x00002bcb in ?? ()
+<font color="#0099ff" face="黑体">(gdb) b *0x7c00</font>
+Breakpoint 1 at 0x7c00.
+
+<font color="#0099ff" face="黑体">(gdb) info breakpoints</font>
+Num     Type           Disp Enb Address    What
+1       breakpoint     keep y   0x00007c00
+
+<font color="#0099ff" face="黑体">(gdb) hbreak start_kernel</font>
+
+</http:></http:></pre>
+
+
+<h2 id="顺便附上一些用到的gdb的快捷键以及命令"><a href="#顺便附上一些用到的gdb的快捷键以及命令" class="headerlink" title="顺便附上一些用到的gdb的快捷键以及命令"></a>顺便附上一些用到的gdb的快捷键以及命令</h2><h3 id="TUI-窗口"><a href="#TUI-窗口" class="headerlink" title="TUI 窗口"></a>TUI 窗口</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Ctrl + x, Ctrl + a</span><br><span class="line">好像等效</span><br><span class="line">Ctrl + x, a</span><br></pre></td></tr></table></figure>
+<p>一般也就按着Ctrl键，依次按下字母x 和a就可以再TUI和非TUI间切换</p>
+<h3 id="TUI-窗口概述"><a href="#TUI-窗口概述" class="headerlink" title="TUI 窗口概述"></a>TUI 窗口概述</h3><p>在TUI模式中，可以显示以下几个窗口：</p>
+<ul>
+<li>命令窗口<br>用于GDB调试时的命令输入和命令结果输出显示，与普通GDB窗口无异。</li>
+<li>源代码窗口<br>用于显示程序源代码，包括当前运行行、中断以中断标识等。</li>
+<li>汇编窗口<br>显示当前程序的汇编代码。</li>
+<li>寄存器窗口<br>显示处理器的寄存器内容，当寄存器内容发生改变时会高亮显示。<br>源代码窗口和汇编窗口会高亮显示程序运行位置并以’&gt;’符号标记。有两个特殊标记用于标识断点，第一个标记用于标识断点类型：<ul>
+<li>B : 程序至少有一次运行到了该断点</li>
+<li>b : 程序没有运行到过该断点</li>
+<li>H : 程序至少有一次运行到了该硬件断点</li>
+<li>h : 程序没有运行到过该硬件断点<br>第二个标记用于标识断点使能与否:</li>
+<li>+ : 断点使能Breakpointis enabled. </li>
+<li>- : 断点被禁用Breakpointis disabled. </li>
+</ul>
+</li>
+</ul>
+<h3 id="三窗口模式"><a href="#三窗口模式" class="headerlink" title="三窗口模式"></a>三窗口模式</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Ctrl + 2</span><br></pre></td></tr></table></figure>
+<p>使TUI的上半部分分割成两个窗口，连接按此快捷键可在三种组合中切换。<br>寄存器窗口、代码窗口、汇编窗口 三个窗口只能同时显示两个，共3种组合。</p>
+<h3 id="更换激活窗口"><a href="#更换激活窗口" class="headerlink" title="更换激活窗口"></a>更换激活窗口</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Ctrl + o</span><br></pre></td></tr></table></figure>
+<p>之所以需要切换激活窗口，是因为有些快捷键，比如箭头上下左右，page up/down只有在当前窗口起作用</p>
+<h3 id="GDB-command"><a href="#GDB-command" class="headerlink" title="GDB command"></a>GDB command</h3><p><code>c</code> : continue<br><code>r</code> : run<br><code>n</code> : next<br><code>s</code> : step</p>
+<h3 id="TUI-特有命令"><a href="#TUI-特有命令" class="headerlink" title="TUI 特有命令"></a>TUI 特有命令</h3><p><code>info win</code> ：显示正在显示的窗口大小信息<br><code>layout next</code> ：显示下一个窗口<br><code>layout prev</code> ：显示上一个窗口<br><code>layout src</code> ：显示源代码窗口<br><code>layout asm</code> ：显示汇编窗口<br><code>layout split</code> ：显示源代码和汇编窗口<br><code>layout regs</code> ：显示寄存器窗口<br><code>focus next</code> ： 将一个窗口置为激活状态<br><code>focus prev</code> ：将上一个窗口置为激活状态<br><code>focus src</code> : 将源代码窗口置为激活状态<br><code>focus asm</code> ：将汇编窗口置为激活状态<br><code>focus regs</code> ： 将寄存器窗口置为激活状态<br><code>focus cmd</code> ：将命令行窗口置为激活状态<br><code>refresh</code> ： 更新窗口，与C-L快捷键同</p>
+<p><code>tuireg float</code> ：寄存器窗口显示内容为浮点寄存器<br><code>tuireg general</code> ：寄存器窗口显示内容为普通寄存器<br><code>tuireg next</code> ：显示下一组寄存器，预定义的寄存器组: general, float,system, vector,all, save,restore.<br><code>tuireg system</code> ：显示上一组寄存器<br><code>update</code> ：更新源代码窗口到当前运行点<br><code>winname + count</code> ：增加指定窗口的高度<br><code>winname + count</code> ：减小指定窗口的高度<br><code>tabset nchars</code> : Set the width of tab stops to be nchars characters</p>
+<h3 id="条件断点："><a href="#条件断点：" class="headerlink" title="条件断点："></a>条件断点：</h3><p>在gdb中可以watch一个寄存器，命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">watch $eax == 0x0000ffaa</span><br></pre></td></tr></table></figure>
+<p>另外，当我们想有条件的设置某一个断点的时候，命令如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">break test.c:120 if $eax == 0x0000ffaa</span><br></pre></td></tr></table></figure></p>
+<p><img src="/2018/12/24/qemu-debug/gdb_tui.png" alt=""></p>
+<h2 id="VSCode-远程debug"><a href="#VSCode-远程debug" class="headerlink" title="VSCode 远程debug"></a>VSCode 远程debug</h2><p>gdb只有TUI，并且对于多线程程序支持并不是很理想，相比之下vscode更为现代一些。<br>大概只需要两个配置文件，和一个启动虚拟机的脚本就好：<br><code>launch.json</code>:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;version&quot;: &quot;0.2.0&quot;,</span><br><span class="line">    &quot;configurations&quot;: [</span><br><span class="line">      &#123;</span><br><span class="line">        &quot;name&quot;: &quot;(gdb) linux&quot;,</span><br><span class="line">        &quot;type&quot;: &quot;cppdbg&quot;,</span><br><span class="line">        &quot;request&quot;: &quot;launch&quot;,</span><br><span class="line">        &quot;preLaunchTask&quot;: &quot;vm&quot;, //if you don&apos;t want to launch vm via vscode, common this line!</span><br><span class="line">        &quot;program&quot;: &quot;$&#123;workspaceRoot&#125;/vmlinux&quot;,</span><br><span class="line">        &quot;miDebuggerServerAddress&quot;: &quot;localhost:1234&quot;,</span><br><span class="line">        &quot;args&quot;: [],</span><br><span class="line">        &quot;stopAtEntry&quot;: true,</span><br><span class="line">        &quot;cwd&quot;: &quot;$&#123;workspaceFolder&#125;&quot;,</span><br><span class="line">        &quot;environment&quot;: [],</span><br><span class="line">        &quot;externalConsole&quot;: false,</span><br><span class="line">        &quot;MIMode&quot;: &quot;gdb&quot;,</span><br><span class="line">        &quot;miDebuggerArgs&quot;: &quot;-n&quot;,</span><br><span class="line">        &quot;targetArchitecture&quot;: &quot;x64&quot;,</span><br><span class="line">        &quot;hardwareBreakpoints&quot;: &#123; &quot;require&quot;: true&#125;,</span><br><span class="line">        //&quot;logging&quot;: &#123; &quot;engineLogging&quot;: true &#125;,</span><br><span class="line">        &quot;setupCommands&quot;: [</span><br><span class="line">          &#123;</span><br><span class="line">            &quot;description&quot;: &quot;Hardware breakpoint at start&quot;,</span><br><span class="line">            &quot;text&quot;: &quot;-break-insert -h -f start_kernel&quot;, // specify your entry point label, mine wa</span><br><span class="line">s &apos;start_kernel&apos;</span><br><span class="line">            &quot;ignoreFailures&quot;: true</span><br><span class="line">          &#125;,</span><br><span class="line">          &#123;</span><br><span class="line">            &quot;text&quot;: &quot;set arch i386:x86-64:intel&quot;,</span><br><span class="line">            &quot;ignoreFailures&quot;: false</span><br><span class="line">          &#125;,</span><br><span class="line">          &#123;</span><br><span class="line">            &quot;text&quot;: &quot;dir .&quot;,</span><br><span class="line">            &quot;ignoreFailures&quot;: false</span><br><span class="line">          &#125;,</span><br><span class="line">          &#123;</span><br><span class="line">            &quot;text&quot;: &quot;add-auto-load-safe-path ./&quot;,</span><br><span class="line">            &quot;ignoreFailures&quot;: false</span><br><span class="line">          &#125;,</span><br><span class="line">          &#123;</span><br><span class="line">            &quot;text&quot;: &quot;-enable-pretty-printing&quot;,</span><br><span class="line">            &quot;ignoreFailures&quot;: true</span><br><span class="line">          &#125;</span><br><span class="line">        ]</span><br><span class="line">      &#125;                                                                                           </span><br><span class="line">   ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>tasks.josn</code>:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">&#123;                                                                                                 </span><br><span class="line">  // See https://go.microsoft.com/fwlink/?LinkId=733558</span><br><span class="line">  // for the documentation about the tasks.json format</span><br><span class="line">  &quot;version&quot;: &quot;2.0.0&quot;,</span><br><span class="line">  &quot;tasks&quot;: [</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;label&quot;: &quot;vm&quot;,</span><br><span class="line">      &quot;type&quot;: &quot;shell&quot;,</span><br><span class="line">      &quot;command&quot;: &quot;`pwd`/.vscode/start_vm_qemu_mini_iommu.sh&quot;,</span><br><span class="line">      &quot;presentation&quot;: &#123;</span><br><span class="line">        &quot;echo&quot;: true,</span><br><span class="line">        &quot;clear&quot;: true,</span><br><span class="line">        &quot;group&quot;: &quot;vm&quot;</span><br><span class="line">      &#125;,</span><br><span class="line">      &quot;isBackground&quot;: true,</span><br><span class="line">      &quot;problemMatcher&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;pattern&quot;: [</span><br><span class="line">            &#123;</span><br><span class="line">              &quot;regexp&quot;: &quot;.&quot;,</span><br><span class="line">              &quot;file&quot;: 1,</span><br><span class="line">              &quot;location&quot;: 2,</span><br><span class="line">              &quot;message&quot;: 3</span><br><span class="line">            &#125;</span><br><span class="line">          ],</span><br><span class="line">          &quot;background&quot;: &#123;</span><br><span class="line">            &quot;activeOnStart&quot;: true,</span><br><span class="line">            &quot;beginsPattern&quot;: &quot;.&quot;,</span><br><span class="line">            &quot;endsPattern&quot;: &quot;.&quot;,</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      ]</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;label&quot;: &quot;build&quot;,</span><br><span class="line">      &quot;type&quot;: &quot;shell&quot;,</span><br><span class="line">      &quot;command&quot;: &quot;make&quot;,</span><br><span class="line">      &quot;group&quot;: &#123;</span><br><span class="line">        &quot;kind&quot;: &quot;build&quot;,</span><br><span class="line">        &quot;isDefault&quot;: true</span><br><span class="line">      &#125;,</span><br><span class="line">      &quot;presentation&quot;: &#123;</span><br><span class="line">        &quot;echo&quot;: false,</span><br><span class="line">        &quot;group&quot;: &quot;build&quot;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>start_vm_qemu_mini_iommu.sh</code>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash</span><br><span class="line"></span><br><span class="line">qemu-system-x86_64 \</span><br><span class="line">        -m 2048 -smp 1 \</span><br><span class="line">        -enable-kvm \</span><br><span class="line">        -cpu max \</span><br><span class="line">        -vga none -nodefaults -nographic \</span><br><span class="line">        -serial mon:stdio \</span><br><span class="line">        -hda /home/works/kvm/ubuntu20.10_mini.img \</span><br><span class="line">        -append &quot;root=/dev/sda3 nokaslr console=ttyS0&quot;  \</span><br><span class="line">        -kernel /home/works/linux-stable/arch/x86/boot/bzImage \</span><br><span class="line">        -net nic -net user,hostfwd=tcp::5028-:22 \</span><br><span class="line">        -s -S \</span><br><span class="line">        -machine q35,kernel-irqchip=split \</span><br><span class="line">        -device intel-iommu,intremap=on</span><br></pre></td></tr></table></figure>
+<p>快速下载链接:<br><a href="launch.json.sample">launch.json</a><br><a href="tasks.json.sample">tasks.json</a><br><a href="start_vm_qemu_mini_iommu.sh">start_vm_qemu_mini_iommu.sh</a><br><a href="c_cpp_properties.json.sample">c_cpp_properties.json</a><br><a href="settings.json.sample">settings.json</a></p>
+<p>效果如图：<br><img src="/2018/12/24/qemu-debug/vscode.png" alt="vscode.png"><br><img src="/2018/12/24/qemu-debug/vscode2.png" alt="vscode2.png"></p>
+<p>Reference:<br><a href="https://www.starlab.io/blog/using-gdb-to-debug-the-linux-kernel" target="_blank" rel="noopener">https://www.starlab.io/blog/using-gdb-to-debug-the-linux-kernel</a><br><a href="https://www.kernel.org/doc/html/latest/dev-tools/gdb-kernel-debugging.html" target="_blank" rel="noopener">https://www.kernel.org/doc/html/latest/dev-tools/gdb-kernel-debugging.html</a><br><a href="https://blog.csdn.net/eydwyz/article/details/114019532" target="_blank" rel="noopener">使用 VSCode + qemu 搭建 Linux 内核调试环境</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="Yi颗烂樱桃 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.png" alt="Yi颗烂樱桃 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者：</strong>
+    Yi颗烂樱桃
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://www.owalle.com/2018/12/24/qemu-debug/" title="使用 QEMU 调试内核">http://www.owalle.com/2018/12/24/qemu-debug/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>
+    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="external nofollow" target="_blank">CC BY-NC-ND 3.0</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/QEMU/" rel="tag"># QEMU</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/12/10/kvm-memory/" rel="next" title="KVM 虚拟化原理4--内存">
+                <i class="fa fa-chevron-left"></i> KVM 虚拟化原理4--内存
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/12/26/qemu-qom/" rel="prev" title="利用QOM(Qemu Object Model)创建虚拟设备">
+                利用QOM(Qemu Object Model)创建虚拟设备 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+    <a href="#" class="bds_douban" data-cmd="douban" title="分享到豆瓣网"></a>
+    <a href="#" class="bds_sqq" data-cmd="sqq" title="分享到QQ好友"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+    <a href="#" class="bds_tieba" data-cmd="tieba" title="分享到百度贴吧"></a>
+    <a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+    <a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a class="bds_count" data-cmd="count"></a>
+  </div>
+  <script>
+    window._bd_share_config = {
+      "common": {
+        "bdText": "",
+        "bdMini": "2",
+        "bdMiniList": false,
+        "bdPic": ""
+      },
+      "share": {
+        "bdSize": "16",
+        "bdStyle": "0"
+      },
+      "image": {
+        "viewList": ["tsina", "douban", "sqq", "qzone", "weixin", "twi", "fbook"],
+        "viewText": "分享到：",
+        "viewSize": "16"
+      }
+    }
+  </script>
+
+<script>
+  with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='//bdimg.share.baidu.com/static/api/js/share.js?cdnversion='+~(-new Date()/36e5)];
+</script>
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="Yi颗烂樱桃">
+            
+              <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">46</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+            <div class="cc-license motion-element" itemprop="license">
+              <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" class="cc-opacity" target="_blank">
+                <img src="/images/cc-by-nc-nd.svg" alt="Creative Commons">
+              </a>
+            </div>
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-调试QEMU源码"><span class="nav-number">1.</span> <span class="nav-text">1. 调试QEMU源码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-调试虚拟机"><span class="nav-number">2.</span> <span class="nav-text">2. 调试虚拟机</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#顺便附上一些用到的gdb的快捷键以及命令"><span class="nav-number">3.</span> <span class="nav-text">顺便附上一些用到的gdb的快捷键以及命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#TUI-窗口"><span class="nav-number">3.1.</span> <span class="nav-text">TUI 窗口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TUI-窗口概述"><span class="nav-number">3.2.</span> <span class="nav-text">TUI 窗口概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#三窗口模式"><span class="nav-number">3.3.</span> <span class="nav-text">三窗口模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更换激活窗口"><span class="nav-number">3.4.</span> <span class="nav-text">更换激活窗口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GDB-command"><span class="nav-number">3.5.</span> <span class="nav-text">GDB command</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TUI-特有命令"><span class="nav-number">3.6.</span> <span class="nav-text">TUI 特有命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#条件断点："><span class="nav-number">3.7.</span> <span class="nav-text">条件断点：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VSCode-远程debug"><span class="nav-number">4.</span> <span class="nav-text">VSCode 远程debug</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yi颗烂樱桃</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">106.6k</span>
+
+  <span class="post-meta-divider">|</span>
+  
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  <span class="site-uv">
+    <i class="fa fa-user"></i>
+    <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    
+  </span>
+
+
+
+  <span class="site-pv">
+    <i class="fa fa-eye"></i>
+    <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    
+  </span>
+
+</div>
+
+<div align="center">
+	<img style="display:inline-block;" src="images/icp.png"> 
+	<a href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备13030765号-8</a>
+
+	<img style="display:inline-block;text-decoration:none;height:20px;line-height:20px;" src="images/beian.png"> 
+	<a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202004052">沪公网安备 31011202004052号</a>
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+  
+  <script type="text/javascript" color="129,216,208" opacity="0.5" zindex="-2" count="50" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three.min.js"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three-waves.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kity.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/kityminder.core.min.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/mindmap.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: true,
+        notify: false,
+        appId: 'sIDOr6ptvMjLBmxig1vHlYsG-gzGzoHsz',
+        appKey: 'c1R9jtqasnufksgJUCE3eWo5',
+        placeholder: '亲，你不想说点什么吗？？ :D',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+</body>
+</html>
