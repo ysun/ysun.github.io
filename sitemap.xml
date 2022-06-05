@@ -170,6 +170,13 @@
   </url>
   
   <url>
+    <loc>http://www.owalle.com/2020/05/11/android-emulator/</loc>
+    
+    <lastmod>2021-09-27T09:54:43.334Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://www.owalle.com/2020/06/03/crosvm-chromevm/</loc>
     
     <lastmod>2021-09-27T09:54:43.334Z</lastmod>
@@ -178,13 +185,6 @@
   
   <url>
     <loc>http://www.owalle.com/2020/04/19/crosvm-input/</loc>
-    
-    <lastmod>2021-09-27T09:54:43.334Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://www.owalle.com/2020/05/11/android-emulator/</loc>
     
     <lastmod>2021-09-27T09:54:43.334Z</lastmod>
     
@@ -254,13 +254,6 @@
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2019/07/16/study-x86-fence/</loc>
-    
-    <lastmod>2021-09-27T09:54:43.190Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://www.owalle.com/2019/05/22/inline-assembly/</loc>
     
     <lastmod>2021-09-27T09:54:43.190Z</lastmod>
@@ -269,6 +262,13 @@
   
   <url>
     <loc>http://www.owalle.com/2019/05/12/sdm-8-2-memory-ordering/</loc>
+    
+    <lastmod>2021-09-27T09:54:43.190Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://www.owalle.com/2019/07/16/study-x86-fence/</loc>
     
     <lastmod>2021-09-27T09:54:43.190Z</lastmod>
     
@@ -296,14 +296,14 @@
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2018/12/10/kvm-cpu/</loc>
+    <loc>http://www.owalle.com/2018/12/10/kvm-memory/</loc>
     
     <lastmod>2021-09-27T09:54:43.062Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2018/12/10/kvm-memory/</loc>
+    <loc>http://www.owalle.com/2018/12/10/kvm-cpu/</loc>
     
     <lastmod>2021-09-27T09:54:43.062Z</lastmod>
     

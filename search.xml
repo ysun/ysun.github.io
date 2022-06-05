@@ -275,9 +275,9 @@
         <category>X86</category>
       </categories>
       <tags>
+        <tag>x86</tag>
         <tag>QEMU</tag>
         <tag>KVM</tag>
-        <tag>x86</tag>
       </tags>
   </entry>
   <entry>
@@ -289,8 +289,8 @@
       </categories>
       <tags>
         <tag>QEMU</tag>
-        <tag>X86</tag>
         <tag>KVM</tag>
+        <tag>X86</tag>
       </tags>
   </entry>
   <entry>
