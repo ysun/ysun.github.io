@@ -24,7 +24,7 @@
   </script>
 
   <meta name="description" content="浅谈“内存读写重排序”在我们编写C/C++代码时，以及它在CPU上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序(又叫“程序顺序”, program ordering)会被重新排列。这个现象会在两个地方引入，编译时候由编译器引入；以及运行时由处理器引入。目的都是为了”使代码运行的更快”。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起">
-<meta name="keywords" content="x86,QEMU,KVM">
+<meta name="keywords" content="x86,KVM,QEMU">
 <meta property="og:type" content="article">
 <meta property="og:title" content="利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令">
 <meta property="og:url" content="http://www.owalle.com/2019/07/16/study-x86-fence/index.html">
@@ -339,8 +339,8 @@
       <footer class="post-footer">
           <div class="post-tags">
               <a href="/tags/x86/" rel="tag"># x86</a>
-              <a href="/tags/QEMU/" rel="tag"># QEMU</a>
               <a href="/tags/KVM/" rel="tag"># KVM</a>
+              <a href="/tags/QEMU/" rel="tag"># QEMU</a>
           </div>
 
         
