@@ -879,6 +879,7 @@ external interrupt
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -1047,6 +1048,26 @@ external interrupt
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '30a5af43b5ea724ad81b',
+      clientSecret: '3426c0800920f9f75967ecf4b87f453e8012b911',
+      repo        : 'ysun.github.io',
+      owner       : 'ysun',
+      admin       : ['ysun'],
+      id          : '01fd40b52b74b82317da6124b412d2c5',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>
