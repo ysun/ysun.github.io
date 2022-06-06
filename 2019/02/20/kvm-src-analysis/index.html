@@ -1043,11 +1043,11 @@ external interrupt
 
   
 
-<link rel="stylesheet" href="gitalk/gitalk.min.css">
+<link rel="stylesheet" href="/lib/gitalk/gitalk.min.css">
 
 <script>
 NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
-  NexT.utils.getScript('gitalk/gitalk.min.js', () => {
+  NexT.utils.getScript('/lib/gitalk/gitalk.min.js', () => {
     var gitalk = new Gitalk({
       clientID    : '30a5af43b5ea724ad81b',
       clientSecret: '3426c0800920f9f75967ecf4b87f453e8012b911',
