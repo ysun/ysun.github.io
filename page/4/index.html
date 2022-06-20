@@ -198,6 +198,88 @@
   
   
   <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2019/05/12/sdm-8-2-memory-ordering/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/05/12/sdm-8-2-memory-ordering/" class="post-title-link" itemprop="url">SMD Chapter 8.2 内存存取顺序</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2019-05-12 23:12:28" itemprop="dateCreated datePublished" datetime="2019-05-12T23:12:28+08:00">2019-05-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-09-27 17:54:43" itemprop="dateModified" datetime="2021-09-27T17:54:43+08:00">2021-09-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/X86/" itemprop="url" rel="index"><span itemprop="name">X86</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>‘内存存取顺序(Memory ordering)’一词说的是处理器通过系统总线进行读取（加载）以及写回（存储）到系统内存里面。Intel 64以及32位系统根据架构的实现，支持多种存储顺序模型。例如，intel 386处理器强制使用“程序顺序”（强顺序），就是说读写系统总线的顺序按照全部环境中CPU指令流产生的顺序。<br>后来为了指令执行的效率，IA32架构允许脱离“强顺序”，在奔腾4、Xeon以及P6系列处理器中，称作“处理器顺序”。处理器顺序不同的方式，称作“内存存取顺序模型”，他们都允许增强执行，例如 允许读操作在可以缓存的写操作之前。所有这些不同模型的目的就是增强指令执行速度，同时保持存储内容的一致性，即使在多核系统中亦然。<br>8.2.1和8.2.2章节描述在intel486、奔腾、Core2 Due、Atom、Core Due、奔腾4、Xeon以及P6系列处理器中内存存取模型的实现。8.2.3章节会给出具体的存储模型的例子。8.2.4章节是关于字节操作的特殊处理。8.2.5章节讨论一些特殊指令的使用会影响存储模型的行为。</p>
+<h2 id="8-2-1-奔腾以及486处理器上的存储模型"><a href="#8-2-1-奔腾以及486处理器上的存储模型" class="headerlink" title="8.2.1 奔腾以及486处理器上的存储模型"></a>8.2.1 奔腾以及486处理器上的存储模型</h2>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/05/12/sdm-8-2-memory-ordering/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2019/05/07/efi-shell-tftp/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -925,87 +1007,6 @@
   
   
 
-      
-  
-  
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2018/12/10/qmp-introduction/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Yi颗烂樱桃">
-      <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yi颗烂樱桃">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/12/10/qmp-introduction/" class="post-title-link" itemprop="url">QMP 简介</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2018-12-10 21:42:39" itemprop="dateCreated datePublished" datetime="2018-12-10T21:42:39+08:00">2018-12-10</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-09-27 17:54:43" itemprop="dateModified" datetime="2021-09-27T17:54:43+08:00">2021-09-27</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/QEMU/" itemprop="url" rel="index"><span itemprop="name">QEMU</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="什么是QMP协议"><a href="#什么是QMP协议" class="headerlink" title="什么是QMP协议"></a>什么是QMP协议</h2><p>QMP，即QEMU Machine Protocol，就是qemu虚拟机中的一种协议，是qemu的一部分。qmp是基于json格式的一整套协议，通过这套协议我们可以控制qemu虚拟机实例的整个生命周期，包括挂起、暂停、快照、查询、外设的热插拔等，以及最简单的查询，都可以通过qmp实现。 有多种方法使用qmp，这里简要介绍通过tcp和unix socket使用qmp。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/12/10/qmp-introduction/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1076,7 +1077,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">46</span>
+          <span class="site-state-item-count">47</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
