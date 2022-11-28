@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.8.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.owalle.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Kprobes 能够动态地中断任何内核正在执行的指令，可以在几乎任何内核代码地址处捕获，指定在断点被命中时要调用的处理函数。目前有两种类型的probe：kprobes 和 kretprobes（也称为return probe）。 kprobe 可以插入到内核中的几乎任何指令上；而kretprobe是当指定函数返回时，会触发返回函数调用。通常，Kprobes会被在内核模块中。在模块的初始化函数中，注">
+<meta name="keywords" content="kernel">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kprobe原理和应用">
+<meta property="og:url" content="http://www.owalle.com/2022/11/06/kprobe/index.html">
+<meta property="og:site_name" content="Yi颗烂樱桃">
+<meta property="og:description" content="Kprobes 能够动态地中断任何内核正在执行的指令，可以在几乎任何内核代码地址处捕获，指定在断点被命中时要调用的处理函数。目前有两种类型的probe：kprobes 和 kretprobes（也称为return probe）。 kprobe 可以插入到内核中的几乎任何指令上；而kretprobe是当指定函数返回时，会触发返回函数调用。通常，Kprobes会被在内核模块中。在模块的初始化函数中，注">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://www.owalle.com/2022/11/06/kprobe/KProbeExecution.png">
+<meta property="og:updated_time" content="2022-11-06T12:52:21.803Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kprobe原理和应用">
+<meta name="twitter:description" content="Kprobes 能够动态地中断任何内核正在执行的指令，可以在几乎任何内核代码地址处捕获，指定在断点被命中时要调用的处理函数。目前有两种类型的probe：kprobes 和 kretprobes（也称为return probe）。 kprobe 可以插入到内核中的几乎任何指令上；而kretprobe是当指定函数返回时，会触发返回函数调用。通常，Kprobes会被在内核模块中。在模块的初始化函数中，注">
+<meta name="twitter:image" content="http://www.owalle.com/2022/11/06/kprobe/KProbeExecution.png">
+
+<link rel="canonical" href="http://www.owalle.com/2022/11/06/kprobe/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>Kprobe原理和应用 | Yi颗烂樱桃</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yi颗烂樱桃</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">虚拟化中文</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-fw fa-sitemap"></i>Sitemap</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2022/11/06/kprobe/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Kprobe原理和应用
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2022-11-06 16:13:30 / Modified: 20:52:21" itemprop="dateCreated datePublished" datetime="2022-11-06T16:13:30+08:00">2022-11-06</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/kernel/" itemprop="url" rel="index"><span itemprop="name">kernel</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Kprobes 能够动态地中断任何内核正在执行的指令，可以在几乎任何内核代码地址处捕获，指定在断点被命中时要调用的处理函数。<br>目前有两种类型的probe：kprobes 和 kretprobes（也称为return probe）。 kprobe 可以插入到内核中的几乎任何指令上；而kretprobe是当指定函数返回时，会触发返回函数调用。<br>通常，Kprobes会被在内核模块中。在模块的初始化函数中，注册一个或多个probe函数，而在该模块的exit函数中取消注册的函数。后面会贴一些内核的事例代码。</p>
+<h2 id="Kprobe"><a href="#Kprobe" class="headerlink" title="Kprobe"></a>Kprobe</h2><h3 id="Kprobe-工作原理？"><a href="#Kprobe-工作原理？" class="headerlink" title="Kprobe 工作原理？"></a>Kprobe 工作原理？</h3><p>注册kprobe函数后，Kprobes会复制被探测的指令，并用断点指令（x86_64 上的 int3指令）替换被探测指令的第一个字节。<br>当 CPU 遇到断点指令时，会发生<code>trap</code>，保存 CPU 的寄存器，并通过 notifier_call_chain 机制将控制权传递给 Kprobes。 Kprobes 执行与 kprobe 相关的<code>pre_handler</code>，将 kprobe 结构的地址和保存的寄存器传递给处理程序。</p>
+<p>接下来，Kprobes一次性执行完被probe的指令。 然后Kprobes 执行<code>post_handler</code>（如果有）。<br>最后，返回继续执行探测点之后的指令。</p>
+<h3 id="更改执行路径"><a href="#更改执行路径" class="headerlink" title="更改执行路径"></a>更改执行路径</h3><p>由于 kprobes 可以探测正在运行的内核代码，所以它可以更改寄存器，包括指令指针。此操作需要非常小心，例如保护堆栈，恢复执行路径等。<br>如果在回调函数pre_handler中修改指令指针(IP)寄存器以及相关的寄存器，那么<code>pre_handler</code>必须返回非零值，此时，kprobes会停止上面提到的一次性执行的步骤，仅会返回一个到给定地址。这也意味着不应再调用<code>post_handler</code>函数。</p>
+<h2 id="return-probe"><a href="#return-probe" class="headerlink" title="return probe"></a>return probe</h2><h3 id="return-probe-工作原理"><a href="#return-probe-工作原理" class="headerlink" title="return probe 工作原理"></a>return probe 工作原理</h3><p>KProbe利用注册函数register_kretprobe()，在要探测的函数入口处建立一个探测点。当被探测的函数被调用并且这个探测被命中时，Kprobes会保存一份返回地址的副本，并将返回地址替换为另一个“trampoline”的地址。”trampoline”是一段任意代码，通常只是一条 nop 指令。在启动时，Kprobes 在蹦床上注册一个 kprobe。<br>当被探测的函数执行它的返回指令时，控制权传递给“trampoline”指令，并且该探测被命中。 Kprobes 的 trampoline 处理程序调用kretprobe注册的用户指定的返回处理程序，然后将保存的指令指针设置为保存的返回地址，这就是从陷阱返回后恢复执行的地方。</p>
+<p>当被探测函数正在执行时，它的返回地址存储在一个kretprobe_instance类型的对象中。在调用 register_kretprobe() 之前，用户设置 kretprobe 结构的 maxactive 字段来指定可以同时探测多少个指定函数的实例。 register_kretprobe() 预分配指定数量的 kretprobe_instance 对象。</p>
+<p>例如，如果函数是非递归的并且在调用时持有自旋锁，那么 maxactive = 1 就足够了。如果函数是非递归的并且永远不会放弃 CPU（例如，通过信号量或抢占），则 NR_CPUS 应该足够了。如果 maxactive &lt;= 0，则设置为默认值。</p>
+<p>如果 maxactive 设置得太低，会错过一些探测。在 kretprobe 结构中，nmissed 字段在注册返回探针时设置为零，并且每次进入被探测函数但没有可用于建立返回探针的 kretprobe_instance 对象时递增。</p>
+<h3 id="Kretprobe-入口处理程序"><a href="#Kretprobe-入口处理程序" class="headerlink" title="Kretprobe 入口处理程序"></a>Kretprobe 入口处理程序</h3><p>Kretprobes 还提供了一个可选的用户指定的处理程序，它在函数入口上运行。该处理程序是通过设置 kretprobe 结构的 entry_handler 字段来指定的。每当 kretprobe 放置在函数入口处的 kprobe 被命中时，都会调用用户定义的 entry_handler，如果有的话。如果 entry_handler 返回 0（成功），则保证在函数返回时调用相应的返回处理程序。如果 entry_handler 返回非零错误，则 Kprobes 将返回地址保持原样，并且 kretprobe 对该特定函数实例没有进一步的影响。</p>
+<p>使用与它们关联的唯一 kretprobe_instance 对象来匹配多个入口和返回处理程序调用。此外，用户还可以将每个返回实例的私有数据指定为每个 kretprobe_instance 对象的一部分。这在相应的用户条目和返回处理程序之间共享私有数据时特别有用。每个私有数据对象的大小可以在 kretprobe 注册时通过设置 kretprobe 结构的 data_size 字段来指定。可以通过每个 kretprobe_instance 对象的数据字段访问此数据。</p>
+<p>如果输入了探测函数但没有可用的 kretprobe_instance 对象，则除了增加 nmissed 计数外，还会跳过用户 entry_handler 调用。</p>
+<p><img src="/2022/11/06/kprobe/KProbeExecution.png" alt="kprobe"></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/kernel.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/kprobes.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">char</span> symbol[KSYM_NAME_LEN] = <span class="string">"kernel_clone"</span>;</span><br><span class="line">module_param_string(symbol, symbol, KSYM_NAME_LEN, <span class="number">0644</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/* For each probe you need to allocate a kprobe structure */</span></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">kprobe</span> <span class="title">kp</span> = &#123;</span></span><br><span class="line">	.symbol_name	= symbol,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* kprobe pre_handler: called just before the probed instruction is executed */</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span> __<span class="function">kprobes <span class="title">handler_pre</span><span class="params">(struct kprobe *p, struct pt_regs *regs)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	pr_info(<span class="string">"&lt;%s&gt; p-&gt;addr = 0x%p, ip = %lx, flags = 0x%lx\n"</span>,</span><br><span class="line">		p-&gt;symbol_name, p-&gt;addr, regs-&gt;ip, regs-&gt;flags);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* A dump_stack() here will give a stack backtrace */</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* kprobe post_handler: called after the probed instruction is executed */</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span> __<span class="function">kprobes <span class="title">handler_post</span><span class="params">(struct kprobe *p, struct pt_regs *regs,</span></span></span><br><span class="line"><span class="function"><span class="params">				<span class="keyword">unsigned</span> <span class="keyword">long</span> flags)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	pr_info(<span class="string">"&lt;%s&gt; p-&gt;addr = 0x%p, flags = 0x%lx\n"</span>,</span><br><span class="line">		p-&gt;symbol_name, p-&gt;addr, regs-&gt;flags);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span> __<span class="function">init <span class="title">kprobe_init</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> ret;</span><br><span class="line">	kp.pre_handler = handler_pre;</span><br><span class="line">	kp.post_handler = handler_post;</span><br><span class="line"></span><br><span class="line">	ret = register_kprobe(&amp;kp);</span><br><span class="line">	<span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">		pr_err(<span class="string">"register_kprobe failed, returned %d\n"</span>, ret);</span><br><span class="line">		<span class="keyword">return</span> ret;</span><br><span class="line">	&#125;</span><br><span class="line">	pr_info(<span class="string">"Planted kprobe at %p\n"</span>, kp.addr);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span> __<span class="function"><span class="built_in">exit</span> <span class="title">kprobe_exit</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	unregister_kprobe(&amp;kp);</span><br><span class="line">	pr_info(<span class="string">"kprobe at %p unregistered\n"</span>, kp.addr);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(kprobe_init)</span><br><span class="line">module_exit(kprobe_exit)</span><br><span class="line">MODULE_LICENSE(<span class="string">"GPL"</span>);</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/kernel.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/kprobes.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">char</span> func_name[KSYM_NAME_LEN] = <span class="string">"kernel_clone"</span>;</span><br><span class="line">module_param_string(func, func_name, KSYM_NAME_LEN, <span class="number">0644</span>);</span><br><span class="line">MODULE_PARM_DESC(func, <span class="string">"Function to kretprobe; this module will report the"</span></span><br><span class="line">			<span class="string">" function's execution time"</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/* per-instance private data */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">my_data</span> &#123;</span></span><br><span class="line">	<span class="keyword">ktime_t</span> entry_stamp;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Here we use the entry_hanlder to timestamp function entry */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">entry_handler</span><span class="params">(struct kretprobe_instance *ri, struct pt_regs *regs)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">my_data</span> *<span class="title">data</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!current-&gt;mm)</span><br><span class="line">		<span class="keyword">return</span> <span class="number">1</span>;	<span class="comment">/* Skip kernel threads */</span></span><br><span class="line"></span><br><span class="line">	data = (struct my_data *)ri-&gt;data;</span><br><span class="line">	data-&gt;entry_stamp = ktime_get();</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line">NOKPROBE_SYMBOL(entry_handler);</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Return-probe handler: Log the return value and duration. Duration may turn</span></span><br><span class="line"><span class="comment"> * out to be zero consistently, depending upon the granularity of time</span></span><br><span class="line"><span class="comment"> * accounting on the platform.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">ret_handler</span><span class="params">(struct kretprobe_instance *ri, struct pt_regs *regs)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> retval = regs_return_value(regs);</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">my_data</span> *<span class="title">data</span> = (<span class="title">struct</span> <span class="title">my_data</span> *)<span class="title">ri</span>-&gt;<span class="title">data</span>;</span></span><br><span class="line">	s64 delta;</span><br><span class="line">	<span class="keyword">ktime_t</span> now;</span><br><span class="line"></span><br><span class="line">	now = ktime_get();</span><br><span class="line">	delta = ktime_to_ns(ktime_sub(now, data-&gt;entry_stamp));</span><br><span class="line">	pr_info(<span class="string">"%s returned %lu and took %lld ns to execute\n"</span>,</span><br><span class="line">			func_name, retval, (<span class="keyword">long</span> <span class="keyword">long</span>)delta);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line">NOKPROBE_SYMBOL(ret_handler);</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">kretprobe</span> <span class="title">my_kretprobe</span> = &#123;</span></span><br><span class="line">	.handler		= ret_handler,</span><br><span class="line">	.entry_handler		= entry_handler,</span><br><span class="line">	.data_size		= <span class="keyword">sizeof</span>(struct my_data),</span><br><span class="line">	<span class="comment">/* Probe up to 20 instances concurrently. */</span></span><br><span class="line">	.maxactive		= <span class="number">20</span>,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span> __<span class="function">init <span class="title">kretprobe_init</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> ret;</span><br><span class="line"></span><br><span class="line">	my_kretprobe.kp.symbol_name = func_name;</span><br><span class="line">	ret = register_kretprobe(&amp;my_kretprobe);</span><br><span class="line">	<span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">		pr_err(<span class="string">"register_kretprobe failed, returned %d\n"</span>, ret);</span><br><span class="line">		<span class="keyword">return</span> ret;</span><br><span class="line">	&#125;</span><br><span class="line">	pr_info(<span class="string">"Planted return probe at %s: %p\n"</span>,</span><br><span class="line">			my_kretprobe.kp.symbol_name, my_kretprobe.kp.addr);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span> __<span class="function"><span class="built_in">exit</span> <span class="title">kretprobe_exit</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	unregister_kretprobe(&amp;my_kretprobe);</span><br><span class="line">	pr_info(<span class="string">"kretprobe at %p unregistered\n"</span>, my_kretprobe.kp.addr);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* nmissed &gt; 0 suggests that maxactive was set too low. */</span></span><br><span class="line">	pr_info(<span class="string">"Missed probing %d instances of %s\n"</span>,</span><br><span class="line">		my_kretprobe.nmissed, my_kretprobe.kp.symbol_name);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(kretprobe_init)</span><br><span class="line">module_exit(kretprobe_exit)</span><br><span class="line">MODULE_LICENSE(<span class="string">"GPL"</span>);</span><br></pre></td></tr></table></figure>
+<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><p><a href="https://www.kernel.org/doc/html/latest/trace/kprobes.html" target="_blank" rel="noopener">https://www.kernel.org/doc/html/latest/trace/kprobes.html</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    Donate
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Yi颗烂樱桃 WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="Yi颗烂樱桃 Alipay">
+        <p>Alipay</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/kernel/" rel="tag"># kernel</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/06/19/debug-compile-preprocess/" rel="prev" title="内核宏定义展开">
+      <i class="fa fa-chevron-left"></i> 内核宏定义展开
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Kprobe"><span class="nav-number">1.</span> <span class="nav-text">Kprobe</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Kprobe-工作原理？"><span class="nav-number">1.1.</span> <span class="nav-text">Kprobe 工作原理？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更改执行路径"><span class="nav-number">1.2.</span> <span class="nav-text">更改执行路径</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#return-probe"><span class="nav-number">2.</span> <span class="nav-text">return probe</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#return-probe-工作原理"><span class="nav-number">2.1.</span> <span class="nav-text">return probe 工作原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kretprobe-入口处理程序"><span class="nav-number">2.2.</span> <span class="nav-text">Kretprobe 入口处理程序</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文档"><span class="nav-number">3.</span> <span class="nav-text">参考文档</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
+  <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">48</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+      <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yi颗烂樱桃</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+  <script defer src="/lib/three/three.min.js"></script>
+    <script defer src="/lib/three/three-waves.min.js"></script>
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="/lib/gitalk/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('/lib/gitalk/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '30a5af43b5ea724ad81b',
+      clientSecret: '3426c0800920f9f75967ecf4b87f453e8012b911',
+      repo        : 'ysun.github.io',
+      owner       : 'ysun',
+      admin       : ['ysun'],
+      id          : 'fe2f00358d1cb90c8559c4e8da7c3028',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

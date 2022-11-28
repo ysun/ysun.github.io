@@ -198,6 +198,82 @@
   
   
   <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2022/11/06/kprobe/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/11/06/kprobe/" class="post-title-link" itemprop="url">Kprobe原理和应用</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2022-11-06 16:13:30 / Modified: 20:52:21" itemprop="dateCreated datePublished" datetime="2022-11-06T16:13:30+08:00">2022-11-06</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/kernel/" itemprop="url" rel="index"><span itemprop="name">kernel</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Kprobes 能够动态地中断任何内核正在执行的指令，可以在几乎任何内核代码地址处捕获，指定在断点被命中时要调用的处理函数。<br>目前有两种类型的probe：kprobes 和 kretprobes（也称为return probe）。 kprobe 可以插入到内核中的几乎任何指令上；而kretprobe是当指定函数返回时，会触发返回函数调用。<br>通常，Kprobes会被在内核模块中。在模块的初始化函数中，注册一个或多个probe函数，而在该模块的exit函数中取消注册的函数。后面会贴一些内核的事例代码。</p>
+<h2 id="Kprobe"><a href="#Kprobe" class="headerlink" title="Kprobe"></a>Kprobe</h2>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/11/06/kprobe/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2022/06/19/debug-compile-preprocess/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -891,88 +967,6 @@
   
   
 
-      
-  
-  
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2021/09/27/auto-subtitle/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Yi颗烂樱桃">
-      <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yi颗烂樱桃">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/09/27/auto-subtitle/" class="post-title-link" itemprop="url">利用Google Speech自动视频字幕</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2021-09-27 15:32:10" itemprop="dateCreated datePublished" datetime="2021-09-27T15:32:10+08:00">2021-09-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-09-28 07:01:35" itemprop="dateModified" datetime="2021-09-28T07:01:35+08:00">2021-09-28</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/Live/" itemprop="url" rel="index"><span itemprop="name">Live</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>最近由于需要看一些英文的视频学习材料，其中不乏一些印度同仁的作品，口音着实不是很友好，有时候在github上找到了个挺好的项目，<a href="https://github.com/BingLingGroup/autosub" target="_blank" rel="noopener">自动字幕</a>。</p>
-<h2 id="使用-Autosub"><a href="#使用-Autosub" class="headerlink" title="使用 Autosub"></a>使用 Autosub</h2>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/09/27/auto-subtitle/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1043,7 +1037,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-count">48</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -1077,6 +1071,9 @@
         </li>
         <li class="links-of-blogroll-item">
           <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
     </ul>
   </div>
