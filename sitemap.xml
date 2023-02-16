@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://www.owalle.com/2023/02/16/autotools-cmake/</loc>
+    
+    <lastmod>2023-02-16T02:43:32.324Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://www.owalle.com/2022/11/06/kprobe/</loc>
     
     <lastmod>2022-11-06T12:52:21.803Z</lastmod>
@@ -275,14 +282,14 @@
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2019/05/12/sdm-8-2-memory-ordering/</loc>
+    <loc>http://www.owalle.com/2019/07/16/study-x86-fence/</loc>
     
     <lastmod>2021-09-27T09:54:43.190Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2019/07/16/study-x86-fence/</loc>
+    <loc>http://www.owalle.com/2019/05/12/sdm-8-2-memory-ordering/</loc>
     
     <lastmod>2021-09-27T09:54:43.190Z</lastmod>
     

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.8.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.owalle.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="步骤对比Autotools">
+<meta name="keywords" content="KVM Linux Kernel Qemu">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Autotools 和 cmake 对比">
+<meta property="og:url" content="http://www.owalle.com/2023/02/16/autotools-cmake/index.html">
+<meta property="og:site_name" content="Yi颗烂樱桃">
+<meta property="og:description" content="步骤对比Autotools">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://www.owalle.com/2023/02/16/autotools-cmake/autotools.jpeg">
+<meta property="og:updated_time" content="2023-02-16T02:43:32.324Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Autotools 和 cmake 对比">
+<meta name="twitter:description" content="步骤对比Autotools">
+<meta name="twitter:image" content="http://www.owalle.com/2023/02/16/autotools-cmake/autotools.jpeg">
+
+<link rel="canonical" href="http://www.owalle.com/2023/02/16/autotools-cmake/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>Autotools 和 cmake 对比 | Yi颗烂樱桃</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yi颗烂樱桃</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">虚拟化中文</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-fw fa-sitemap"></i>Sitemap</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2023/02/16/autotools-cmake/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Autotools 和 cmake 对比
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-02-16 09:43:43 / Modified: 10:43:32" itemprop="dateCreated datePublished" datetime="2023-02-16T09:43:43+08:00">2023-02-16</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="步骤对比"><a href="#步骤对比" class="headerlink" title="步骤对比"></a>步骤对比</h2><h3 id="Autotools"><a href="#Autotools" class="headerlink" title="Autotools"></a>Autotools</h3><p><img src="/2023/02/16/autotools-cmake/autotools.jpeg" alt="autotools.jpeg"></p>
+<ul>
+<li><p>运行autoscan命令<br>将configure.scan 文件重命名为configure.ac，并修改configure.ac文件</p>
+</li>
+<li><p>在项目根目录目录下新建Makefile.am文件，并在子目录下也新建makefile.am文件<br>Automake工具会根据 configure.in 中的参量把 Makefile.am 转换成 Makefile.in 文件。最终通过Makefile.in生成Makefile文件，所以Makefile.am这个文件非常重要，定义了一些生成Makefile的规则</p>
+</li>
+<li><p>在项目根目录下新建NEWS、 README、 ChangeLog 、AUTHORS文件</p>
+</li>
+<li><p>运行aclocal命令<br>扫描 configure.ac 文件生成 aclocal.m4文件, 该文件主要处理本地的宏定义，它根据已经安装的宏、用户定义宏和 acinclude.m4 文件中的宏将 configure.ac 文件需要的宏集中定义到文件 aclocal.m4 中</p>
+</li>
+<li><p>运行autoconf命令<br>这个命令将 configure.ac 文件中的宏展开，生成 configure 脚本。这个过程可能要用到aclocal.m4中定义的宏。</p>
+</li>
+<li><p>运行autoheader<br>。该命令生成 config.h.in 文件。该命令通常会从 “acconfig.h” 文件中复制用户附加的符号定义。该例子中没有附加的符号定义, 所以不需要创建 “acconfig.h” 文件。</p>
+</li>
+<li><p>运行automake -a命令<br>执行automake –add-missing命令。该命令生成 Makefile.in 文件。使用选项 “–add-missing” 可以让 Automake 自动添加一些必需的脚本文件。如果发现一些文件不存在，可以通过手工 touch命令创建。</p>
+</li>
+<li><p>运行./confiugre脚本<br>./congigure主要把 Makefile.in 变成最终的 Makefile 文件。configure会把一些配置参数配置到Makefile文件里面。</p>
+</li>
+</ul>
+<h2 id="CMake"><a href="#CMake" class="headerlink" title="CMake"></a>CMake</h2><ul>
+<li>编写CMakeLists.txt</li>
+<li>运行cmake命令</li>
+</ul>
+<h2 id="简单用法对比"><a href="#简单用法对比" class="headerlink" title="简单用法对比"></a>简单用法对比</h2><h3 id="Autotools-1"><a href="#Autotools-1" class="headerlink" title="Autotools"></a>Autotools</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"># configure.ac</span><br><span class="line"></span><br><span class="line">AC_PREREQ([2.69])</span><br><span class="line">AC_INIT([lkvs], [1.0], [])</span><br><span class="line"></span><br><span class="line">AM_INIT_AUTOMAKE</span><br><span class="line"></span><br><span class="line">AC_CONFIG_SRCDIR([.])</span><br><span class="line"></span><br><span class="line"># Checks for programs.</span><br><span class="line">AC_PROG_CC</span><br><span class="line"></span><br><span class="line">AC_PROG_RANLIB</span><br><span class="line"></span><br><span class="line"># Checks for libraries.</span><br><span class="line"></span><br><span class="line"># Checks for header files.</span><br><span class="line"></span><br><span class="line"># Checks for typedefs, structures, and compiler characteristics.</span><br><span class="line"></span><br><span class="line"># Checks for library functions.</span><br><span class="line"></span><br><span class="line">AC_CONFIG_FILES([Makefile</span><br><span class="line">                 th/Makefile</span><br><span class="line">                 xsave/Makefile])</span><br><span class="line">AC_OUTPUT</span><br></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th>标签</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AC_PREREQ</td>
+<td>声明autoconf要求的版本号</td>
+</tr>
+<tr>
+<td>AC_INIT</td>
+<td>定义软件名称、版本号、联系方式</td>
+</tr>
+<tr>
+<td>AM_INIT_AUTOMAKE</td>
+<td>必须要的，参数为软件名称和版本号</td>
+</tr>
+<tr>
+<td>AC_CONFIG_SCRDIR</td>
+<td>宏用来侦测所指定的源码文件是否存在, 来确定源码目录的有效性.。此处为当前目录。</td>
+</tr>
+<tr>
+<td>AC_CONFIG_HEADER</td>
+<td>宏用于生成config.h文件，以便 autoheader 命令使用。如果不用autoheader，可以省略</td>
+</tr>
+<tr>
+<td>AC_PROG_CC</td>
+<td>指定编译器，默认GCC</td>
+</tr>
+<tr>
+<td>AC_CONFIG_FILES</td>
+<td>生成相应的Makefile文件，不同文件夹下的Makefile通过空格分隔。例如：AC_CONFIG_FILES([Makefile src/Makefile])</td>
+</tr>
+<tr>
+<td>AC_OUTPUT</td>
+<td>用来设定 configure 所要产生的文件，如果是makefile，configure 会把它检查出来的结果带入makefile.in文件产生合适的makefile。</td>
+</tr>
+</tbody>
+</table>
+<p>这里只特别说明一下 AC_CONFIG_FILES 这个宏的作用 (其他宏是必须的, 但是含义比较简单, 具体细节可以查询 Autoconf 的手册)</p>
+<p>AC_CONFIG_FILES 指明了需要根据模版生成的 Makefile 文件. 在这个例子中, 需要生成 3 个 Makefile 文件, 每个 Mafile 文件都需要一个模版:</p>
+<p>根目录下需要有模版文件 Makefile.in<br>test 目录下需要有模版文件 Makefile.in<br>test/funtest 目录下需要有模版文件 Makefile.in<br>而这3个 Makefile.in 需要用 Automake 通过各自的 Makefile.am 来生成。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">#Makefile.am</span><br><span class="line"></span><br><span class="line">bin_PROGRAMS = funtest1 funtest2</span><br><span class="line"></span><br><span class="line">funtest1_SOURCES = funtest1.c ../../src/fun.h ../../src/fun.c</span><br><span class="line">funtest1_CPPFLAGS = -I$(top_srcdir)/src</span><br><span class="line"></span><br><span class="line">funtest2_SOURCES = funtest2.c ../../src/fun.h ../../src/fun.c</span><br><span class="line">funtest2_CPPFLAGS = -I$(top_srcdir)/src</span><br></pre></td></tr></table></figure>
+<ul>
+<li>bin_PROGRAMS 生成的可执行文件名称。如果生成的可执行文件名称为多个，则可以通过空格的方式分隔。</li>
+<li>funtest1_SOURCES 指明 funtest1 所依赖的源文件 (特别注意, 利用相对路径指明了所依赖的src目录下的源文件)</li>
+<li>funtest1_CPPFLAGS = -I$(top_srcdir)/src 指明了编译时需要指定的头文件路径</li>
+<li>noinst_PROGRAMS：如果make install的时候不想被安装，可以使用noinst_PROGRAMS命令。</li>
+<li>hello_LDADD: 编译成可执行文件过程中，连接所需的库文件，包括*.so的动态库文件和.a的静态库文件。</li>
+</ul>
+<h3 id="CMake-1"><a href="#CMake-1" class="headerlink" title="CMake"></a>CMake</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"># 根目录</span><br><span class="line">cmake_minimum_required(VERSION 3.10)</span><br><span class="line"></span><br><span class="line"># Set project name and version</span><br><span class="line">project(LKVS VERSION 1.0)</span><br><span class="line"></span><br><span class="line"># Find all subdirectories in the current directory</span><br><span class="line">file(GLOB children RELATIVE $&#123;CMAKE_CURRENT_SOURCE_DIR&#125; $&#123;CMAKE_CURRENT_SOURCE_DIR&#125;/*)</span><br><span class="line"></span><br><span class="line"># Run cmake on all subdirectories containing a CMakeLists.txt file</span><br><span class="line">foreach(child $&#123;children&#125;)</span><br><span class="line">    if(IS_DIRECTORY $&#123;CMAKE_CURRENT_SOURCE_DIR&#125;/$&#123;child&#125;)</span><br><span class="line">        if(EXISTS $&#123;CMAKE_CURRENT_SOURCE_DIR&#125;/$&#123;child&#125;/CMakeLists.txt)</span><br><span class="line">            execute_process(</span><br><span class="line">                COMMAND cmake .</span><br><span class="line">                WORKING_DIRECTORY $&#123;CMAKE_CURRENT_SOURCE_DIR&#125;/$&#123;child&#125;</span><br><span class="line">            )</span><br><span class="line">            add_subdirectory($&#123;child&#125;)</span><br><span class="line">        endif()</span><br><span class="line">    endif()</span><br><span class="line">endforeach()</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"># 子目录MakeLists.txt</span><br><span class="line">cmake_minimum_required(VERSION 3.10)</span><br><span class="line"></span><br><span class="line"># Set project name and version</span><br><span class="line">project(th_test VERSION 1.0)</span><br><span class="line"></span><br><span class="line"># Find all source files in the current directory</span><br><span class="line">file(GLOB SOURCES *.c *.h)</span><br><span class="line"></span><br><span class="line"># Create an executable from the source files</span><br><span class="line">add_executable(th_test $&#123;SOURCES&#125;)</span><br></pre></td></tr></table></figure>
+<h3 id="CMake-CMakeList-txt-详解"><a href="#CMake-CMakeList-txt-详解" class="headerlink" title="CMake CMakeList.txt 详解"></a>CMake CMakeList.txt 详解</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line">#表示注释   </span><br><span class="line">#cmake file for project association</span><br><span class="line"></span><br><span class="line">#cmake 最低版本要求，低于2.8 构建过程会被终止。   </span><br><span class="line">CMAKE_MINIMUM_REQUIRED(VERSION 2.8)</span><br><span class="line"></span><br><span class="line">#定义工程名称</span><br><span class="line">PROJECT(association)</span><br><span class="line">                     </span><br><span class="line">#打印相关消息消息   </span><br><span class="line">#MESSAGE(STATUS &quot;Project: $&#123;PROJECT_NAME&#125;&quot;)</span><br><span class="line">#MESSAGE(STATUS &quot;Project Directory: $&#123;PROJECT_SOURCE_DIR&#125;&quot;)  </span><br><span class="line"></span><br><span class="line">#指定编译类型debug版</span><br><span class="line">SET(CMAKE_BUILE_TYPE DEBUG)</span><br><span class="line">#发行版</span><br><span class="line">#SET(CMAKE_BUILE_TYPE RELEASE)</span><br><span class="line"></span><br><span class="line">#SET(CMAKE_C_FLAGS_DEBUG &quot;-g -Wall&quot;)          #C</span><br><span class="line">#SET(CMAKE_CXX_FLAGS_DEBUG &quot;-g -Wall&quot;)           #C++</span><br><span class="line"></span><br><span class="line">#设置C++ 编译</span><br><span class="line">SET(CMAKE_CXX_FLAGS &quot;$&#123;CMAKE_CXX_FLAGS&#125; -std=c++11 -s -Wall -W -O3&quot;)   </span><br><span class="line"> </span><br><span class="line">#添加子目录   </span><br><span class="line">ADD_SUBDIRECTORY(src/include)</span><br><span class="line"></span><br><span class="line">#设置变量，表示所有的源文件  </span><br><span class="line">SET(SOURCE_FILES</span><br><span class="line">    src/main.cpp    </span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#配置相关库文件的目录，  </span><br><span class="line">LINK_DIRECTORIES(                                  </span><br><span class="line">    /usr/local/lib</span><br><span class="line">    )  </span><br><span class="line"></span><br><span class="line">#找BZip2</span><br><span class="line">FIND_PACKAGE(BZip2)</span><br><span class="line">if (BZIP2_FOUND)</span><br><span class="line">    MESSAGE(STATUS &quot;$&#123;BZIP_INCLUDE_DIRS&#125;&quot;)  </span><br><span class="line">    MESSAGE(STATUS &quot; $&#123;BZIP2_LIBRARIES&#125;&quot;)  </span><br><span class="line">endif (BZIP2_FOUND)</span><br><span class="line">if (NOT BZIP2_FOUND)</span><br><span class="line">    MESSAGE(STATUS &quot;NOT  BZIP2_FOUND&quot;)  </span><br><span class="line">endif (NOT  BZIP2_FOUND)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#相关头文件的目录</span><br><span class="line">INCLUDE_DIRECTORIES(  </span><br><span class="line">     /usr/local/include  </span><br><span class="line">     $&#123;PROJECT_SOURCE_DIR&#125;/utility_inc</span><br><span class="line">     $&#123;BZIP_INCLUDE_DIRS&#125;</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">#链接库</span><br><span class="line">LINK_LIBRARIES(</span><br><span class="line">    $&#123;PROJECT_SOURCE_DIR&#125;/static_libs/libSentinelKeys64.a</span><br><span class="line">    $&#123;BZIP2_LIBRARIES&#125;</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">#生成可执行文件</span><br><span class="line">ADD_EXECUTABLE($&#123;PROJECT_NAME&#125; $&#123;SOURCE_FILES&#125;)</span><br><span class="line"></span><br><span class="line">#依赖的库文件  </span><br><span class="line">TARGET_LINK_LIBRARIES($&#123;PROJECT_NAME&#125; eventloop)</span><br></pre></td></tr></table></figure>
+<p>子目录CMakeLists.txt 文件编写<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">SET(EVENTLOOP_SOURCE_FILES</span><br><span class="line">        tool/BlockingQueue.hpp</span><br><span class="line">        tool/Copyable.h</span><br><span class="line">        tool/ExecuteState.h</span><br><span class="line">        tool/Likely.h</span><br><span class="line">        EventLoop.h</span><br><span class="line">        EventLoop.cpp</span><br><span class="line">        )</span><br><span class="line">#生成静态链接库eventloop </span><br><span class="line">ADD_LIBRARY(eventloop $&#123;EVENTLOOP_SOURCE_FILES&#125;)</span><br></pre></td></tr></table></figure></p>
+<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><p><a href="http://www.gnu.org/software/autoconf" target="_blank" rel="noopener">autoconf官方手册</a><br><a href="http://www.gnu.org/software/automake" target="_blank" rel="noopener">automake官方手册</a><br><a href="https://www.lrde.epita.fr/~adl/autotools.html" target="_blank" rel="noopener">autotools比较流行的文档</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    Donate
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Yi颗烂樱桃 WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="Yi颗烂樱桃 Alipay">
+        <p>Alipay</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/11/06/kprobe/" rel="prev" title="Kprobe原理和应用">
+      <i class="fa fa-chevron-left"></i> Kprobe原理和应用
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#步骤对比"><span class="nav-number">1.</span> <span class="nav-text">步骤对比</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Autotools"><span class="nav-number">1.1.</span> <span class="nav-text">Autotools</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CMake"><span class="nav-number">2.</span> <span class="nav-text">CMake</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#简单用法对比"><span class="nav-number">3.</span> <span class="nav-text">简单用法对比</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Autotools-1"><span class="nav-number">3.1.</span> <span class="nav-text">Autotools</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CMake-1"><span class="nav-number">3.2.</span> <span class="nav-text">CMake</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CMake-CMakeList-txt-详解"><span class="nav-number">3.3.</span> <span class="nav-text">CMake CMakeList.txt 详解</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文档"><span class="nav-number">4.</span> <span class="nav-text">参考文档</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
+  <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+      <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yi颗烂樱桃</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+  <script defer src="/lib/three/three.min.js"></script>
+    <script defer src="/lib/three/three-waves.min.js"></script>
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="/lib/gitalk/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('/lib/gitalk/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '30a5af43b5ea724ad81b',
+      clientSecret: '3426c0800920f9f75967ecf4b87f453e8012b911',
+      repo        : 'ysun.github.io',
+      owner       : 'ysun',
+      admin       : ['ysun'],
+      id          : 'f3a0698a66d605b5fb195faaff2d9555',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
