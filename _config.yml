@@ -86,12 +86,13 @@ theme: hexo-theme-next
 deploy:
   type: git
   repository:
-    github: git@github.com:ysun/blog.github.io.git
+    github: git@github.com:ysun/ysun.github.io.git
+#    github: git@github.com:ysun/blog.github.io.git
+  branch: master
 #    github: https://github.com/ysun/ysun.github.io.git
 #    token: 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
     #coding: git@git.coding.net:ysun/ysun.coding.me.git #https://git.coding.net/ysun/ysun.coding.me.git
 #    coding: https://git.coding.net/ysun/ysun.coding.me.git
-  branch: master
 
 search:
   path: search.xml
