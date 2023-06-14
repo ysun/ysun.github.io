@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 3.8.0">
+<meta name="generator" content="Hexo 6.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -22,22 +22,24 @@
     var CONFIG = {"hostname":"www.owalle.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="浅谈“内存读写重排序”在我们编写C/C++代码时，以及它在CPU上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序(又叫“程序顺序”, program ordering)会被重新排列。这个现象会在两个地方引入，编译时候由编译器引入；以及运行时由处理器引入。目的都是为了”使代码运行的更快”。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起">
-<meta name="keywords" content="x86,QEMU,KVM">
+  <meta name="description" content="浅谈“内存读写重排序”在我们编写C&#x2F;C++代码时，以及它在CPU上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序(又叫“程序顺序”, program ordering)会被重新排列。这个现象会在两个地方引入，编译时候由编译器引入；以及运行时由处理器引入。目的都是为了”使代码运行的更快”。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起">
 <meta property="og:type" content="article">
 <meta property="og:title" content="利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令">
 <meta property="og:url" content="http://www.owalle.com/2019/07/16/study-x86-fence/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="浅谈“内存读写重排序”在我们编写C/C++代码时，以及它在CPU上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序(又叫“程序顺序”, program ordering)会被重新排列。这个现象会在两个地方引入，编译时候由编译器引入；以及运行时由处理器引入。目的都是为了”使代码运行的更快”。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起">
-<meta property="og:locale" content="zh-Hans">
+<meta property="og:description" content="浅谈“内存读写重排序”在我们编写C&#x2F;C++代码时，以及它在CPU上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序(又叫“程序顺序”, program ordering)会被重新排列。这个现象会在两个地方引入，编译时候由编译器引入；以及运行时由处理器引入。目的都是为了”使代码运行的更快”。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起">
+<meta property="og:locale">
 <meta property="og:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/weak-strong-table.png">
 <meta property="og:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/memory_order.png">
 <meta property="og:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/fence_no.png">
 <meta property="og:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/fence_added.png">
-<meta property="og:updated_time" content="2021-09-27T09:54:43.190Z">
+<meta property="article:published_time" content="2019-07-16T13:28:40.000Z">
+<meta property="article:modified_time" content="2021-09-27T09:54:43.190Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="x86">
+<meta property="article:tag" content="QEMU">
+<meta property="article:tag" content="KVM">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="利用虚拟机(QEMU)学习X86指令集1--内存存储的重排序以及FENCE指令">
-<meta name="twitter:description" content="浅谈“内存读写重排序”在我们编写C/C++代码时，以及它在CPU上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序(又叫“程序顺序”, program ordering)会被重新排列。这个现象会在两个地方引入，编译时候由编译器引入；以及运行时由处理器引入。目的都是为了”使代码运行的更快”。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起">
 <meta name="twitter:image" content="http://www.owalle.com/2019/07/16/study-x86-fence/weak-strong-table.png">
 
 <link rel="canonical" href="http://www.owalle.com/2019/07/16/study-x86-fence/">
@@ -168,7 +170,9 @@
     <i class="fa fa-search"></i>
   </span>
   <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
   </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
@@ -204,16 +208,16 @@
     
   
   
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2019/07/16/study-x86-fence/">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Yi颗烂樱桃">
       <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Yi颗烂樱桃">
     </span>
       <header class="post-header">
@@ -242,7 +246,7 @@
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/X86/" itemprop="url" rel="index"><span itemprop="name">X86</span></a>
                 </span>
             </span>
@@ -259,7 +263,7 @@
 
       
         <h2 id="浅谈“内存读写重排序”"><a href="#浅谈“内存读写重排序”" class="headerlink" title="浅谈“内存读写重排序”"></a>浅谈“内存读写重排序”</h2><p>在我们编写C/C++代码时，以及它在CPU上运行时，按照一些规则，代码中原有的内存读写指令的执行顺序(又叫“程序顺序”, program ordering)会被重新排列。这个现象会在两个地方引入，编译时候由编译器引入；以及运行时由处理器引入。目的都是为了”使代码运行的更快”。尽管本文重在说明运行时CPU对内存读写的重排序作用。但考虑完整性以及防止读者混淆，我们会两种重排序一起介绍。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">c_code=&gt;operation: C 语言</span><br><span class="line">asm_code=&gt;operation: 汇编语言</span><br><span class="line">cpu_instruction=&gt;operation: CPU执行序列</span><br><span class="line"></span><br><span class="line">compiler_reorder=&gt;inputoutput: 编译器重排序</span><br><span class="line">cpu_reorder=&gt;inputoutput: 处理器重排序</span><br><span class="line"></span><br><span class="line">c_code(right)-&gt;compiler_reorder(right)-&gt;asm_code(right)-&gt;cpu_reorder(right)-&gt;cpu_instruction</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">c_code=&gt;operation: C 语言</span><br><span class="line">asm_code=&gt;operation: 汇编语言</span><br><span class="line">cpu_instruction=&gt;operation: CPU执行序列</span><br><span class="line"></span><br><span class="line">compiler_reorder=&gt;inputoutput: 编译器重排序</span><br><span class="line">cpu_reorder=&gt;inputoutput: 处理器重排序</span><br><span class="line"></span><br><span class="line">c_code(right)-&gt;compiler_reorder(right)-&gt;asm_code(right)-&gt;cpu_reorder(right)-&gt;cpu_instruction</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <h3 id="X86的内存读写顺序模型"><a href="#X86的内存读写顺序模型" class="headerlink" title="X86的内存读写顺序模型"></a>X86的内存读写顺序模型</h3><p>按照内存访问重排序发生情况的多少，大概划分为下面三种“顺序模型”。</p>
 <h4 id="弱顺序模型"><a href="#弱顺序模型" class="headerlink" title="弱顺序模型"></a>弱顺序模型</h4><p>弱顺序模型中，可能会出现四种内存重排序(Load-Load, Store-Store, Load-Store 和 Store-Load)。任意读(load)操作和写(store)操作都有可能与其他读写操作重排序，只要它能保证原来程序的行为。采用弱顺序模型的处理器可以称为“weakly-order”或者”weak ordering”。<br>对于C/C++的编译器gcc(因为我只用过gcc:p)，都可以呈现弱顺序模型，稍后我们看下例子。</p>
 <h4 id="强顺序模型"><a href="#强顺序模型" class="headerlink" title="强顺序模型"></a>强顺序模型</h4><p>强顺序模型和弱顺序模型的界限可能不一定有确切的标准，但从SDM 8.2章开头可以看到，奔腾4之后的X86处理器大概属于强顺序类型：<br><em>To allow performance optimization of instruction execution, the IA-32 architecture allows departures from strongordering model called processor ordering in Pentium 4, Intel Xeon, and P6 family processors</em><br>继续读SDM8.2 可以发现如下约定：</p>
@@ -270,14 +274,12 @@
 <li>Reads may be reordered with older writes to different locations but not with older writes to the same location. (‘读’可以向前重排序到不同内存位置的‘写’之前)<br>这就明确的说明4种弱顺序模型中的store-load是<strong>被允许的!</strong>。这也是我们后面实例的重要依据。</li>
 </ol>
 <h4 id="顺序一致"><a href="#顺序一致" class="headerlink" title="顺序一致"></a>顺序一致</h4><p>所有运行时内存访问的顺序跟程序顺序一模一样。现如今都是多核系统，可能很难找到可以成为顺序一致(Sequential consistency)的CPU了。如果真要追溯可能是386时代。</p>
-<p><img src="/2019/07/16/study-x86-fence/weak-strong-table.png" alt=""></p>
-<h2 id="编译时内存顺序重排序"><a href="#编译时内存顺序重排序" class="headerlink" title="编译时内存顺序重排序"></a>编译时内存顺序重排序</h2><p>我们先通过下面这个最简单的实例，体验编译器如何进行内存访问的重排序的，直接看代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">int a, b;</span><br><span class="line">void test() &#123;</span><br><span class="line">    a = b;</span><br><span class="line">    b = 1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>写了一个.c 文件，里面仅仅包含了上面这几行，然后我们用gcc把它翻译成汇编语言：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$gcc -S -O0 test.c -o test1.s</span><br><span class="line"></span><br><span class="line">movl    b(%rip), %eax</span><br><span class="line">movl    %eax, a(%rip)</span><br><span class="line">movl    $1, b(%rip)</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$gcc -S -O2 test.c -o test2.s</span><br><span class="line"></span><br><span class="line">movl    b(%rip), %eax</span><br><span class="line">movl    $1, b(%rip)	&lt;--- 被提前了!!</span><br><span class="line">movl    %eax, a(%rip)</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/07/16/study-x86-fence/weak-strong-table.png" alt></p>
+<h2 id="编译时内存顺序重排序"><a href="#编译时内存顺序重排序" class="headerlink" title="编译时内存顺序重排序"></a>编译时内存顺序重排序</h2><p>我们先通过下面这个最简单的实例，体验编译器如何进行内存访问的重排序的，直接看代码：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">int a, b;</span><br><span class="line">void test() &#123;</span><br><span class="line">    a = b;</span><br><span class="line">    b = 1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>写了一个.c 文件，里面仅仅包含了上面这几行，然后我们用gcc把它翻译成汇编语言：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$gcc -S -O0 test.c -o test1.s</span><br><span class="line"></span><br><span class="line">movl    b(%rip), %eax</span><br><span class="line">movl    %eax, a(%rip)</span><br><span class="line">movl    $1, b(%rip)</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$gcc -S -O2 test.c -o test2.s</span><br><span class="line"></span><br><span class="line">movl    b(%rip), %eax</span><br><span class="line">movl    $1, b(%rip)	&lt;--- 被提前了!!</span><br><span class="line">movl    %eax, a(%rip)</span><br></pre></td></tr></table></figure>
 <p>通过这个例子可以明显的感受到gcc的弱顺序模型：-O0的时候，顺序跟我们预期的程序顺序是一致的；但当使用-O2优化时，test函数的最后一句的变量b赋值明显已经被<strong>向前重排</strong>到了变量a的存储之前！<br>但我们需要知道的是，这样的重排序，对于单线程的硬件来说，重排序并不会影响程序最后的执行结果。但是对于多线程来说，如果有另外的线程实时的读取变量a的值的话，很可能会得到错误的结果。</p>
-<h3 id="如何阻止编译器的重排序？"><a href="#如何阻止编译器的重排序？" class="headerlink" title="如何阻止编译器的重排序？"></a>如何阻止编译器的重排序？</h3><p>前辈们习惯的用法是这样的：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">int a, b;</span><br><span class="line">void test() &#123;</span><br><span class="line">    a = b;</span><br><span class="line">    asm volatile(&quot;&quot; ::: &quot;memory&quot;);</span><br><span class="line">    b = 1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>加了嵌入式汇编<code>asm volatile(&quot;&quot; ::: &quot;memory&quot;);</code>后的test.c再无论怎么优化，都会得到跟-O0一样的汇编结果。</p>
+<h3 id="如何阻止编译器的重排序？"><a href="#如何阻止编译器的重排序？" class="headerlink" title="如何阻止编译器的重排序？"></a>如何阻止编译器的重排序？</h3><p>前辈们习惯的用法是这样的：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">int a, b;</span><br><span class="line">void test() &#123;</span><br><span class="line">    a = b;</span><br><span class="line">    asm volatile(&quot;&quot; ::: &quot;memory&quot;);</span><br><span class="line">    b = 1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>加了嵌入式汇编<code>asm volatile(&quot;&quot; ::: &quot;memory&quot;);</code>后的test.c再无论怎么优化，都会得到跟-O0一样的汇编结果。</p>
 <h2 id="CPU运行时重排序"><a href="#CPU运行时重排序" class="headerlink" title="CPU运行时重排序"></a>CPU运行时重排序</h2><p>前面的一篇文章大概翻译了下SDM的8.2章节<a href="/2019/05/12/sdm-8-2-memory-ordering/" title="SMD Chapter 8.2 内存存取顺序">SMD Chapter 8.2 内存存取顺序</a>，我们按照SDM8.2.3.4的描述，重现一个store-read操作的重排序，并且观察MFENCE是如何工作的，以保证执行顺序的正确。</p>
 <h3 id="回顾SDM8-2-3-4的内容"><a href="#回顾SDM8-2-3-4的内容" class="headerlink" title="回顾SDM8.2.3.4的内容"></a>回顾SDM8.2.3.4的内容</h3><p>intel-64存取顺序重排允许<strong>加载操作</strong>重排序到<strong>不同地址</strong>的存储之前，但<strong>不</strong>允许重排序到<strong>同一个</strong>地址的存储之前。</p>
 <table>
@@ -305,10 +307,10 @@
 </tbody>
 </table>
 <h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><p>下面我们就来实现上面这段逻辑：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line">#define USE_CPU_FENCE  0</span><br><span class="line"></span><br><span class="line">atomic_t begin_sem1;</span><br><span class="line">atomic_t begin_sem2;</span><br><span class="line">atomic_t end_sem;</span><br><span class="line"></span><br><span class="line">int X, Y;</span><br><span class="line">int r1, r2;</span><br><span class="line"></span><br><span class="line">int main(int ac, char **av) &#123;</span><br><span class="line"></span><br><span class="line">	int detected = 0;</span><br><span class="line">	atomic_set(&amp;begin_sem1, 0);</span><br><span class="line">	atomic_set(&amp;begin_sem2, 0);</span><br><span class="line">	atomic_set(&amp;end_sem, 0);</span><br><span class="line"></span><br><span class="line">	id = 0;</span><br><span class="line"></span><br><span class="line">	for (int i = 1; ; ++i) &#123;</span><br><span class="line">		X = Y = 0;</span><br><span class="line">		r1 = r2 = 1;</span><br><span class="line">		atomic_inc(&amp;begin_sem1);</span><br><span class="line">		atomic_inc(&amp;begin_sem2);</span><br><span class="line"></span><br><span class="line">		while(atomic_read(&amp;end_sem) != 2) NOP();</span><br><span class="line"></span><br><span class="line">		atomic_set(&amp;end_sem, 0);</span><br><span class="line"></span><br><span class="line">		if (r1 == 0 &amp;&amp; r2 == 0) &#123;</span><br><span class="line">			detected++;</span><br><span class="line">			printf(&quot;%d reorders detected after %d iterations\n&quot;, detected, i);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		if( i % 10000 == 0) printf(&quot;BSP: times %d\n&quot;, i);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	while(1) &#123; NOP(); &#125;</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void test1() &#123;</span><br><span class="line">	while(atomic_read(&amp;begin_sem1) != 1) NOP();</span><br><span class="line">	atomic_dec(&amp;begin_sem1);</span><br><span class="line"></span><br><span class="line">	asm volatile(</span><br><span class="line">			&quot;xor %0, %0\n\t                 &quot;</span><br><span class="line">			&quot;movl $1, %1\n\t                &quot;</span><br><span class="line">#if USE_CPU_FENCE</span><br><span class="line">			&quot;mfence\n\t                     &quot;</span><br><span class="line">#endif</span><br><span class="line">			&quot;movl %2, %0\n\t                &quot;</span><br><span class="line">			: &quot;=r&quot;(r1), &quot;=m&quot; (X)</span><br><span class="line">			: &quot;m&quot;(Y)</span><br><span class="line">			: &quot;memory&quot;);</span><br><span class="line"></span><br><span class="line">	atomic_inc(&amp;end_sem);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void test2() &#123;</span><br><span class="line">	while(atomic_read(&amp;begin_sem2) != 1) NOP();</span><br><span class="line">	atomic_dec(&amp;begin_sem2);</span><br><span class="line"></span><br><span class="line">	asm volatile(</span><br><span class="line">			&quot;xor %0, %0\n\t                 &quot;</span><br><span class="line">			&quot;movl $1, %1\n\t                &quot;</span><br><span class="line">#if USE_CPU_FENCE</span><br><span class="line">			&quot;mfence\n\t                     &quot;</span><br><span class="line">#endif</span><br><span class="line">			&quot;movl %2, %0\n\t                &quot;</span><br><span class="line">			: &quot;=r&quot;(r2), &quot;=m&quot; (Y)</span><br><span class="line">			: &quot;m&quot;(X)</span><br><span class="line">			: &quot;memory&quot;);</span><br><span class="line"></span><br><span class="line">	atomic_inc(&amp;end_sem);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line">#define USE_CPU_FENCE  0</span><br><span class="line"></span><br><span class="line">atomic_t begin_sem1;</span><br><span class="line">atomic_t begin_sem2;</span><br><span class="line">atomic_t end_sem;</span><br><span class="line"></span><br><span class="line">int X, Y;</span><br><span class="line">int r1, r2;</span><br><span class="line"></span><br><span class="line">int main(int ac, char **av) &#123;</span><br><span class="line"></span><br><span class="line">	int detected = 0;</span><br><span class="line">	atomic_set(&amp;begin_sem1, 0);</span><br><span class="line">	atomic_set(&amp;begin_sem2, 0);</span><br><span class="line">	atomic_set(&amp;end_sem, 0);</span><br><span class="line"></span><br><span class="line">	id = 0;</span><br><span class="line"></span><br><span class="line">	for (int i = 1; ; ++i) &#123;</span><br><span class="line">		X = Y = 0;</span><br><span class="line">		r1 = r2 = 1;</span><br><span class="line">		atomic_inc(&amp;begin_sem1);</span><br><span class="line">		atomic_inc(&amp;begin_sem2);</span><br><span class="line"></span><br><span class="line">		while(atomic_read(&amp;end_sem) != 2) NOP();</span><br><span class="line"></span><br><span class="line">		atomic_set(&amp;end_sem, 0);</span><br><span class="line"></span><br><span class="line">		if (r1 == 0 &amp;&amp; r2 == 0) &#123;</span><br><span class="line">			detected++;</span><br><span class="line">			printf(&quot;%d reorders detected after %d iterations\n&quot;, detected, i);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		if( i % 10000 == 0) printf(&quot;BSP: times %d\n&quot;, i);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	while(1) &#123; NOP(); &#125;</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void test1() &#123;</span><br><span class="line">	while(atomic_read(&amp;begin_sem1) != 1) NOP();</span><br><span class="line">	atomic_dec(&amp;begin_sem1);</span><br><span class="line"></span><br><span class="line">	asm volatile(</span><br><span class="line">			&quot;xor %0, %0\n\t                 &quot;</span><br><span class="line">			&quot;movl $1, %1\n\t                &quot;</span><br><span class="line">#if USE_CPU_FENCE</span><br><span class="line">			&quot;mfence\n\t                     &quot;</span><br><span class="line">#endif</span><br><span class="line">			&quot;movl %2, %0\n\t                &quot;</span><br><span class="line">			: &quot;=r&quot;(r1), &quot;=m&quot; (X)</span><br><span class="line">			: &quot;m&quot;(Y)</span><br><span class="line">			: &quot;memory&quot;);</span><br><span class="line"></span><br><span class="line">	atomic_inc(&amp;end_sem);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void test2() &#123;</span><br><span class="line">	while(atomic_read(&amp;begin_sem2) != 1) NOP();</span><br><span class="line">	atomic_dec(&amp;begin_sem2);</span><br><span class="line"></span><br><span class="line">	asm volatile(</span><br><span class="line">			&quot;xor %0, %0\n\t                 &quot;</span><br><span class="line">			&quot;movl $1, %1\n\t                &quot;</span><br><span class="line">#if USE_CPU_FENCE</span><br><span class="line">			&quot;mfence\n\t                     &quot;</span><br><span class="line">#endif</span><br><span class="line">			&quot;movl %2, %0\n\t                &quot;</span><br><span class="line">			: &quot;=r&quot;(r2), &quot;=m&quot; (Y)</span><br><span class="line">			: &quot;m&quot;(X)</span><br><span class="line">			: &quot;memory&quot;);</span><br><span class="line"></span><br><span class="line">	atomic_inc(&amp;end_sem);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>完整的可编译的code可以到github上clone:<br><code>git clone -b memory_ordering https://github.com/ysun/acrn-unit-test.git</code><br>在<code>guest</code>文件夹里执行<code>make unit file=memory_order</code>就可以执行了。</p>
 <h3 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h3><p>读代码难免有点枯燥，我们把流程图画一下就一目了然了：</p>
-<p><img src="/2019/07/16/study-x86-fence/memory_order.png" alt=""></p>
+<p><img src="/2019/07/16/study-x86-fence/memory_order.png" alt></p>
 <ol>
 <li><p>上面这个例子中一共涉及到了三个逻辑CPU(core)。BSP(processor1)就是上电后第一个执行指令的逻辑CPU，负责另外两个AP(processor2和processor3)的同步工作。两个AP负责分别运行两段测试代码<code>test1</code>和<code>test2</code>。</p>
 </li>
@@ -323,11 +325,11 @@
 <li><p>通过改变宏定义USE_CPU_FENCE  的值来重现重排序，以及引入MFENCE来防止重排序。</p>
 </li>
 </ol>
-<h3 id="执行结果"><a href="#执行结果" class="headerlink" title="执行结果"></a>执行结果</h3><p>下面两个图就是义USE_CPU_FENCE=0和USE_CPU_FENCE=1两次不同的运行结果。<br><img src="/2019/07/16/study-x86-fence/fence_no.png" alt=""><br><img src="/2019/07/16/study-x86-fence/fence_added.png" alt=""><br>从打印的日志可以容易的看出图一发生了重排序，图二中大概200w次测试没有发生重排序。需要指出的是这里200w次循环执行时间不超过1秒钟，非常快。</p>
+<h3 id="执行结果"><a href="#执行结果" class="headerlink" title="执行结果"></a>执行结果</h3><p>下面两个图就是义USE_CPU_FENCE=0和USE_CPU_FENCE=1两次不同的运行结果。<br><img src="/2019/07/16/study-x86-fence/fence_no.png" alt><br><img src="/2019/07/16/study-x86-fence/fence_added.png" alt><br>从打印的日志可以容易的看出图一发生了重排序，图二中大概200w次测试没有发生重排序。需要指出的是这里200w次循环执行时间不超过1秒钟，非常快。</p>
 <h2 id="LFENCE-和-SFENCE"><a href="#LFENCE-和-SFENCE" class="headerlink" title="LFENCE 和 SFENCE"></a>LFENCE 和 SFENCE</h2><p>既然说到FNECE了，咱就得讲完另外两种LFENE和SFENCE。SDM里面讲LFENCE是保证load-load操作不被重排序，SFENCE是保证store-store不被重排序，就是前面在说SDM8.2里面列举了禁止的弱顺序模型中的store-store我们省略掉的部分。<br><em>Writes to memory are not reordered with other writes, with the following exceptions:<br>— streaming stores (writes) executed with the non-temporal move instructions (MOVNTI, MOVNTQ,<br>MOVNTDQ, MOVNTPS, and MOVNTPD); and<br>— string operations (see Section 8.2.4.1)</em></p>
-<p>这里我利用RDTSC指令实现了LFENCE组织CPU指令的重排序，这里不列举了，大概意思是，在一个逻辑CPU上，利用两次rdtsc指令之间插入LFENCE来观察循环的周期的长短来判断LFENCE的作用。只放个链接在这里吧<a href="https://github.com/ysun/acrn-unit-test/blob/memory_ordering_LFENCE/guest/x86/memory_order.c" target="_blank" rel="noopener">memory_ordering_lfence.c</a></p>
-<p>但对于SFENCE，我按照SDM 8.2.2所述内容并没有重现MOVNTI指令的store-store重排序，所以没能确认SFENCE的作用。<br>我的MOVNTI和SFENCE的测试代码在这里<a href="https://github.com/ysun/acrn-unit-test/blob/memory_ordering_SFENCE/guest/x86/memory_order.c" target="_blank" rel="noopener">memory_ordering_sfence.c</a>，<strong>幻想着某位大牛可以回复我一下！！！</strong></p>
-<p>参考文档：<br><a href="https://preshing.com/20120930/weak-vs-strong-memory-models/" target="_blank" rel="noopener">https://preshing.com/20120930/weak-vs-strong-memory-models/</a><br><a href="https://preshing.com/20120515/memory-reordering-caught-in-the-act/" target="_blank" rel="noopener">https://preshing.com/20120515/memory-reordering-caught-in-the-act/</a><br><a href="http://dreamrunner.org/blog/2014/06/28/qian-tan-memory-reordering/" target="_blank" rel="noopener">http://dreamrunner.org/blog/2014/06/28/qian-tan-memory-reordering/</a></p>
+<p>这里我利用RDTSC指令实现了LFENCE组织CPU指令的重排序，这里不列举了，大概意思是，在一个逻辑CPU上，利用两次rdtsc指令之间插入LFENCE来观察循环的周期的长短来判断LFENCE的作用。只放个链接在这里吧<a target="_blank" rel="noopener" href="https://github.com/ysun/acrn-unit-test/blob/memory_ordering_LFENCE/guest/x86/memory_order.c">memory_ordering_lfence.c</a></p>
+<p>但对于SFENCE，我按照SDM 8.2.2所述内容并没有重现MOVNTI指令的store-store重排序，所以没能确认SFENCE的作用。<br>我的MOVNTI和SFENCE的测试代码在这里<a target="_blank" rel="noopener" href="https://github.com/ysun/acrn-unit-test/blob/memory_ordering_SFENCE/guest/x86/memory_order.c">memory_ordering_sfence.c</a>，<strong>幻想着某位大牛可以回复我一下！！！</strong></p>
+<p>参考文档：<br><a target="_blank" rel="noopener" href="https://preshing.com/20120930/weak-vs-strong-memory-models/">https://preshing.com/20120930/weak-vs-strong-memory-models/</a><br><a target="_blank" rel="noopener" href="https://preshing.com/20120515/memory-reordering-caught-in-the-act/">https://preshing.com/20120515/memory-reordering-caught-in-the-act/</a><br><a target="_blank" rel="noopener" href="http://dreamrunner.org/blog/2014/06/28/qian-tan-memory-reordering/">http://dreamrunner.org/blog/2014/06/28/qian-tan-memory-reordering/</a></p>
 
     </div>
 
@@ -434,13 +436,14 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#浅谈“内存读写重排序”"><span class="nav-number">1.</span> <span class="nav-text">浅谈“内存读写重排序”</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#X86的内存读写顺序模型"><span class="nav-number">1.1.</span> <span class="nav-text">X86的内存读写顺序模型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#弱顺序模型"><span class="nav-number">1.1.1.</span> <span class="nav-text">弱顺序模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#强顺序模型"><span class="nav-number">1.1.2.</span> <span class="nav-text">强顺序模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#顺序一致"><span class="nav-number">1.1.3.</span> <span class="nav-text">顺序一致</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译时内存顺序重排序"><span class="nav-number">2.</span> <span class="nav-text">编译时内存顺序重排序</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如何阻止编译器的重排序？"><span class="nav-number">2.1.</span> <span class="nav-text">如何阻止编译器的重排序？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU运行时重排序"><span class="nav-number">3.</span> <span class="nav-text">CPU运行时重排序</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#回顾SDM8-2-3-4的内容"><span class="nav-number">3.1.</span> <span class="nav-text">回顾SDM8.2.3.4的内容</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#代码实现"><span class="nav-number">3.2.</span> <span class="nav-text">代码实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#源码分析"><span class="nav-number">3.3.</span> <span class="nav-text">源码分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#执行结果"><span class="nav-number">3.4.</span> <span class="nav-text">执行结果</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LFENCE-和-SFENCE"><span class="nav-number">4.</span> <span class="nav-text">LFENCE 和 SFENCE</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%85%E8%B0%88%E2%80%9C%E5%86%85%E5%AD%98%E8%AF%BB%E5%86%99%E9%87%8D%E6%8E%92%E5%BA%8F%E2%80%9D"><span class="nav-number">1.</span> <span class="nav-text">浅谈“内存读写重排序”</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#X86%E7%9A%84%E5%86%85%E5%AD%98%E8%AF%BB%E5%86%99%E9%A1%BA%E5%BA%8F%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.1.</span> <span class="nav-text">X86的内存读写顺序模型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BC%B1%E9%A1%BA%E5%BA%8F%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.1.1.</span> <span class="nav-text">弱顺序模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BC%BA%E9%A1%BA%E5%BA%8F%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.1.2.</span> <span class="nav-text">强顺序模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%A1%BA%E5%BA%8F%E4%B8%80%E8%87%B4"><span class="nav-number">1.1.3.</span> <span class="nav-text">顺序一致</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E6%97%B6%E5%86%85%E5%AD%98%E9%A1%BA%E5%BA%8F%E9%87%8D%E6%8E%92%E5%BA%8F"><span class="nav-number">2.</span> <span class="nav-text">编译时内存顺序重排序</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E9%98%BB%E6%AD%A2%E7%BC%96%E8%AF%91%E5%99%A8%E7%9A%84%E9%87%8D%E6%8E%92%E5%BA%8F%EF%BC%9F"><span class="nav-number">2.1.</span> <span class="nav-text">如何阻止编译器的重排序？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU%E8%BF%90%E8%A1%8C%E6%97%B6%E9%87%8D%E6%8E%92%E5%BA%8F"><span class="nav-number">3.</span> <span class="nav-text">CPU运行时重排序</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9E%E9%A1%BESDM8-2-3-4%E7%9A%84%E5%86%85%E5%AE%B9"><span class="nav-number">3.1.</span> <span class="nav-text">回顾SDM8.2.3.4的内容</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.2.</span> <span class="nav-text">代码实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-number">3.3.</span> <span class="nav-text">源码分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E7%BB%93%E6%9E%9C"><span class="nav-number">3.4.</span> <span class="nav-text">执行结果</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LFENCE-%E5%92%8C-SFENCE"><span class="nav-number">4.</span> <span class="nav-text">LFENCE 和 SFENCE</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
   <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
   <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
 </div>
@@ -449,7 +452,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -476,25 +479,25 @@
     </div>
     <ul class="links-of-blogroll-list">
         <li class="links-of-blogroll-item">
-          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
         </li>
     </ul>
   </div>
@@ -514,7 +517,7 @@
         
 
         
-  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
       <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
   </div>
 
@@ -545,9 +548,17 @@
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
 <script src="/js/schemes/muse.js"></script>
+
+
 <script src="/js/next-boot.js"></script>
+
 
   <script defer src="/lib/three/three.min.js"></script>
     <script defer src="/lib/three/three-waves.min.js"></script>
@@ -567,7 +578,9 @@
 
 
 
-  <script src="/js/local-search.js"></script>
+  
+<script src="/js/local-search.js"></script>
+
 
 
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 3.8.0">
+<meta name="generator" content="Hexo 6.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -22,21 +22,21 @@
     var CONFIG = {"hostname":"www.owalle.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="概述Intel® DSA是集成在Intel处理器中的高速数据拷贝传输的加速器。用于优化应用程中用于存储、网络、persistent memory以及各种数据处理时的的那些数据流搬运和传输。Intel® DSA取代了Intel® I/O Acceleration Technology中的Intel® QuickData Technology。">
-<meta name="keywords" content="kernel dsa">
+  <meta name="description" content="概述Intel® DSA是集成在Intel处理器中的高速数据拷贝传输的加速器。用于优化应用程中用于存储、网络、persistent memory以及各种数据处理时的的那些数据流搬运和传输。Intel® DSA取代了Intel® I&#x2F;O Acceleration Technology中的Intel® QuickData Technology。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Intel® DSA 综述">
 <meta property="og:url" content="http://www.owalle.com/2021/11/05/dsa-overview/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="概述Intel® DSA是集成在Intel处理器中的高速数据拷贝传输的加速器。用于优化应用程中用于存储、网络、persistent memory以及各种数据处理时的的那些数据流搬运和传输。Intel® DSA取代了Intel® I/O Acceleration Technology中的Intel® QuickData Technology。">
-<meta property="og:locale" content="zh-Hans">
+<meta property="og:description" content="概述Intel® DSA是集成在Intel处理器中的高速数据拷贝传输的加速器。用于优化应用程中用于存储、网络、persistent memory以及各种数据处理时的的那些数据流搬运和传输。Intel® DSA取代了Intel® I&#x2F;O Acceleration Technology中的Intel® QuickData Technology。">
+<meta property="og:locale">
 <meta property="og:image" content="http://www.owalle.com/2021/11/05/dsa-overview/dsa-intro-1.png">
 <meta property="og:image" content="http://www.owalle.com/2021/11/05/dsa-overview/dsa-intro-2.png">
 <meta property="og:image" content="http://www.owalle.com/2021/11/05/dsa-overview/dsa-intro-3.png">
-<meta property="og:updated_time" content="2021-11-05T21:49:54.051Z">
+<meta property="article:published_time" content="2021-11-05T02:51:49.000Z">
+<meta property="article:modified_time" content="2021-11-05T21:49:54.051Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="kernel dsa">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Intel® DSA 综述">
-<meta name="twitter:description" content="概述Intel® DSA是集成在Intel处理器中的高速数据拷贝传输的加速器。用于优化应用程中用于存储、网络、persistent memory以及各种数据处理时的的那些数据流搬运和传输。Intel® DSA取代了Intel® I/O Acceleration Technology中的Intel® QuickData Technology。">
 <meta name="twitter:image" content="http://www.owalle.com/2021/11/05/dsa-overview/dsa-intro-1.png">
 
 <link rel="canonical" href="http://www.owalle.com/2021/11/05/dsa-overview/">
@@ -167,7 +167,9 @@
     <i class="fa fa-search"></i>
   </span>
   <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
   </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
@@ -203,16 +205,16 @@
     
   
   
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2021/11/05/dsa-overview/">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Yi颗烂樱桃">
       <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Yi颗烂樱桃">
     </span>
       <header class="post-header">
@@ -241,7 +243,7 @@
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/x86/" itemprop="url" rel="index"><span itemprop="name">x86</span></a>
                 </span>
             </span>
@@ -280,7 +282,7 @@
 <li>Shared WQ (SWQ) - 多个终端设备共享队列</li>
 </ul>
 <p>终端使用指令MOVDIR64B向DWQ提交任务，异步写操作。所以，终端设备必须跟踪已经提交的descriptors，确保提交的descriptor不会因为超过预设长度而被丢弃。<br>终端使用指令ENQCMD(内核态)和ENQCMD(用户态)来提交share work queue。可以通过EFLAGS.ZF 位判断指令是否被接收。</p>
-<p>更多细节可以参考 <a href="https://software.intel.com/en-us/articles/intel-sdm#combined" target="_blank" rel="noopener">Intel® Software Developer’s Manual (SDM)</a>  和 <a href="https://software.intel.com/en-us/articles/intel-sdm#architecture" target="_blank" rel="noopener">Intel® Instruction Set Extensions (ISE)</a></p>
+<p>更多细节可以参考 <a target="_blank" rel="noopener" href="https://software.intel.com/en-us/articles/intel-sdm#combined">Intel® Software Developer’s Manual (SDM)</a>  和 <a target="_blank" rel="noopener" href="https://software.intel.com/en-us/articles/intel-sdm#architecture">Intel® Instruction Set Extensions (ISE)</a></p>
 <h2 id="关键架构"><a href="#关键架构" class="headerlink" title="关键架构"></a>关键架构</h2><p><img src="/2021/11/05/dsa-overview/dsa-intro-2.png" alt="dsa-intro-2.png"></p>
 <p>上图是软件架构。内核中驱动名字叫做IDXD(Intel® Data Accelerator Driver)。同时也作为Virtual Device Composition Module(VMCM) 被Intel® Scalable IOV specification 引用。用于创建实例暴露给虚拟机。</p>
 <p>内核驱动提供了如下服务:</p>
@@ -290,7 +292,7 @@
 <li>VDCM 组成虚拟设备，为虚拟机提供Intel DSA实例</li>
 <li>通过sysfs文件系统提供用户接口，用于发现设备以及配置work queue.</li>
 </ul>
-<p>更多详情，参考<a href="https://software.intel.com/en-us/download/intel-data-streaming-accelerator-preliminary-architecture-specification" target="_blank" rel="noopener"> Intel® DSA specification</a></p>
+<p>更多详情，参考<a target="_blank" rel="noopener" href="https://software.intel.com/en-us/download/intel-data-streaming-accelerator-preliminary-architecture-specification"> Intel® DSA specification</a></p>
 <h2 id="ACCELERATOR-CONFIGURATOR-ACCEL-CONFIG"><a href="#ACCELERATOR-CONFIGURATOR-ACCEL-CONFIG" class="headerlink" title="ACCELERATOR CONFIGURATOR  (ACCEL-CONFIG)"></a>ACCELERATOR CONFIGURATOR  (ACCEL-CONFIG)</h2><p>accel-config是一套给系统管理员配置groups, work queue，engine用的工具。它能够解析经过sysfs提供的头结构以及RSA的能力，并且提供了命令行接口，配置资源。</p>
 <ul>
 <li>显示设备层级</li>
@@ -299,7 +301,7 @@
 <li>控制设备启停</li>
 <li>创建VFIO仲裁设备，为虚拟机的操作系统提供虚拟DSA设备</li>
 </ul>
-<p>更多可参考：<a href="https://github.com/intel/idxd" target="_blank" rel="noopener">accel-config</a></p>
+<p>更多可参考：<a target="_blank" rel="noopener" href="https://github.com/intel/idxd">accel-config</a></p>
 <h2 id="内核中使用DSA"><a href="#内核中使用DSA" class="headerlink" title="内核中使用DSA"></a>内核中使用DSA</h2><p>通过sysfs，可以为每一个WQ指定类型和名字。这允许WQ被预留。驱动中有三种类型：</p>
 <ul>
 <li>Kernel - 预留给内核使用的</li>
@@ -309,7 +311,7 @@
 <p>给用户和mdev使用时，可以为WQ指定一个字符串用来表示预留的目的，比如字符串mysql或者DPDK等 用来标示预留的目的。</p>
 <p><img src="/2021/11/05/dsa-overview/dsa-intro-3.png" alt="dsa-intro-3.png"></p>
 <p>IDXD驱动处理Linux内核DMA engine产生内核WQ请求。类似的例子还有ClearPage engine, NonTransparent Bridge (NTB),persistent memory</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>Intel® DSA Specification:  <a href="https://software.intel.com/en-us/download/intel-data-streaming-accelerat.." target="_blank" rel="noopener">https://software.intel.com/en-us/download/intel-data-streaming-accelerat..</a>.<br>Intel® Data Accelerator Driver GitHub repository:  <a href="https://github.com/intel/idxd-driver" target="_blank" rel="noopener">https://github.com/intel/idxd-driver</a><br>Intel® Data Accelerator Driver Overview on GitHub.io:  <a href="https://intel.github.io/idxd/" target="_blank" rel="noopener">https://intel.github.io/idxd/</a><br>Intel® Data Accelerator Control Utility and Library: <a href="https://github.com/intel/idxd-config" target="_blank" rel="noopener">https://github.com/intel/idxd-config</a><br>Shared Virtual Memory:  <a href="https://software.intel.com/en-us/articles/opencl-20-shared-virtual-memor.." target="_blank" rel="noopener">https://software.intel.com/en-us/articles/opencl-20-shared-virtual-memor..</a>.<br>Intel® Scalable I/O Virtualization:  <a href="https://software.intel.com/sites/default/files/managed/cc/0e/intel-scala.." target="_blank" rel="noopener">https://software.intel.com/sites/default/files/managed/cc/0e/intel-scala..</a>.<br>Intel® 64 and IA-32 Architectures Software Developer Manuals:  <a href="https://software.intel.com/en-us/articles/intel-sdm" target="_blank" rel="noopener">https://software.intel.com/en-us/articles/intel-sdm</a></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>Intel® DSA Specification:  <a target="_blank" rel="noopener" href="https://software.intel.com/en-us/download/intel-data-streaming-accelerat..">https://software.intel.com/en-us/download/intel-data-streaming-accelerat..</a>.<br>Intel® Data Accelerator Driver GitHub repository:  <a target="_blank" rel="noopener" href="https://github.com/intel/idxd-driver">https://github.com/intel/idxd-driver</a><br>Intel® Data Accelerator Driver Overview on GitHub.io:  <a target="_blank" rel="noopener" href="https://intel.github.io/idxd/">https://intel.github.io/idxd/</a><br>Intel® Data Accelerator Control Utility and Library: <a target="_blank" rel="noopener" href="https://github.com/intel/idxd-config">https://github.com/intel/idxd-config</a><br>Shared Virtual Memory:  <a target="_blank" rel="noopener" href="https://software.intel.com/en-us/articles/opencl-20-shared-virtual-memor..">https://software.intel.com/en-us/articles/opencl-20-shared-virtual-memor..</a>.<br>Intel® Scalable I/O Virtualization:  <a target="_blank" rel="noopener" href="https://software.intel.com/sites/default/files/managed/cc/0e/intel-scala..">https://software.intel.com/sites/default/files/managed/cc/0e/intel-scala..</a>.<br>Intel® 64 and IA-32 Architectures Software Developer Manuals:  <a target="_blank" rel="noopener" href="https://software.intel.com/en-us/articles/intel-sdm">https://software.intel.com/en-us/articles/intel-sdm</a></p>
 <p>Address Translation Services (ATS)<br>Process Address Space ID (PASID)<br>Page Request Services (PRS)<br>Message Signalled Interrupts Extended (MSI-X)<br>Advanced Error Reporting (AER)</p>
 
     </div>
@@ -415,13 +417,14 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关键架构"><span class="nav-number">2.</span> <span class="nav-text">关键架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ACCELERATOR-CONFIGURATOR-ACCEL-CONFIG"><span class="nav-number">3.</span> <span class="nav-text">ACCELERATOR CONFIGURATOR  (ACCEL-CONFIG)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内核中使用DSA"><span class="nav-number">4.</span> <span class="nav-text">内核中使用DSA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E6%9E%B6%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">关键架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ACCELERATOR-CONFIGURATOR-ACCEL-CONFIG"><span class="nav-number">3.</span> <span class="nav-text">ACCELERATOR CONFIGURATOR  (ACCEL-CONFIG)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E4%B8%AD%E4%BD%BF%E7%94%A8DSA"><span class="nav-number">4.</span> <span class="nav-text">内核中使用DSA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
   <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
   <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
 </div>
@@ -430,7 +433,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -457,25 +460,25 @@
     </div>
     <ul class="links-of-blogroll-list">
         <li class="links-of-blogroll-item">
-          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
         </li>
     </ul>
   </div>
@@ -495,7 +498,7 @@
         
 
         
-  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
       <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
   </div>
 
@@ -526,9 +529,17 @@
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
 <script src="/js/schemes/muse.js"></script>
+
+
 <script src="/js/next-boot.js"></script>
+
 
   <script defer src="/lib/three/three.min.js"></script>
     <script defer src="/lib/three/three-waves.min.js"></script>
@@ -548,7 +559,9 @@
 
 
 
-  <script src="/js/local-search.js"></script>
+  
+<script src="/js/local-search.js"></script>
+
 
 
 

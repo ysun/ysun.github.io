@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 3.8.0">
+<meta name="generator" content="Hexo 6.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -23,17 +23,17 @@
   </script>
 
   <meta name="description" content="引言对于Linux Kernel 或者OS相关的自动化测试，如何自动更新被测的Kernel以及OS image有时候是比较困难的事情。Linux社区的”老神仙”Fengguang同学牵头开发了0-day自动化测试系统，系统期初的核心功能是利用kexec加载待测的kernel image二次启动。大概流程是:">
-<meta name="keywords" content="efi">
 <meta property="og:type" content="article">
 <meta property="og:title" content="EFI Shell中使用tfpt.efi 自动化Kernel测试方案">
 <meta property="og:url" content="http://www.owalle.com/2019/05/07/efi-shell-tftp/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="引言对于Linux Kernel 或者OS相关的自动化测试，如何自动更新被测的Kernel以及OS image有时候是比较困难的事情。Linux社区的”老神仙”Fengguang同学牵头开发了0-day自动化测试系统，系统期初的核心功能是利用kexec加载待测的kernel image二次启动。大概流程是:">
-<meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2021-09-27T09:54:43.190Z">
+<meta property="og:locale">
+<meta property="article:published_time" content="2019-05-07T01:44:48.000Z">
+<meta property="article:modified_time" content="2021-09-27T09:54:43.190Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="efi">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="EFI Shell中使用tfpt.efi 自动化Kernel测试方案">
-<meta name="twitter:description" content="引言对于Linux Kernel 或者OS相关的自动化测试，如何自动更新被测的Kernel以及OS image有时候是比较困难的事情。Linux社区的”老神仙”Fengguang同学牵头开发了0-day自动化测试系统，系统期初的核心功能是利用kexec加载待测的kernel image二次启动。大概流程是:">
 
 <link rel="canonical" href="http://www.owalle.com/2019/05/07/efi-shell-tftp/">
 
@@ -163,7 +163,9 @@
     <i class="fa fa-search"></i>
   </span>
   <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
   </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
@@ -199,16 +201,16 @@
     
   
   
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2019/05/07/efi-shell-tftp/">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Yi颗烂樱桃">
       <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Yi颗烂樱桃">
     </span>
       <header class="post-header">
@@ -237,7 +239,7 @@
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/OS/" itemprop="url" rel="index"><span itemprop="name">OS</span></a>
                 </span>
             </span>
@@ -254,7 +256,7 @@
 
       
         <h2 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h2><p>对于Linux Kernel 或者OS相关的自动化测试，如何自动更新被测的Kernel以及OS image有时候是比较困难的事情。<br>Linux社区的”老神仙”Fengguang同学牵头开发了0-day自动化测试系统，系统期初的核心功能是利用kexec加载待测的kernel image二次启动。大概流程是:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">st=&gt;start: 系统启动</span><br><span class="line">op1=&gt;operation: 启动small size的kernel + ramfs</span><br><span class="line">op2=&gt;operation: 初始化网络并获取IP地址</span><br><span class="line">op3=&gt;operation: 从服务器上获取可用的kernel image列表</span><br><span class="line">op4=&gt;operation: 根据列表的配置获取待测的kernel image</span><br><span class="line">op5=&gt;operation: 在ramfs初始化的最后阶段使用Kexec加载待测的kernel image启动本地文件系统</span><br><span class="line">e=&gt;end: 系统启动结束</span><br><span class="line"></span><br><span class="line">st-&gt;op1-&gt;op2-&gt;op3-&gt;op4-&gt;op5-&gt;e</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">st=&gt;start: 系统启动</span><br><span class="line">op1=&gt;operation: 启动small size的kernel + ramfs</span><br><span class="line">op2=&gt;operation: 初始化网络并获取IP地址</span><br><span class="line">op3=&gt;operation: 从服务器上获取可用的kernel image列表</span><br><span class="line">op4=&gt;operation: 根据列表的配置获取待测的kernel image</span><br><span class="line">op5=&gt;operation: 在ramfs初始化的最后阶段使用Kexec加载待测的kernel image启动本地文件系统</span><br><span class="line">e=&gt;end: 系统启动结束</span><br><span class="line"></span><br><span class="line">st-&gt;op1-&gt;op2-&gt;op3-&gt;op4-&gt;op5-&gt;e</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <p>这个方法对于绝大多数kernel或者module测试中是工作的，也是非常灵活的。但有几个特例：</p>
 <ol>
 <li>由于Kexec的限制，上述方法对Xen支持的不好。</li>
@@ -262,23 +264,18 @@
 </ol>
 <p>这里大概验证了一个补充的方法，可以覆盖对于hypervisor等运行在Linux Kernel下层的组建进行自动化测试。</p>
 <h2 id="EFI-以及EDKII"><a href="#EFI-以及EDKII" class="headerlink" title="EFI 以及EDKII"></a>EFI 以及EDKII</h2><p>我不是EFI或者EDKII的专家，这里就简单描述使用方法。另外之所以需要编译EDKII，是因为一般平台自带的EFI shell网络支持都不是很好。</p>
-<h3 id="下载EDKII-source-code："><a href="#下载EDKII-source-code：" class="headerlink" title="下载EDKII source code："></a>下载EDKII source code：</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/tianocore/edk2.git</span><br><span class="line">cd edk2</span><br><span class="line">git submodule update --init --recursive</span><br></pre></td></tr></table></figure>
-<h3 id="编译edk2的编译工具"><a href="#编译edk2的编译工具" class="headerlink" title="编译edk2的编译工具"></a>编译edk2的编译工具</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">. edksetup.sh BaseTools</span><br><span class="line">cd BaseTools/</span><br><span class="line">make</span><br></pre></td></tr></table></figure>
-<h3 id="编译EFI-Shell包"><a href="#编译EFI-Shell包" class="headerlink" title="编译EFI Shell包"></a>编译EFI Shell包</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">build -p ShellPkg/ShellPkg.dsc  -t GCC5 -a IA32 -a X64</span><br></pre></td></tr></table></figure>
+<h3 id="下载EDKII-source-code："><a href="#下载EDKII-source-code：" class="headerlink" title="下载EDKII source code："></a>下载EDKII source code：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/tianocore/edk2.git</span><br><span class="line">cd edk2</span><br><span class="line">git submodule update --init --recursive</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="编译edk2的编译工具"><a href="#编译edk2的编译工具" class="headerlink" title="编译edk2的编译工具"></a>编译edk2的编译工具</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">. edksetup.sh BaseTools</span><br><span class="line">cd BaseTools/</span><br><span class="line">make</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="编译EFI-Shell包"><a href="#编译EFI-Shell包" class="headerlink" title="编译EFI Shell包"></a>编译EFI Shell包</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">build -p ShellPkg/ShellPkg.dsc  -t GCC5 -a IA32 -a X64</span><br></pre></td></tr></table></figure>
 <p>然后就可以在目录<code>Build/Shell/RELEASE_GCC5/X64/</code> 中找到<code>shell.efi</code>和<code>tftp.efi</code>。可以将这两个文件copy到efi分区中，就可以使用了。</p>
-<h3 id="加载shell-efi"><a href="#加载shell-efi" class="headerlink" title="加载shell.efi"></a>加载shell.efi</h3><p><code>shell.efi</code>也只是个EFI 的application，可以使用Linux下的工具<code>efibootmgr</code>让BIOS自动加载<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">efibootmgr -c -l &quot;\EFI\shell.efi&quot; -d /dev/nvme0n1 -p 1  -L &quot;MY EFI SHELL&quot;</span><br></pre></td></tr></table></figure></p>
-<p>大概意思是创建(<code>-c</code>)一个entry，加载(<code>-l</code>)EFI文件<code>\EFI\shell.efi</code>，磁盘(<code>-d</code>)<code>/dev/nvme0n1</code>的第1个分区(<code>-p 1</code>)，标签命名为(<code>-L &quot;MY EFI SHELL&quot;</code>)</p>
-<p>另外还有两个常用命令：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">efibootmgr -v</span><br><span class="line">efibootmgr -o 0001,0002,0005,0003,0004,0000</span><br></pre></td></tr></table></figure></p>
-<p><code>-v</code> 列出当前的启动顺序，一般新加入的都是第一个启动<br><code>-o</code> 后面列出来重新排列的启动顺序，需要需要从上一条命令中查到。</p>
-<h3 id="确认网络工作"><a href="#确认网络工作" class="headerlink" title="确认网络工作"></a>确认网络工作</h3><p>执行命令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ifconfig -l</span><br></pre></td></tr></table></figure></p>
-<p>可以列出来所有的网络接口。默认会自动dhcp，如果没有可以使用<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ifconfig -i etho dhcp</span><br></pre></td></tr></table></figure></p>
-<p>来手动获取IP地址。</p>
+<h3 id="加载shell-efi"><a href="#加载shell-efi" class="headerlink" title="加载shell.efi"></a>加载shell.efi</h3><p><code>shell.efi</code>也只是个EFI 的application，可以使用Linux下的工具<code>efibootmgr</code>让BIOS自动加载<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">efibootmgr -c -l &quot;\EFI\shell.efi&quot; -d /dev/nvme0n1 -p 1  -L &quot;MY EFI SHELL&quot; </span><br></pre></td></tr></table></figure><br>大概意思是创建(<code>-c</code>)一个entry，加载(<code>-l</code>)EFI文件<code>\EFI\shell.efi</code>，磁盘(<code>-d</code>)<code>/dev/nvme0n1</code>的第1个分区(<code>-p 1</code>)，标签命名为(<code>-L &quot;MY EFI SHELL&quot;</code>)</p>
+<p>另外还有两个常用命令：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">efibootmgr -v</span><br><span class="line">efibootmgr -o 0001,0002,0005,0003,0004,0000</span><br></pre></td></tr></table></figure><br><code>-v</code> 列出当前的启动顺序，一般新加入的都是第一个启动<br><code>-o</code> 后面列出来重新排列的启动顺序，需要需要从上一条命令中查到。</p>
+<h3 id="确认网络工作"><a href="#确认网络工作" class="headerlink" title="确认网络工作"></a>确认网络工作</h3><p>执行命令<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ifconfig -l</span><br></pre></td></tr></table></figure><br>可以列出来所有的网络接口。默认会自动dhcp，如果没有可以使用<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ifconfig -i etho dhcp</span><br></pre></td></tr></table></figure><br>来手动获取IP地址。</p>
 <p>tips: 如果在BIOS里面设置关闭PXE网络启动的话，网络驱动就不会加载了，所以，建议在BIOS里面enable PXE boot，尽管我们并不使用它。</p>
 <h2 id="TFTP"><a href="#TFTP" class="headerlink" title="TFTP"></a>TFTP</h2><p>接下来简单说下TFTP的使用方法</p>
-<h3 id="搭建TFTP-server"><a href="#搭建TFTP-server" class="headerlink" title="搭建TFTP server"></a>搭建TFTP server</h3><p>以Ubuntu为例：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">安装：</span><br><span class="line">apt-get install tftp-hpa tftpd-hpa</span><br><span class="line"></span><br><span class="line">创建目录：</span><br><span class="line">mkdir /tftpboot # 这是建立tftp传输目录。</span><br><span class="line">sudo chmod 0777 /tftpboot</span><br><span class="line">sudo touch test.txt # test.txt文件最好输入内容以便区分</span><br><span class="line"></span><br><span class="line">配置：</span><br><span class="line">vim /etc/default/tftpd-hpa3</span><br><span class="line">TFTP_USERNAME=&quot;tftp&quot;</span><br><span class="line">TFTP_DIRECTORY=&quot;/tftpboot&quot; # 这里是你的tftpd-hpa的服务目录,这个想建立在哪里都行</span><br><span class="line">TFTP_ADDRESS=&quot;0.0.0.0:69&quot;</span><br><span class="line">TFTP_OPTIONS=&quot;-l -c -s&quot; # 这里是选项,-c是可以上传文件的参数，-s是指定tftpd-hpa服务目录，上面已经指定</span><br><span class="line"></span><br><span class="line">重启服务</span><br><span class="line">sudo service tftpd-hpa restart # 启动服务，这里要注意，采用的独立服务形式。</span><br><span class="line"></span><br><span class="line">测试</span><br><span class="line">$ tftp 127.0.0.1</span><br><span class="line">tftp&gt;get test.txt</span><br><span class="line">tftp&gt;put test1.txt</span><br></pre></td></tr></table></figure></p>
-<h3 id="EFI-Shell-中使用tftp-efi"><a href="#EFI-Shell-中使用tftp-efi" class="headerlink" title="EFI Shell 中使用tftp.efi"></a>EFI Shell 中使用tftp.efi</h3><p>在EFI shell中进入tftp.efi所在目录然后执行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tftp.efi &lt;tftp server IP&gt; &lt;文件名字&gt;</span><br></pre></td></tr></table></figure></p>
-<p>就可以下载文件了。</p>
-<h2 id="自动化kernel-测试方案："><a href="#自动化kernel-测试方案：" class="headerlink" title="自动化kernel 测试方案："></a>自动化kernel 测试方案：</h2><p>在EFI Shell的根目录中，比如fs0: 中添加一个文件 startup.nsh 内容如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">if not exist fs0:\EFI\tftp.efi then</span><br><span class="line">        echo &quot;No tftp.efi&quot;</span><br><span class="line">endif</span><br><span class="line"></span><br><span class="line">fs0:</span><br><span class="line">cd \EFI</span><br><span class="line"></span><br><span class="line">tftp.efi 10.239.159.139 kernel_images/bzImage_current bzImage</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">:boot_os</span><br><span class="line">        cd \EFI\ubuntu</span><br><span class="line">        grubx64.efi</span><br></pre></td></tr></table></figure></p>
+<h3 id="搭建TFTP-server"><a href="#搭建TFTP-server" class="headerlink" title="搭建TFTP server"></a>搭建TFTP server</h3><p>以Ubuntu为例：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">安装：</span><br><span class="line">apt-get install tftp-hpa tftpd-hpa</span><br><span class="line"></span><br><span class="line">创建目录：</span><br><span class="line">mkdir /tftpboot # 这是建立tftp传输目录。</span><br><span class="line">sudo chmod 0777 /tftpboot</span><br><span class="line">sudo touch test.txt # test.txt文件最好输入内容以便区分</span><br><span class="line"></span><br><span class="line">配置：</span><br><span class="line">vim /etc/default/tftpd-hpa3</span><br><span class="line">TFTP_USERNAME=&quot;tftp&quot;</span><br><span class="line">TFTP_DIRECTORY=&quot;/tftpboot&quot; # 这里是你的tftpd-hpa的服务目录,这个想建立在哪里都行</span><br><span class="line">TFTP_ADDRESS=&quot;0.0.0.0:69&quot;</span><br><span class="line">TFTP_OPTIONS=&quot;-l -c -s&quot; # 这里是选项,-c是可以上传文件的参数，-s是指定tftpd-hpa服务目录，上面已经指定</span><br><span class="line"></span><br><span class="line">重启服务</span><br><span class="line">sudo service tftpd-hpa restart # 启动服务，这里要注意，采用的独立服务形式。</span><br><span class="line"></span><br><span class="line">测试</span><br><span class="line">$ tftp 127.0.0.1</span><br><span class="line">tftp&gt;get test.txt</span><br><span class="line">tftp&gt;put test1.txt</span><br></pre></td></tr></table></figure></p>
+<h3 id="EFI-Shell-中使用tftp-efi"><a href="#EFI-Shell-中使用tftp-efi" class="headerlink" title="EFI Shell 中使用tftp.efi"></a>EFI Shell 中使用tftp.efi</h3><p>在EFI shell中进入tftp.efi所在目录然后执行<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tftp.efi &lt;tftp server IP&gt; &lt;文件名字&gt;</span><br></pre></td></tr></table></figure><br>就可以下载文件了。</p>
+<h2 id="自动化kernel-测试方案："><a href="#自动化kernel-测试方案：" class="headerlink" title="自动化kernel 测试方案："></a>自动化kernel 测试方案：</h2><p>在EFI Shell的根目录中，比如fs0: 中添加一个文件 startup.nsh 内容如下：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">if not exist fs0:\EFI\tftp.efi then</span><br><span class="line">        echo &quot;No tftp.efi&quot;</span><br><span class="line">endif</span><br><span class="line"></span><br><span class="line">fs0:</span><br><span class="line">cd \EFI</span><br><span class="line"></span><br><span class="line">tftp.efi 10.239.159.139 kernel_images/bzImage_current bzImage</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">:boot_os</span><br><span class="line">        cd \EFI\ubuntu</span><br><span class="line">        grubx64.efi </span><br></pre></td></tr></table></figure></p>
 <p>这样Ubuntu grub加载的时候，就可以使用刚刚下载来的kernel了，因为grub和efi都可以使用FAT分区格式。</p>
 <p>当系统死掉了，并且需要更新kernel的时候，只需要覆盖tftp server上的bzimage_current或者改变其软连接的指向，然后重启系统，就可以一次性更新kernel。</p>
 <h2 id="Todo"><a href="#Todo" class="headerlink" title="Todo"></a>Todo</h2><p>目前EFI shell能做的事情相比Linux shell还相差甚远，没有太多现成的application可以直接使用。<br>tftp.efi也能是download，并不能upload，这使得EFI直接并不能对server进行通知，需要借助OS。<br>后面，可以增加application，实现类似Linux工具curl，或者patch tfpt让它可以上传文件，这样就可以双向通信了。</p>
@@ -387,13 +384,14 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#引言"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EFI-以及EDKII"><span class="nav-number">2.</span> <span class="nav-text">EFI 以及EDKII</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#下载EDKII-source-code："><span class="nav-number">2.1.</span> <span class="nav-text">下载EDKII source code：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#编译edk2的编译工具"><span class="nav-number">2.2.</span> <span class="nav-text">编译edk2的编译工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#编译EFI-Shell包"><span class="nav-number">2.3.</span> <span class="nav-text">编译EFI Shell包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#加载shell-efi"><span class="nav-number">2.4.</span> <span class="nav-text">加载shell.efi</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#确认网络工作"><span class="nav-number">2.5.</span> <span class="nav-text">确认网络工作</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TFTP"><span class="nav-number">3.</span> <span class="nav-text">TFTP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#搭建TFTP-server"><span class="nav-number">3.1.</span> <span class="nav-text">搭建TFTP server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#EFI-Shell-中使用tftp-efi"><span class="nav-number">3.2.</span> <span class="nav-text">EFI Shell 中使用tftp.efi</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#自动化kernel-测试方案："><span class="nav-number">4.</span> <span class="nav-text">自动化kernel 测试方案：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Todo"><span class="nav-number">5.</span> <span class="nav-text">Todo</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#附件"><span class="nav-number">6.</span> <span class="nav-text">附件</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%95%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EFI-%E4%BB%A5%E5%8F%8AEDKII"><span class="nav-number">2.</span> <span class="nav-text">EFI 以及EDKII</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BDEDKII-source-code%EF%BC%9A"><span class="nav-number">2.1.</span> <span class="nav-text">下载EDKII source code：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%96%E8%AF%91edk2%E7%9A%84%E7%BC%96%E8%AF%91%E5%B7%A5%E5%85%B7"><span class="nav-number">2.2.</span> <span class="nav-text">编译edk2的编译工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%96%E8%AF%91EFI-Shell%E5%8C%85"><span class="nav-number">2.3.</span> <span class="nav-text">编译EFI Shell包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A0%E8%BD%BDshell-efi"><span class="nav-number">2.4.</span> <span class="nav-text">加载shell.efi</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A1%AE%E8%AE%A4%E7%BD%91%E7%BB%9C%E5%B7%A5%E4%BD%9C"><span class="nav-number">2.5.</span> <span class="nav-text">确认网络工作</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TFTP"><span class="nav-number">3.</span> <span class="nav-text">TFTP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%90%AD%E5%BB%BATFTP-server"><span class="nav-number">3.1.</span> <span class="nav-text">搭建TFTP server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#EFI-Shell-%E4%B8%AD%E4%BD%BF%E7%94%A8tftp-efi"><span class="nav-number">3.2.</span> <span class="nav-text">EFI Shell 中使用tftp.efi</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E5%8C%96kernel-%E6%B5%8B%E8%AF%95%E6%96%B9%E6%A1%88%EF%BC%9A"><span class="nav-number">4.</span> <span class="nav-text">自动化kernel 测试方案：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Todo"><span class="nav-number">5.</span> <span class="nav-text">Todo</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%84%E4%BB%B6"><span class="nav-number">6.</span> <span class="nav-text">附件</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
   <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
   <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
 </div>
@@ -402,7 +400,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -429,25 +427,25 @@
     </div>
     <ul class="links-of-blogroll-list">
         <li class="links-of-blogroll-item">
-          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
         </li>
     </ul>
   </div>
@@ -467,7 +465,7 @@
         
 
         
-  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
       <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
   </div>
 
@@ -498,9 +496,17 @@
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
 <script src="/js/schemes/muse.js"></script>
+
+
 <script src="/js/next-boot.js"></script>
+
 
   <script defer src="/lib/three/three.min.js"></script>
     <script defer src="/lib/three/three-waves.min.js"></script>
@@ -520,7 +526,9 @@
 
 
 
-  <script src="/js/local-search.js"></script>
+  
+<script src="/js/local-search.js"></script>
+
 
 
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 3.8.0">
+<meta name="generator" content="Hexo 6.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -23,20 +23,20 @@
   </script>
 
   <meta name="description" content="前面几篇文章我们完成了Crosvm的编译和安装，以及依赖库的安装。本文将详细阐述一下如何开发和调试crosvm。我的开发环境是Windows工作机+Ubuntu开发机。当然，可以仅仅用一个Ubuntu做为开发机就可以搞定所有的事情，这种情况最为简单直接。之所以这么做，因为需要使用windows的office，N多年来也习惯了Windows office。出差出门啥的，不需要带两个电脑。所以，win">
-<meta name="keywords" content="crosvm ChromeOS">
 <meta property="og:type" content="article">
 <meta property="og:title" content="由浅入深CrosVM（五）—— Crosvm的开发和调试">
 <meta property="og:url" content="http://www.owalle.com/2021/03/24/crosvm-develop-debug/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="前面几篇文章我们完成了Crosvm的编译和安装，以及依赖库的安装。本文将详细阐述一下如何开发和调试crosvm。我的开发环境是Windows工作机+Ubuntu开发机。当然，可以仅仅用一个Ubuntu做为开发机就可以搞定所有的事情，这种情况最为简单直接。之所以这么做，因为需要使用windows的office，N多年来也习惯了Windows office。出差出门啥的，不需要带两个电脑。所以，win">
-<meta property="og:locale" content="zh-Hans">
+<meta property="og:locale">
 <meta property="og:image" content="http://www.owalle.com/2021/03/24/crosvm-develop-debug/vscode1.png">
 <meta property="og:image" content="http://www.owalle.com/2021/03/24/crosvm-develop-debug/vscode2.png">
 <meta property="og:image" content="http://www.owalle.com/2021/03/24/crosvm-develop-debug/vscode3.png">
-<meta property="og:updated_time" content="2021-09-27T09:54:43.430Z">
+<meta property="article:published_time" content="2021-03-24T07:39:28.000Z">
+<meta property="article:modified_time" content="2021-09-27T09:54:43.430Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="crosvm ChromeOS">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="由浅入深CrosVM（五）—— Crosvm的开发和调试">
-<meta name="twitter:description" content="前面几篇文章我们完成了Crosvm的编译和安装，以及依赖库的安装。本文将详细阐述一下如何开发和调试crosvm。我的开发环境是Windows工作机+Ubuntu开发机。当然，可以仅仅用一个Ubuntu做为开发机就可以搞定所有的事情，这种情况最为简单直接。之所以这么做，因为需要使用windows的office，N多年来也习惯了Windows office。出差出门啥的，不需要带两个电脑。所以，win">
 <meta name="twitter:image" content="http://www.owalle.com/2021/03/24/crosvm-develop-debug/vscode1.png">
 
 <link rel="canonical" href="http://www.owalle.com/2021/03/24/crosvm-develop-debug/">
@@ -167,7 +167,9 @@
     <i class="fa fa-search"></i>
   </span>
   <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
   </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
@@ -203,16 +205,16 @@
     
   
   
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2021/03/24/crosvm-develop-debug/">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Yi颗烂樱桃">
       <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Yi颗烂樱桃">
     </span>
       <header class="post-header">
@@ -241,7 +243,7 @@
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/CROSVM/" itemprop="url" rel="index"><span itemprop="name">CROSVM</span></a>
                 </span>
             </span>
@@ -260,21 +262,17 @@
         <p>前面几篇文章我们完成了Crosvm的编译和安装，以及依赖库的安装。本文将详细阐述一下如何开发和调试crosvm。<br>我的开发环境是Windows工作机+Ubuntu开发机。当然，可以仅仅用一个Ubuntu做为开发机就可以搞定所有的事情，这种情况最为简单直接。之所以这么做，因为需要使用windows的office，N多年来也习惯了Windows office。出差出门啥的，不需要带两个电脑。<br>所以，windows中使用的IDE是MS VScode。免费软件，自行下载。</p>
 <h2 id="VSCode-插件"><a href="#VSCode-插件" class="headerlink" title="VSCode 插件"></a>VSCode 插件</h2><p>两类插件：Rust编译、调试相关，其他类。<br>编译调试相关： C/C++, CodeLLDB, Rust/Rust analyzer, Rust Assit, rust-launcher<br>其他类：Remote-SSH, Terminal, Vim</p>
 <p>直接在VSCode里面搜索安装就好了，每个插件都有介绍，都比较常用。</p>
-<h3 id="Remote-SSH"><a href="#Remote-SSH" class="headerlink" title="Remote-SSH"></a>Remote-SSH</h3><p>如果再Ubuntu本地开发调试，可以跳过这一步。对于远程调试，之前尝试过几个remote浏览code的方案，最终感觉remote-ssh最符合我的习惯。<br>安装过Remote-ssh之后，可以如下图配置:<br><img src="/2021/03/24/crosvm-develop-debug/vscode1.png" alt="vscode1"><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Host tiaoban</span><br><span class="line">    HostName 10.239.88.88</span><br><span class="line">    Port 22</span><br><span class="line">    User root</span><br><span class="line"></span><br><span class="line">Host 192.168.1.66    //需要网关跳转</span><br><span class="line">  HostName 192.168.1.66</span><br><span class="line">  User root</span><br><span class="line">  ProxyCommand ssh tiaoban -W %h:%p</span><br><span class="line"></span><br><span class="line">Host 10.239.88.111   //直接ssh</span><br><span class="line">  HostName 10.239.88.111</span><br><span class="line">  User root</span><br><span class="line">  ForwardAgent yes</span><br></pre></td></tr></table></figure></p>
-<p>而我又偏偏需要网关跳转一次。配置文件写好后，就可以看到如图所示”SSH TARGETS”里面有对应的机器出现。鼠标右键点击开发机，选择”Connect Host in New Window”，或者host name后面的图标，就弹出一个新的VSCode窗口，分别输入网关和开发机的密码，就可以连上去。然后就像在本地一样，在最上边地址栏里输入项目文件夹的地址就好了。</p>
-<h3 id="rust-launcher"><a href="#rust-launcher" class="headerlink" title="rust-launcher"></a>rust-launcher</h3><p>用来运行rust编译和调试程序的插件，运行时要求依赖 C/C++ 和 CodeLLDB，以及Rust（编译器）。rust-launcher的配置文件很关键，我列在这里供参考：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;version&quot;: &quot;0.2.0&quot;,</span><br><span class="line">    &quot;configurations&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">            &quot;type&quot;: &quot;lldb&quot;,</span><br><span class="line">            &quot;request&quot;: &quot;launch&quot;,</span><br><span class="line">            &quot;name&quot;: &quot;Debug executable &apos;qcow_img&apos;&quot;,</span><br><span class="line">            &quot;cargo&quot;: &#123;</span><br><span class="line">                &quot;args&quot;: [</span><br><span class="line">                    &quot;build&quot;,</span><br><span class="line">                    &quot;--features=gpu,x&quot;</span><br><span class="line">                ],</span><br><span class="line">            &#125;,</span><br><span class="line">            &quot;args&quot;: [</span><br><span class="line">                &quot;run&quot;, </span><br><span class="line">                &quot;--disable-sandbox&quot;,</span><br><span class="line">                &quot;--cpus=4&quot;,</span><br><span class="line">                &quot;--mem=4096&quot;,</span><br><span class="line">                &quot;--rwdisk=/home/works/kvm/ubuntu20.10_rootfs.img&quot;,</span><br><span class="line">                &quot;--params=root=/dev/vda3&quot;,</span><br><span class="line">                &quot;--socket=/tmp/crosvm.sock&quot;,</span><br><span class="line">                &quot;--host_ip=192.168.0.1&quot;,</span><br><span class="line">                &quot;--netmask=255.255.255.0&quot;,</span><br><span class="line">                &quot;--mac=AA:BB:CC:00:00:12&quot;,</span><br><span class="line">                &quot;--gpu&quot;,</span><br><span class="line">                &quot;--x-display=:0&quot;,</span><br><span class="line">                &quot;--display-window-keyboard&quot;,</span><br><span class="line">                &quot;--display-window-mouse&quot;,</span><br><span class="line">                &quot;/home/works/crosvm_kvm/vmlinuz-5.11.0-intel-next-adl-alpha-rc1&quot;,</span><br><span class="line">            ],</span><br><span class="line">            &quot;cwd&quot;: &quot;$&#123;workspaceFolder&#125;&quot;</span><br><span class="line">        &#125;,</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>下面是部分参数的说明:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">// lldb的launch.json配置内容</span><br><span class="line">&quot;version&quot;: &quot;0.2.0&quot;,</span><br><span class="line">    &quot;configurations&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">            &quot;name&quot;: &quot;rust&quot;, // 配置名称，将会在调试配置下拉列表中显示</span><br><span class="line">            &quot;type&quot;: &quot;lldb&quot;, // 调试器类型：Windows表示器使用cppvsdbg；GDB和LLDB使用cppdbg。该值自动生成</span><br><span class="line">            &quot;request&quot;: &quot;launch&quot;, // 调试方式</span><br><span class="line">            &quot;program&quot;: &quot;$&#123;workspaceRoot&#125;/target/debug/helloworld&quot;, // 要调试的程序（完整路径，支持相对路径）</span><br><span class="line">            &quot;args&quot;: [], // 传递给上面程序的参数，没有参数留空即可</span><br><span class="line">            &quot;stopAtEntry&quot;: false, // 是否停在程序入口点（即停在main函数开始）（目前为不停下）</span><br><span class="line">            &quot;cwd&quot;: &quot;$&#123;workspaceRoot&#125;&quot;, // 调试程序时的工作目录</span><br><span class="line">            &quot;environment&quot;: [],</span><br><span class="line">            &quot;externalConsole&quot;: false, // 调试时是否显示控制台窗口(目前为不显示)</span><br><span class="line">            //&quot;preLaunchTask&quot;: &quot;build&quot;, //预先执行task.json</span><br><span class="line">            &quot;MIMode&quot;: &quot;lldb&quot; //MAC下的debug程序</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br></pre></td></tr></table></figure></p>
-<p>两个注意地方：</p>
+<h3 id="Remote-SSH"><a href="#Remote-SSH" class="headerlink" title="Remote-SSH"></a>Remote-SSH</h3><p>如果再Ubuntu本地开发调试，可以跳过这一步。对于远程调试，之前尝试过几个remote浏览code的方案，最终感觉remote-ssh最符合我的习惯。<br>安装过Remote-ssh之后，可以如下图配置:<br><img src="/2021/03/24/crosvm-develop-debug/vscode1.png" alt="vscode1"><br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Host tiaoban</span><br><span class="line">    HostName 10.239.88.88</span><br><span class="line">    Port 22</span><br><span class="line">    User root</span><br><span class="line"></span><br><span class="line">Host 192.168.1.66    //需要网关跳转</span><br><span class="line">  HostName 192.168.1.66</span><br><span class="line">  User root</span><br><span class="line">  ProxyCommand ssh tiaoban -W %h:%p</span><br><span class="line"></span><br><span class="line">Host 10.239.88.111   //直接ssh</span><br><span class="line">  HostName 10.239.88.111</span><br><span class="line">  User root</span><br><span class="line">  ForwardAgent yes</span><br></pre></td></tr></table></figure><br>而我又偏偏需要网关跳转一次。配置文件写好后，就可以看到如图所示”SSH TARGETS”里面有对应的机器出现。鼠标右键点击开发机，选择”Connect Host in New Window”，或者host name后面的图标，就弹出一个新的VSCode窗口，分别输入网关和开发机的密码，就可以连上去。然后就像在本地一样，在最上边地址栏里输入项目文件夹的地址就好了。</p>
+<h3 id="rust-launcher"><a href="#rust-launcher" class="headerlink" title="rust-launcher"></a>rust-launcher</h3><p>用来运行rust编译和调试程序的插件，运行时要求依赖 C/C++ 和 CodeLLDB，以及Rust（编译器）。rust-launcher的配置文件很关键，我列在这里供参考：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;version&quot;: &quot;0.2.0&quot;,</span><br><span class="line">    &quot;configurations&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">            &quot;type&quot;: &quot;lldb&quot;,</span><br><span class="line">            &quot;request&quot;: &quot;launch&quot;,</span><br><span class="line">            &quot;name&quot;: &quot;Debug executable &#x27;qcow_img&#x27;&quot;,</span><br><span class="line">            &quot;cargo&quot;: &#123;</span><br><span class="line">                &quot;args&quot;: [</span><br><span class="line">                    &quot;build&quot;,</span><br><span class="line">                    &quot;--features=gpu,x&quot;</span><br><span class="line">                ],</span><br><span class="line">            &#125;,</span><br><span class="line">            &quot;args&quot;: [</span><br><span class="line">                &quot;run&quot;, </span><br><span class="line">                &quot;--disable-sandbox&quot;,</span><br><span class="line">                &quot;--cpus=4&quot;,</span><br><span class="line">                &quot;--mem=4096&quot;,</span><br><span class="line">                &quot;--rwdisk=/home/works/kvm/ubuntu20.10_rootfs.img&quot;,</span><br><span class="line">                &quot;--params=root=/dev/vda3&quot;,</span><br><span class="line">                &quot;--socket=/tmp/crosvm.sock&quot;,</span><br><span class="line">                &quot;--host_ip=192.168.0.1&quot;,</span><br><span class="line">                &quot;--netmask=255.255.255.0&quot;,</span><br><span class="line">                &quot;--mac=AA:BB:CC:00:00:12&quot;,</span><br><span class="line">                &quot;--gpu&quot;,</span><br><span class="line">                &quot;--x-display=:0&quot;,</span><br><span class="line">                &quot;--display-window-keyboard&quot;,</span><br><span class="line">                &quot;--display-window-mouse&quot;,</span><br><span class="line">                &quot;/home/works/crosvm_kvm/vmlinuz-5.11.0-intel-next-adl-alpha-rc1&quot;,</span><br><span class="line">            ],</span><br><span class="line">            &quot;cwd&quot;: &quot;$&#123;workspaceFolder&#125;&quot;</span><br><span class="line">        &#125;,</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>下面是部分参数的说明:<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">// lldb的launch.json配置内容</span><br><span class="line">&quot;version&quot;: &quot;0.2.0&quot;,</span><br><span class="line">    &quot;configurations&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">            &quot;name&quot;: &quot;rust&quot;, // 配置名称，将会在调试配置下拉列表中显示</span><br><span class="line">            &quot;type&quot;: &quot;lldb&quot;, // 调试器类型：Windows表示器使用cppvsdbg；GDB和LLDB使用cppdbg。该值自动生成</span><br><span class="line">            &quot;request&quot;: &quot;launch&quot;, // 调试方式</span><br><span class="line">            &quot;program&quot;: &quot;$&#123;workspaceRoot&#125;/target/debug/helloworld&quot;, // 要调试的程序（完整路径，支持相对路径）</span><br><span class="line">            &quot;args&quot;: [], // 传递给上面程序的参数，没有参数留空即可</span><br><span class="line">            &quot;stopAtEntry&quot;: false, // 是否停在程序入口点（即停在main函数开始）（目前为不停下）</span><br><span class="line">            &quot;cwd&quot;: &quot;$&#123;workspaceRoot&#125;&quot;, // 调试程序时的工作目录</span><br><span class="line">            &quot;environment&quot;: [],</span><br><span class="line">            &quot;externalConsole&quot;: false, // 调试时是否显示控制台窗口(目前为不显示)</span><br><span class="line">            //&quot;preLaunchTask&quot;: &quot;build&quot;, //预先执行task.json</span><br><span class="line">            &quot;MIMode&quot;: &quot;lldb&quot; //MAC下的debug程序</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br></pre></td></tr></table></figure><br>两个注意地方：</p>
 <ol>
 <li>key “cargo”是rust的编译语句，我这里加入了gpu和x的参数。这里等效Linux command:<br><code>cargo build --features=gpu,x</code></li>
 <li>key “args”是运行时的参数，这里是我常用的启动crosvm虚拟机的参数供大家参考。这里好说的是，参数后面如果有值的话，必须用等号”=”，不可以使用空格，否则rust-launcher会报错的。</li>
 </ol>
 <p>launcher的配置文件写完之后，再修改最后一个地方，如图所示，在VSCode的左下角点击setting那个小齿轮，然后搜索break，勾选”Allow setting breakpoints in any files”。不知道为何这个选项没有默认勾选，但勾选之后，就可以在source code中使用F9设断点了<br><img src="/2021/03/24/crosvm-develop-debug/vscode2.png" alt="vscode2"></p>
 <p>最后的效果如下图所示：<br><img src="/2021/03/24/crosvm-develop-debug/vscode3.png" alt="vscode3"></p>
-<h2 id="补充三个VSCode调试技巧"><a href="#补充三个VSCode调试技巧" class="headerlink" title="补充三个VSCode调试技巧"></a>补充三个VSCode调试技巧</h2><h3 id="多进程"><a href="#多进程" class="headerlink" title="多进程"></a>多进程</h3><p>VSCode可以很优雅的显示多线程，并且可以针对每一个线程分别单步调试。但对于进程(fork()) 默认只能跟踪父进程。如果想在fork()函数之后，debug子进程中的内容，这么做：<br>在程序创建多进程之前(fork)之前，设置断点，然后在执行到这个断点的时候，在debug console里输入<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-exec -gdb-set follow-fork-mode child</span><br></pre></td></tr></table></figure></p>
-<p>这样继续执行的时候，VSCode就会跟踪子进程了。</p>
+<h2 id="补充三个VSCode调试技巧"><a href="#补充三个VSCode调试技巧" class="headerlink" title="补充三个VSCode调试技巧"></a>补充三个VSCode调试技巧</h2><h3 id="多进程"><a href="#多进程" class="headerlink" title="多进程"></a>多进程</h3><p>VSCode可以很优雅的显示多线程，并且可以针对每一个线程分别单步调试。但对于进程(fork()) 默认只能跟踪父进程。如果想在fork()函数之后，debug子进程中的内容，这么做：<br>在程序创建多进程之前(fork)之前，设置断点，然后在执行到这个断点的时候，在debug console里输入<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-exec -gdb-set follow-fork-mode child</span><br></pre></td></tr></table></figure><br>这样继续执行的时候，VSCode就会跟踪子进程了。</p>
 <h3 id="函数的返回值"><a href="#函数的返回值" class="headerlink" title="函数的返回值"></a>函数的返回值</h3><p>进入一个函数，然后执行<code>-exec finish</code>这样就可以看到这个执行后的返回值了。</p>
-<h3 id="查看内存地址上的值"><a href="#查看内存地址上的值" class="headerlink" title="查看内存地址上的值"></a>查看内存地址上的值</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-exec x / 4ub 0x555556e9ba10</span><br><span class="line">或者</span><br><span class="line">-exec x4xb</span><br></pre></td></tr></table></figure>
+<h3 id="查看内存地址上的值"><a href="#查看内存地址上的值" class="headerlink" title="查看内存地址上的值"></a>查看内存地址上的值</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-exec x / 4ub 0x555556e9ba10</span><br><span class="line">或者</span><br><span class="line">-exec x4xb</span><br></pre></td></tr></table></figure>
 
     </div>
 
@@ -379,13 +377,14 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#VSCode-插件"><span class="nav-number">1.</span> <span class="nav-text">VSCode 插件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Remote-SSH"><span class="nav-number">1.1.</span> <span class="nav-text">Remote-SSH</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#rust-launcher"><span class="nav-number">1.2.</span> <span class="nav-text">rust-launcher</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#补充三个VSCode调试技巧"><span class="nav-number">2.</span> <span class="nav-text">补充三个VSCode调试技巧</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#多进程"><span class="nav-number">2.1.</span> <span class="nav-text">多进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#函数的返回值"><span class="nav-number">2.2.</span> <span class="nav-text">函数的返回值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看内存地址上的值"><span class="nav-number">2.3.</span> <span class="nav-text">查看内存地址上的值</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#VSCode-%E6%8F%92%E4%BB%B6"><span class="nav-number">1.</span> <span class="nav-text">VSCode 插件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Remote-SSH"><span class="nav-number">1.1.</span> <span class="nav-text">Remote-SSH</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#rust-launcher"><span class="nav-number">1.2.</span> <span class="nav-text">rust-launcher</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%A5%E5%85%85%E4%B8%89%E4%B8%AAVSCode%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7"><span class="nav-number">2.</span> <span class="nav-text">补充三个VSCode调试技巧</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9A%E8%BF%9B%E7%A8%8B"><span class="nav-number">2.1.</span> <span class="nav-text">多进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E7%9A%84%E8%BF%94%E5%9B%9E%E5%80%BC"><span class="nav-number">2.2.</span> <span class="nav-text">函数的返回值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E5%86%85%E5%AD%98%E5%9C%B0%E5%9D%80%E4%B8%8A%E7%9A%84%E5%80%BC"><span class="nav-number">2.3.</span> <span class="nav-text">查看内存地址上的值</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
   <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
   <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
 </div>
@@ -394,7 +393,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -421,25 +420,25 @@
     </div>
     <ul class="links-of-blogroll-list">
         <li class="links-of-blogroll-item">
-          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
         </li>
     </ul>
   </div>
@@ -459,7 +458,7 @@
         
 
         
-  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
       <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
   </div>
 
@@ -490,9 +489,17 @@
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
 <script src="/js/schemes/muse.js"></script>
+
+
 <script src="/js/next-boot.js"></script>
+
 
   <script defer src="/lib/three/three.min.js"></script>
     <script defer src="/lib/three/three-waves.min.js"></script>
@@ -512,7 +519,9 @@
 
 
 
-  <script src="/js/local-search.js"></script>
+  
+<script src="/js/local-search.js"></script>
+
 
 
 

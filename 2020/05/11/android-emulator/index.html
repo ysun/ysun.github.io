@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 3.8.0">
+<meta name="generator" content="Hexo 6.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -23,19 +23,20 @@
   </script>
 
   <meta name="description" content="近来研究了下Android emulator，就是Android Studio中用于调试App的虚拟机AVD(Android Virtualized Device)。本来是件挺平淡无奇的事情，但非要给生活比个””耶…..”(＾－＾)V 需求是，在Linux OS中，使用自定义的Android Kernel! 由于烂樱桃本人只略懂一丢虚拟化技术，对于Android算是一窍不通，所以，本文主要记录步骤">
-<meta name="keywords" content="android-emulator,kvm">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Ubuntu中玩转Android模拟器">
 <meta property="og:url" content="http://www.owalle.com/2020/05/11/android-emulator/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="近来研究了下Android emulator，就是Android Studio中用于调试App的虚拟机AVD(Android Virtualized Device)。本来是件挺平淡无奇的事情，但非要给生活比个””耶…..”(＾－＾)V 需求是，在Linux OS中，使用自定义的Android Kernel! 由于烂樱桃本人只略懂一丢虚拟化技术，对于Android算是一窍不通，所以，本文主要记录步骤">
-<meta property="og:locale" content="zh-Hans">
+<meta property="og:locale">
 <meta property="og:image" content="http://www.owalle.com/2020/05/11/android-emulator/android_studio_3.png">
 <meta property="og:image" content="http://www.owalle.com/2020/05/11/android-emulator/android_emulator_demo.png">
-<meta property="og:updated_time" content="2021-09-27T09:54:43.334Z">
+<meta property="article:published_time" content="2020-05-11T12:08:48.000Z">
+<meta property="article:modified_time" content="2021-09-27T09:54:43.334Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="android-emulator">
+<meta property="article:tag" content="kvm">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Ubuntu中玩转Android模拟器">
-<meta name="twitter:description" content="近来研究了下Android emulator，就是Android Studio中用于调试App的虚拟机AVD(Android Virtualized Device)。本来是件挺平淡无奇的事情，但非要给生活比个””耶…..”(＾－＾)V 需求是，在Linux OS中，使用自定义的Android Kernel! 由于烂樱桃本人只略懂一丢虚拟化技术，对于Android算是一窍不通，所以，本文主要记录步骤">
 <meta name="twitter:image" content="http://www.owalle.com/2020/05/11/android-emulator/android_studio_3.png">
 
 <link rel="canonical" href="http://www.owalle.com/2020/05/11/android-emulator/">
@@ -166,7 +167,9 @@
     <i class="fa fa-search"></i>
   </span>
   <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
   </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
@@ -202,16 +205,16 @@
     
   
   
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2020/05/11/android-emulator/">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Yi颗烂樱桃">
       <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Yi颗烂樱桃">
     </span>
       <header class="post-header">
@@ -240,7 +243,7 @@
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/KVM/" itemprop="url" rel="index"><span itemprop="name">KVM</span></a>
                 </span>
             </span>
@@ -257,42 +260,35 @@
 
       
         <p>近来研究了下Android emulator，就是Android Studio中用于调试App的虚拟机AVD(Android Virtualized Device)。本来是件挺平淡无奇的事情，但非要给生活比个””耶…..”(＾－＾)V 需求是，在Linux OS中，使用自定义的Android Kernel! 由于烂樱桃本人只略懂一丢虚拟化技术，对于Android算是一窍不通，所以，本文主要记录步骤为主，木有原理性的东西。</p>
-<h2 id="0-准备-安装Android-Studio"><a href="#0-准备-安装Android-Studio" class="headerlink" title="0. 准备 安装Android Studio"></a>0. 准备 安装Android Studio</h2><p>到Android Studio 官网<a href="https://developer.android.com/studio#downloads" target="_blank" rel="noopener">下载最新Android for Linux 64-bit</a> 基本上解压缩之后就能用，如果安装有问题参考<a href="https://developer.android.com/studio/install" target="_blank" rel="noopener">官方安装文档</a><br>注：安装过程需要访问Android的一些服务器，下载文件。所以，需要保证上网方式科学有效，还是那句话，不要问如何上网。</p>
+<h2 id="0-准备-安装Android-Studio"><a href="#0-准备-安装Android-Studio" class="headerlink" title="0. 准备 安装Android Studio"></a>0. 准备 安装Android Studio</h2><p>到Android Studio 官网<a target="_blank" rel="noopener" href="https://developer.android.com/studio#downloads">下载最新Android for Linux 64-bit</a> 基本上解压缩之后就能用，如果安装有问题参考<a target="_blank" rel="noopener" href="https://developer.android.com/studio/install">官方安装文档</a><br>注：安装过程需要访问Android的一些服务器，下载文件。所以，需要保证上网方式科学有效，还是那句话，不要问如何上网。</p>
 <h2 id="1-安装AVD"><a href="#1-安装AVD" class="headerlink" title="1. 安装AVD"></a>1. 安装AVD</h2><p>Android Studio中AVD的安装很方便，第一次创建虚拟机的时候，需要先点击那个’Download’按钮，在线下载虚拟机镜像。<br>需要注意的两点：</p>
 <ul>
 <li>需要下载<strong>不</strong>带有’google play’图标的镜像，因为带有Google play log的镜像中有很多限制，比如无法使用adb root等。</li>
 <li>Android Q内含Android Kernel 4.14， Android R是最新版的Android，内含Android Kernel 5.4. 硬盘空间允许的话，Android Q 和 R 都安装了，下面会分别讲述kernel 4.14 和5.4的不同玩法。</li>
 </ul>
 <p>直接上图一看便知<br><img src="/2020/05/11/android-emulator/android_studio_3.png" alt="android_studio_avd"></p>
-<h2 id="2-命令行启动Android模拟器"><a href="#2-命令行启动Android模拟器" class="headerlink" title="2 命令行启动Android模拟器"></a>2 命令行启动Android模拟器</h2><p>为了方便启动模拟器，在安装好AVD之后，我们可以退出Android Studio，正常情况后面的步骤都不在需要用到Android Studio了。<br>Android Studio在安装过程中，会下载Android SDK，默认路径是<code>~/Android/SDK</code> 这就是Android的开发包了，其中<code>~/Android/SDK/emulator</code>包含了启动模拟器所需要的脚本。<br>所以，只要进入到emulator的目录内，或者把emulator加到PATH环境变量中，就可以运行模拟器了<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DISPLAY=:0 ./emulator -avd Pixel_2_v54 -verbose -show-kernel -shell -memory 8192 -no-snapshot-load -gpu guest #-qemu -enable-kvm</span><br></pre></td></tr></table></figure></p>
-<p>具体的参数含义参考<a href="https://developer.android.com/studio/run/emulator-commandline" target="_blank" rel="noopener">官方文档 emulator-commandline</a></p>
-<h2 id="3-更换模拟器的Kernel"><a href="#3-更换模拟器的Kernel" class="headerlink" title="3. 更换模拟器的Kernel"></a>3. 更换模拟器的Kernel</h2><p>这是本文的主要目的，在Android Q(Android Kernel 4.14)以及之前的版本的Android，是吧所有的kernel driver全都built-in到一个内核镜像中(bzImage)，但在Android R(Kernel 5.4)开始，为了适应硬件的需求，开始将部分驱动编译成内核模块(kernel module)放在系统镜像中。更详细的故事可以参考<a href="https://arstechnica.com/gadgets/2019/11/google-outlines-plans-for-mainline-linux-kernel-support-in-android/" target="_blank" rel="noopener">Google outlines plans for mainline Linux kernel support in Android –Google wants less forking, more modularization for Android’s Linux kernel</a></p>
+<h2 id="2-命令行启动Android模拟器"><a href="#2-命令行启动Android模拟器" class="headerlink" title="2 命令行启动Android模拟器"></a>2 命令行启动Android模拟器</h2><p>为了方便启动模拟器，在安装好AVD之后，我们可以退出Android Studio，正常情况后面的步骤都不在需要用到Android Studio了。<br>Android Studio在安装过程中，会下载Android SDK，默认路径是<code>~/Android/SDK</code> 这就是Android的开发包了，其中<code>~/Android/SDK/emulator</code>包含了启动模拟器所需要的脚本。<br>所以，只要进入到emulator的目录内，或者把emulator加到PATH环境变量中，就可以运行模拟器了<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DISPLAY=:0 ./emulator -avd Pixel_2_v54 -verbose -show-kernel -shell -memory 8192 -no-snapshot-load -gpu guest #-qemu -enable-kvm</span><br></pre></td></tr></table></figure><br>具体的参数含义参考<a target="_blank" rel="noopener" href="https://developer.android.com/studio/run/emulator-commandline">官方文档 emulator-commandline</a></p>
+<h2 id="3-更换模拟器的Kernel"><a href="#3-更换模拟器的Kernel" class="headerlink" title="3. 更换模拟器的Kernel"></a>3. 更换模拟器的Kernel</h2><p>这是本文的主要目的，在Android Q(Android Kernel 4.14)以及之前的版本的Android，是吧所有的kernel driver全都built-in到一个内核镜像中(bzImage)，但在Android R(Kernel 5.4)开始，为了适应硬件的需求，开始将部分驱动编译成内核模块(kernel module)放在系统镜像中。更详细的故事可以参考<a target="_blank" rel="noopener" href="https://arstechnica.com/gadgets/2019/11/google-outlines-plans-for-mainline-linux-kernel-support-in-android/">Google outlines plans for mainline Linux kernel support in Android –Google wants less forking, more modularization for Android’s Linux kernel</a></p>
 <h3 id="3-1-Android-Q-with-Kernel-4-14"><a href="#3-1-Android-Q-with-Kernel-4-14" class="headerlink" title="3.1 Android Q with Kernel 4.14"></a>3.1 Android Q with Kernel 4.14</h3><p>此时的事情很简单，仅需要简单的几步: 1. 下载内核镜像; 2. 下载编译工具; 3. 编译内核</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">git clone https://android.googlesource.com/kernel/goldfish/ -b android-goldfish-4.14-dev.150</span><br><span class="line">git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.9 -b android10-release</span><br><span class="line"></span><br><span class="line">export PATH=$PATH:$PWD/x86_64-linux-android-4.9/bin</span><br><span class="line"></span><br><span class="line">cd goldfish</span><br><span class="line">make ARCH=x86_64 x86_64_ranchu_defconfig</span><br><span class="line">make -j16 ARCH=x86_64 CROSS_COMPILE=x86_64-linux-android-</span><br></pre></td></tr></table></figure>
-<p>注意，两个repo的branch得是搭配的，不可以随意换。<br><a href="https://source.android.com/setup/build/building-kernels-deprecated" target="_blank" rel="noopener">Building Kernels Manually</a>这里列出了各种相关的kernel repo。<br>编译成功之后，这样启动Android模拟器:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DISPLAY=:0 ./emulator -avd Pixel_2_v54 -verbose -show-kernel -shell -memory 8192 -no-snapshot-load -gpu guest -kernel /path/to/repo/goldfish/arch/x86/boot/bzImage #-qemu -enable-kvm</span><br></pre></td></tr></table></figure></p>
-<p>方法参考: <a href="https://medium.com/@gabrio.tognozzi/run-android-emulator-with-a-custom-kernel-547287ef708c" target="_blank" rel="noopener">Run Android Emulator with a Custom Kernel</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">git clone https://android.googlesource.com/kernel/goldfish/ -b android-goldfish-4.14-dev.150</span><br><span class="line">git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.9 -b android10-release</span><br><span class="line"></span><br><span class="line">export PATH=$PATH:$PWD/x86_64-linux-android-4.9/bin</span><br><span class="line"></span><br><span class="line">cd goldfish</span><br><span class="line">make ARCH=x86_64 x86_64_ranchu_defconfig</span><br><span class="line">make -j16 ARCH=x86_64 CROSS_COMPILE=x86_64-linux-android-</span><br></pre></td></tr></table></figure>
+<p>注意，两个repo的branch得是搭配的，不可以随意换。<br><a target="_blank" rel="noopener" href="https://source.android.com/setup/build/building-kernels-deprecated">Building Kernels Manually</a>这里列出了各种相关的kernel repo。<br>编译成功之后，这样启动Android模拟器:<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DISPLAY=:0 ./emulator -avd Pixel_2_v54 -verbose -show-kernel -shell -memory 8192 -no-snapshot-load -gpu guest -kernel /path/to/repo/goldfish/arch/x86/boot/bzImage #-qemu -enable-kvm</span><br></pre></td></tr></table></figure><br>方法参考: <a target="_blank" rel="noopener" href="https://medium.com/@gabrio.tognozzi/run-android-emulator-with-a-custom-kernel-547287ef708c">Run Android Emulator with a Custom Kernel</a></p>
 <h3 id="3-2-Android-R-with-Kernel-5-4"><a href="#3-2-Android-R-with-Kernel-5-4" class="headerlink" title="3.2 Android R with Kernel 5.4"></a>3.2 Android R with Kernel 5.4</h3><p>因为需要重新打包system.img，更新其中的kernel module，所以，除了上面两个repo之外，还需要Android完整的源码，并且编译完整的Android image。</p>
-<h4 id="3-2-1-编译Kernel-5-4"><a href="#3-2-1-编译Kernel-5-4" class="headerlink" title="3.2.1 编译Kernel 5.4"></a>3.2.1 编译Kernel 5.4</h4><p>首先使用跟4.14类似的编译方法。尽管容易理解，但并不推荐，这样还需要手动打包，制作ramdisk.img。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git clone https://android.googlesource.com/kernel/goldfish/ -b android-5.4</span><br><span class="line">或者如果已经clone过goldfish kenrel，执行:</span><br><span class="line">cd goldfish &amp;&amp; git checkout android-5.4</span><br></pre></td></tr></table></figure></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.9 -b master</span><br><span class="line">或者如果已经clone过x86_64-linux-android-4.9，执行:</span><br><span class="line">cd x86_64-linux-android-4.9 &amp;&amp; git checkout master</span><br></pre></td></tr></table></figure>
-<p>下载clang编译器，并且使用特别版本clang-r377782c来编译Android-R<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git clone git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 -b android-r-preview-4</span><br><span class="line">export PATH=$PATH:/path/to/linux-x86/clang-r377782c/bin:/path/to/x86_64-linux-android-4.9/</span><br></pre></td></tr></table></figure></p>
-<p>一切准备就绪之后，编译kernel-5.4<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">make O=out ARCH=x86_64 CC=clang CLANG_TRIPLE=x86_64-linux-gnu x86_64_defconfig</span><br><span class="line">make O=out ARCH=x86_64 CC=clang CLANG_TRIPLE=x86_64-linux-gnu- CROSS_COMPILE=x86_64-linux-androidkernel- LD=ld.lld</span><br></pre></td></tr></table></figure></p>
-<h4 id="3-2-1’-编译Kernel-5-4"><a href="#3-2-1’-编译Kernel-5-4" class="headerlink" title="3.2.1’ 编译Kernel 5.4"></a>3.2.1’ 编译Kernel 5.4</h4><p>使用repo下载Android Kernel 5.4 以及编译工具(x86_64-linux-android-4.9) 和 编译器Clang<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mkdir goldfish-kernel-54</span><br><span class="line">cd goldfish-kernel-54/</span><br><span class="line">repo init -u https://android.googlesource.com/kernel/manifest -b common-android-5.4</span><br><span class="line">repo sync</span><br><span class="line">BUILD_CONFIG=goldfish-modules/build.config.goldfish.x86_64 build/build.sh</span><br><span class="line">#grep &apos;=m&apos; ./out/android-5.4/common/.config</span><br><span class="line">#vim ./goldfish-modules/goldfish_defconfig.fragment</span><br></pre></td></tr></table></figure></p>
-<p>所有生成的二进制文件(包含bzImage， *.ko)都在 <code>out/android-5.4/dist/</code> 里面了。</p>
-<h4 id="3-2-2-编译Android镜像"><a href="#3-2-2-编译Android镜像" class="headerlink" title="3.2.2 编译Android镜像"></a>3.2.2 编译Android镜像</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">apt install libncurses5-dev</span><br><span class="line">apt install libncurses5</span><br><span class="line"></span><br><span class="line">mkdir android-src</span><br><span class="line">repo init -u https://android.googlesource.com/platform/manifest -b master</span><br><span class="line">repo sync -j32</span><br><span class="line">source build/envsetup.sh</span><br><span class="line">lunch sdk_phone_x86_64-userdebug</span><br><span class="line">make -j64</span><br></pre></td></tr></table></figure>
-<p>注: 初始化仓库的时候，这里使用master branch，如果想编译其他分支参考<a href="https://android.googlesource.com/platform/manifest/+refs" target="_blank" rel="noopener">Android manifest</a><br>各个branch的含义以及支持情况，可以参考<a href="https://source.android.com/setup/start/build-numbers#honeycomb-gpl-modules" target="_blank" rel="noopener">Codenames, Tags, and Build Numbers</a><br>编译Android源码的更详细介绍，可以参考<a href="https://source.android.com/setup/build/building" target="_blank" rel="noopener">Building Android</a></p>
-<p>所有生成的镜像文件都在文件夹<code>out/target/product/generic_x86/</code>中<br>Andriod源码中包含了模拟器，一旦Android镜像编译完成之后，可以直接启动Android虚拟机<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">emulator</span><br></pre></td></tr></table></figure></p>
-<p>并且可以基于这个虚拟机，创建一个可以用于Android studio的AVD，详细参见<a href="https://source.android.com/setup/create/avd" target="_blank" rel="noopener">Using Android Emulator Virtual Devices</a></p>
-<h4 id="3-2-3-替换Kernel，重做system-img"><a href="#3-2-3-替换Kernel，重做system-img" class="headerlink" title="3.2.3 替换Kernel，重做system.img"></a>3.2.3 替换Kernel，重做system.img</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">rm /path/to/android-src/prebuilts/qemu-kernel/x86_64/5.4/ko/*</span><br><span class="line">cp /path/to/goldfish-kernel-54/out/android-5.4/dist/bzImage /path/to/android-src/prebuilts/qemu-kernel/x86_64/5.4/kernel-qemu2</span><br><span class="line">cp /path/to/goldfish-kernel-54/out/android-5.4/dist/*.ko    /path/to/android-src/prebuilts/qemu-kernel/x86_64/5.4/ko</span><br><span class="line"></span><br><span class="line">make  # make again after replacing bzImage and modules !!</span><br></pre></td></tr></table></figure>
+<h4 id="3-2-1-编译Kernel-5-4"><a href="#3-2-1-编译Kernel-5-4" class="headerlink" title="3.2.1 编译Kernel 5.4"></a>3.2.1 编译Kernel 5.4</h4><p>首先使用跟4.14类似的编译方法。尽管容易理解，但并不推荐，这样还需要手动打包，制作ramdisk.img。<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git clone https://android.googlesource.com/kernel/goldfish/ -b android-5.4</span><br><span class="line">或者如果已经clone过goldfish kenrel，执行:</span><br><span class="line">cd goldfish &amp;&amp; git checkout android-5.4</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.9 -b master</span><br><span class="line">或者如果已经clone过x86_64-linux-android-4.9，执行:</span><br><span class="line">cd x86_64-linux-android-4.9 &amp;&amp; git checkout master</span><br></pre></td></tr></table></figure>
+<p>下载clang编译器，并且使用特别版本clang-r377782c来编译Android-R<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git clone git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 -b android-r-preview-4</span><br><span class="line">export PATH=$PATH:/path/to/linux-x86/clang-r377782c/bin:/path/to/x86_64-linux-android-4.9/</span><br></pre></td></tr></table></figure><br>一切准备就绪之后，编译kernel-5.4<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">make O=out ARCH=x86_64 CC=clang CLANG_TRIPLE=x86_64-linux-gnu x86_64_defconfig</span><br><span class="line">make O=out ARCH=x86_64 CC=clang CLANG_TRIPLE=x86_64-linux-gnu- CROSS_COMPILE=x86_64-linux-androidkernel- LD=ld.lld</span><br></pre></td></tr></table></figure></p>
+<h4 id="3-2-1’-编译Kernel-5-4"><a href="#3-2-1’-编译Kernel-5-4" class="headerlink" title="3.2.1’ 编译Kernel 5.4"></a>3.2.1’ 编译Kernel 5.4</h4><p>使用repo下载Android Kernel 5.4 以及编译工具(x86_64-linux-android-4.9) 和 编译器Clang<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mkdir goldfish-kernel-54</span><br><span class="line">cd goldfish-kernel-54/</span><br><span class="line">repo init -u https://android.googlesource.com/kernel/manifest -b common-android-5.4</span><br><span class="line">repo sync</span><br><span class="line">BUILD_CONFIG=goldfish-modules/build.config.goldfish.x86_64 build/build.sh</span><br><span class="line">#grep &#x27;=m&#x27; ./out/android-5.4/common/.config</span><br><span class="line">#vim ./goldfish-modules/goldfish_defconfig.fragment</span><br></pre></td></tr></table></figure><br>所有生成的二进制文件(包含bzImage， *.ko)都在 <code>out/android-5.4/dist/</code> 里面了。</p>
+<h4 id="3-2-2-编译Android镜像"><a href="#3-2-2-编译Android镜像" class="headerlink" title="3.2.2 编译Android镜像"></a>3.2.2 编译Android镜像</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">apt install libncurses5-dev</span><br><span class="line">apt install libncurses5</span><br><span class="line"></span><br><span class="line">mkdir android-src</span><br><span class="line">repo init -u https://android.googlesource.com/platform/manifest -b master</span><br><span class="line">repo sync -j32</span><br><span class="line">source build/envsetup.sh</span><br><span class="line">lunch sdk_phone_x86_64-userdebug</span><br><span class="line">make -j64</span><br></pre></td></tr></table></figure>
+<p>注: 初始化仓库的时候，这里使用master branch，如果想编译其他分支参考<a target="_blank" rel="noopener" href="https://android.googlesource.com/platform/manifest/+refs">Android manifest</a><br>各个branch的含义以及支持情况，可以参考<a target="_blank" rel="noopener" href="https://source.android.com/setup/start/build-numbers#honeycomb-gpl-modules">Codenames, Tags, and Build Numbers</a><br>编译Android源码的更详细介绍，可以参考<a target="_blank" rel="noopener" href="https://source.android.com/setup/build/building">Building Android</a></p>
+<p>所有生成的镜像文件都在文件夹<code>out/target/product/generic_x86/</code>中<br>Andriod源码中包含了模拟器，一旦Android镜像编译完成之后，可以直接启动Android虚拟机<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">emulator</span><br></pre></td></tr></table></figure><br>并且可以基于这个虚拟机，创建一个可以用于Android studio的AVD，详细参见<a target="_blank" rel="noopener" href="https://source.android.com/setup/create/avd">Using Android Emulator Virtual Devices</a></p>
+<h4 id="3-2-3-替换Kernel，重做system-img"><a href="#3-2-3-替换Kernel，重做system-img" class="headerlink" title="3.2.3 替换Kernel，重做system.img"></a>3.2.3 替换Kernel，重做system.img</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">rm /path/to/android-src/prebuilts/qemu-kernel/x86_64/5.4/ko/*</span><br><span class="line">cp /path/to/goldfish-kernel-54/out/android-5.4/dist/bzImage /path/to/android-src/prebuilts/qemu-kernel/x86_64/5.4/kernel-qemu2</span><br><span class="line">cp /path/to/goldfish-kernel-54/out/android-5.4/dist/*.ko    /path/to/android-src/prebuilts/qemu-kernel/x86_64/5.4/ko</span><br><span class="line"></span><br><span class="line">make  # make again after replacing bzImage and modules !!</span><br></pre></td></tr></table></figure>
 <p>重新make 之后，会生成包含customized过的kernel以及module，这是我们想起来准备工作中下载的Android-R镜像<br>默认位置这里<code>~/Android/Sdk/system-images/android-R/google-apis/x86_64/</code></p>
 <p>替换掉kernel 和 ramdisk.img:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cp /path/to/android-src/out/target/product/generic_x86_64/kernel-ranchu-64 ~/Android/Sdk/system-images/android-R/google-apis/x86_64/</span><br><span class="line">cp /path/to/android-src/out/target/product/generic_x86_64/ramdisk-qemu.img ~/Android/Sdk/system-images/android-R/google-apis/x86_64/</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cp /path/to/android-src/out/target/product/generic_x86_64/kernel-ranchu-64 ~/Android/Sdk/system-images/android-R/google-apis/x86_64/</span><br><span class="line">cp /path/to/android-src/out/target/product/generic_x86_64/ramdisk-qemu.img ~/Android/Sdk/system-images/android-R/google-apis/x86_64/</span><br></pre></td></tr></table></figure>
 <p>Android源码库中并不包含内核，android-src/out/target/product/generic_x86/kernel-ranchu-64仅仅是上一步生产的内核改了个名字。<br>另外，注意generic_x86_64文件夹中同时还有一个文件’ramdisk.img’，不要混淆，我们需要的是<code>ramdisk-qemu.img</code></p>
-<p>然后启动Android虚拟机:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DISPLAY=:0 ./emulator -avd Pixel_2_v54 -verbose -show-kernel -shell -memory 8192 -no-snapshot-load -gpu guest #-sysdir /path/to/adroid-R/google-apis/x86_64/ #-qemu -enable-kvm</span><br></pre></td></tr></table></figure></p>
-<p><code>-sysdir</code> 参数是说，如果不想直接替换Sdk中的源文件，可以copy一下文件夹x86_64，然后替换kernel 和 ramdisk.img，但同时需要指定sysdir的路径</p>
-<h4 id="3-2-3’-替换Kernel，重做system-img"><a href="#3-2-3’-替换Kernel，重做system-img" class="headerlink" title="3.2.3’ 替换Kernel，重做system.img"></a>3.2.3’ 替换Kernel，重做system.img</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">export ANDROID_PRODUCT_OUT=/path/to/android_src/out/target/product/generic_x86/</span><br><span class="line">export MYPACKEDIMG=~/mypackedimg</span><br><span class="line">mkdir -p $MYPACKEDIMG/img</span><br><span class="line"></span><br><span class="line">cd $MYPACKEDIMG/img</span><br><span class="line">cp $ANDROID_PRODUCT_OUT/system-qemu.img system.img</span><br><span class="line">cp $ANDROID_PRODUCT_OUT/vendor-qemu.img vendor.img</span><br><span class="line">cp $ANDROID_PRODUCT_OUT/ramdisk-qemu.img ramdisk.img</span><br><span class="line">cp $ANDROID_PRODUCT_OUT/kernel-ranchu-64 .</span><br><span class="line"></span><br><span class="line">cp -rf $ANDROID_PRODUCT_OUT/data .</span><br><span class="line">cp -rf $ANDROID_PRODUCT_OUT/advancedFeatures.ini advancedFeatures.ini</span><br><span class="line">cp -rf $ANDROID_PRODUCT_OUT/userdata.img .</span><br><span class="line">cp -rf $ANDROID_PRODUCT_OUT/encryptionkey.img .</span><br><span class="line">cp -rf $ANDROID_PRODUCT_OUT/system/build.prop .</span><br><span class="line">cp -rf $ANDROID_PRODUCT_OUT/VerifiedBootParams.textproto .</span><br><span class="line">cp -rf $ANDROID_PRODUCT_OUT/source.properties .</span><br><span class="line"></span><br><span class="line">cp /path/to/android_src/prebuilts/android-emulator/linux-x86_64/source.properties .</span><br></pre></td></tr></table></figure>
-<p>启动Android虚拟机:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DISPLAY=:0 ./emulator -avd Pixel_2_v54 -verbose -show-kernel -shell -memory 8192 -no-snapshot-load -gpu guest -sysdir $MYPACKEDIMG/img</span><br></pre></td></tr></table></figure></p>
-<p><img src="/2020/05/11/android-emulator/android_emulator_demo.png" alt="android_emulator_demo"></p>
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接:"></a>参考链接:</h2><p><a href="https://source.android.com/setup/build/downloading" target="_blank" rel="noopener">如何下载Android源码</a><br><a href="https://android.googlesource.com/" target="_blank" rel="noopener">Android相关源码仓库目录</a><br>关于Android 源码编译的问题，文章<a href="https://github.com/nathanchance/android-kernel-clang" target="_blank" rel="noopener">android-kernel-clang</a>以及作者<a href="https://github.com/nathanchance" target="_blank" rel="noopener">Nathan Chancellor</a>帮了不少的忙！<br><a href="https://android.googlesource.com/platform/external/qemu.git/+/refs/heads/emu-master-dev/android/docs/LINUX-DEV.md" target="_blank" rel="noopener">Android Emulator Linux Development</a>Android 源码中的一个文章，或多或少参考了了一丢丢。</p>
+<p>然后启动Android虚拟机:<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DISPLAY=:0 ./emulator -avd Pixel_2_v54 -verbose -show-kernel -shell -memory 8192 -no-snapshot-load -gpu guest #-sysdir /path/to/adroid-R/google-apis/x86_64/ #-qemu -enable-kvm</span><br></pre></td></tr></table></figure><br><code>-sysdir</code> 参数是说，如果不想直接替换Sdk中的源文件，可以copy一下文件夹x86_64，然后替换kernel 和 ramdisk.img，但同时需要指定sysdir的路径</p>
+<h4 id="3-2-3’-替换Kernel，重做system-img"><a href="#3-2-3’-替换Kernel，重做system-img" class="headerlink" title="3.2.3’ 替换Kernel，重做system.img"></a>3.2.3’ 替换Kernel，重做system.img</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">export ANDROID_PRODUCT_OUT=/path/to/android_src/out/target/product/generic_x86/</span><br><span class="line">export MYPACKEDIMG=~/mypackedimg</span><br><span class="line">mkdir -p $MYPACKEDIMG/img</span><br><span class="line"></span><br><span class="line">cd $MYPACKEDIMG/img</span><br><span class="line">cp $ANDROID_PRODUCT_OUT/system-qemu.img system.img</span><br><span class="line">cp $ANDROID_PRODUCT_OUT/vendor-qemu.img vendor.img</span><br><span class="line">cp $ANDROID_PRODUCT_OUT/ramdisk-qemu.img ramdisk.img</span><br><span class="line">cp $ANDROID_PRODUCT_OUT/kernel-ranchu-64 .</span><br><span class="line"></span><br><span class="line">cp -rf $ANDROID_PRODUCT_OUT/data .</span><br><span class="line">cp -rf $ANDROID_PRODUCT_OUT/advancedFeatures.ini advancedFeatures.ini</span><br><span class="line">cp -rf $ANDROID_PRODUCT_OUT/userdata.img .</span><br><span class="line">cp -rf $ANDROID_PRODUCT_OUT/encryptionkey.img .</span><br><span class="line">cp -rf $ANDROID_PRODUCT_OUT/system/build.prop .</span><br><span class="line">cp -rf $ANDROID_PRODUCT_OUT/VerifiedBootParams.textproto .</span><br><span class="line">cp -rf $ANDROID_PRODUCT_OUT/source.properties .</span><br><span class="line"></span><br><span class="line">cp /path/to/android_src/prebuilts/android-emulator/linux-x86_64/source.properties .</span><br></pre></td></tr></table></figure>
+<p>启动Android虚拟机:<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DISPLAY=:0 ./emulator -avd Pixel_2_v54 -verbose -show-kernel -shell -memory 8192 -no-snapshot-load -gpu guest -sysdir $MYPACKEDIMG/img</span><br></pre></td></tr></table></figure><br><img src="/2020/05/11/android-emulator/android_emulator_demo.png" alt="android_emulator_demo"></p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接:"></a>参考链接:</h2><p><a target="_blank" rel="noopener" href="https://source.android.com/setup/build/downloading">如何下载Android源码</a><br><a target="_blank" rel="noopener" href="https://android.googlesource.com/">Android相关源码仓库目录</a><br>关于Android 源码编译的问题，文章<a target="_blank" rel="noopener" href="https://github.com/nathanchance/android-kernel-clang">android-kernel-clang</a>以及作者<a target="_blank" rel="noopener" href="https://github.com/nathanchance">Nathan Chancellor</a>帮了不少的忙！<br><a target="_blank" rel="noopener" href="https://android.googlesource.com/platform/external/qemu.git/+/refs/heads/emu-master-dev/android/docs/LINUX-DEV.md">Android Emulator Linux Development</a>Android 源码中的一个文章，或多或少参考了了一丢丢。</p>
 
     </div>
 
@@ -398,13 +394,14 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0-准备-安装Android-Studio"><span class="nav-number">1.</span> <span class="nav-text">0. 准备 安装Android Studio</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-安装AVD"><span class="nav-number">2.</span> <span class="nav-text">1. 安装AVD</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-命令行启动Android模拟器"><span class="nav-number">3.</span> <span class="nav-text">2 命令行启动Android模拟器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-更换模拟器的Kernel"><span class="nav-number">4.</span> <span class="nav-text">3. 更换模拟器的Kernel</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-Android-Q-with-Kernel-4-14"><span class="nav-number">4.1.</span> <span class="nav-text">3.1 Android Q with Kernel 4.14</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-Android-R-with-Kernel-5-4"><span class="nav-number">4.2.</span> <span class="nav-text">3.2 Android R with Kernel 5.4</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-1-编译Kernel-5-4"><span class="nav-number">4.2.1.</span> <span class="nav-text">3.2.1 编译Kernel 5.4</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-1’-编译Kernel-5-4"><span class="nav-number">4.2.2.</span> <span class="nav-text">3.2.1’ 编译Kernel 5.4</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-2-编译Android镜像"><span class="nav-number">4.2.3.</span> <span class="nav-text">3.2.2 编译Android镜像</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-3-替换Kernel，重做system-img"><span class="nav-number">4.2.4.</span> <span class="nav-text">3.2.3 替换Kernel，重做system.img</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-3’-替换Kernel，重做system-img"><span class="nav-number">4.2.5.</span> <span class="nav-text">3.2.3’ 替换Kernel，重做system.img</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考链接"><span class="nav-number">5.</span> <span class="nav-text">参考链接:</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0-%E5%87%86%E5%A4%87-%E5%AE%89%E8%A3%85Android-Studio"><span class="nav-number">1.</span> <span class="nav-text">0. 准备 安装Android Studio</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%AE%89%E8%A3%85AVD"><span class="nav-number">2.</span> <span class="nav-text">1. 安装AVD</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%90%AF%E5%8A%A8Android%E6%A8%A1%E6%8B%9F%E5%99%A8"><span class="nav-number">3.</span> <span class="nav-text">2 命令行启动Android模拟器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E6%9B%B4%E6%8D%A2%E6%A8%A1%E6%8B%9F%E5%99%A8%E7%9A%84Kernel"><span class="nav-number">4.</span> <span class="nav-text">3. 更换模拟器的Kernel</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-Android-Q-with-Kernel-4-14"><span class="nav-number">4.1.</span> <span class="nav-text">3.1 Android Q with Kernel 4.14</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-Android-R-with-Kernel-5-4"><span class="nav-number">4.2.</span> <span class="nav-text">3.2 Android R with Kernel 5.4</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-1-%E7%BC%96%E8%AF%91Kernel-5-4"><span class="nav-number">4.2.1.</span> <span class="nav-text">3.2.1 编译Kernel 5.4</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-1%E2%80%99-%E7%BC%96%E8%AF%91Kernel-5-4"><span class="nav-number">4.2.2.</span> <span class="nav-text">3.2.1’ 编译Kernel 5.4</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-2-%E7%BC%96%E8%AF%91Android%E9%95%9C%E5%83%8F"><span class="nav-number">4.2.3.</span> <span class="nav-text">3.2.2 编译Android镜像</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-3-%E6%9B%BF%E6%8D%A2Kernel%EF%BC%8C%E9%87%8D%E5%81%9Asystem-img"><span class="nav-number">4.2.4.</span> <span class="nav-text">3.2.3 替换Kernel，重做system.img</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-3%E2%80%99-%E6%9B%BF%E6%8D%A2Kernel%EF%BC%8C%E9%87%8D%E5%81%9Asystem-img"><span class="nav-number">4.2.5.</span> <span class="nav-text">3.2.3’ 替换Kernel，重做system.img</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="nav-number">5.</span> <span class="nav-text">参考链接:</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
   <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
   <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
 </div>
@@ -413,7 +410,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -440,25 +437,25 @@
     </div>
     <ul class="links-of-blogroll-list">
         <li class="links-of-blogroll-item">
-          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
         </li>
     </ul>
   </div>
@@ -478,7 +475,7 @@
         
 
         
-  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
       <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
   </div>
 
@@ -509,9 +506,17 @@
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
 <script src="/js/schemes/muse.js"></script>
+
+
 <script src="/js/next-boot.js"></script>
+
 
   <script defer src="/lib/three/three.min.js"></script>
     <script defer src="/lib/three/three-waves.min.js"></script>
@@ -531,7 +536,9 @@
 
 
 
-  <script src="/js/local-search.js"></script>
+  
+<script src="/js/local-search.js"></script>
+
 
 
 

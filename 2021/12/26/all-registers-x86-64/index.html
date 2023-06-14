@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 3.8.0">
+<meta name="generator" content="Hexo 6.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -23,17 +23,17 @@
   </script>
 
   <meta name="description" content="玩了这么久的Intel CPU，今天一个问题忽然闪现在我脑海：“X86_64到底有多少个寄存器”？ 带着知识的渴求，我们来掰一下手指头。 通用寄存器 (general register)">
-<meta name="keywords" content="x86">
 <meta property="og:type" content="article">
 <meta property="og:title" content="X86_64 机器上一共有多少个寄存器">
 <meta property="og:url" content="http://www.owalle.com/2021/12/26/all-registers-x86-64/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="玩了这么久的Intel CPU，今天一个问题忽然闪现在我脑海：“X86_64到底有多少个寄存器”？ 带着知识的渴求，我们来掰一下手指头。 通用寄存器 (general register)">
-<meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2021-12-27T07:36:04.496Z">
+<meta property="og:locale">
+<meta property="article:published_time" content="2021-12-26T15:01:32.000Z">
+<meta property="article:modified_time" content="2021-12-27T07:36:04.496Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="x86">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="X86_64 机器上一共有多少个寄存器">
-<meta name="twitter:description" content="玩了这么久的Intel CPU，今天一个问题忽然闪现在我脑海：“X86_64到底有多少个寄存器”？ 带着知识的渴求，我们来掰一下手指头。 通用寄存器 (general register)">
 
 <link rel="canonical" href="http://www.owalle.com/2021/12/26/all-registers-x86-64/">
 
@@ -163,7 +163,9 @@
     <i class="fa fa-search"></i>
   </span>
   <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
   </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
@@ -199,16 +201,16 @@
     
   
   
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2021/12/26/all-registers-x86-64/">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Yi颗烂樱桃">
       <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Yi颗烂樱桃">
     </span>
       <header class="post-header">
@@ -237,7 +239,7 @@
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/X86/" itemprop="url" rel="index"><span itemprop="name">X86</span></a>
                 </span>
             </span>
@@ -402,7 +404,7 @@
 <p><strong>到目前为止一共: 72</strong>.</p>
 <h2 id="段寄存器-Segment-registers"><a href="#段寄存器-Segment-registers" class="headerlink" title="段寄存器 (Segment registers)"></a>段寄存器 (Segment registers)</h2><p>X86-64一共有6个段寄存器: <code>CS</code>, <code>SS</code>, <code>DS</code>, <code>ES</code>, <code>FS</code>, and <code>GS</code>。</p>
 <ul>
-<li><p>除了<code>长模式</code>以外的所有CPU运行模式里，都有一个段<code>选择器 selector</code>, 表示当前使用<a href="https://en.wikipedia.org/wiki/Global_Descriptor_Table" target="_blank" rel="noopener">GDT</a> 还是 <a href="https://en.wikipedia.org/wiki/Global_Descriptor_Table#Local_Descriptor_Table" target="_blank" rel="noopener">LDT</a>。 同时，还需要一个<code>段描述符descriptor</code>, 提供了段的基址和范围。</p>
+<li><p>除了<code>长模式</code>以外的所有CPU运行模式里，都有一个段<code>选择器 selector</code>, 表示当前使用<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Global_Descriptor_Table">GDT</a> 还是 <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Global_Descriptor_Table#Local_Descriptor_Table">LDT</a>。 同时，还需要一个<code>段描述符descriptor</code>, 提供了段的基址和范围。</p>
 </li>
 <li><p><code>长模式</code>中，除了 FS 和 GS 之外的所有内容都被视为在一个具有零基地址和64位范围的平面地址空间中。 FS 和 GS 作为特殊情况保留，但不再使用段描述符表，取而代之的是，访问保存在 FSBASE 和 GSBASE 中的MSR寄存器中的基地址。</p>
 </li>
@@ -605,7 +607,7 @@
 <p>换句话说：每个ZMMn的低字节部分是YMMn，而每个YMMn的低字节部分是XMMn。没有直接的寄存器可以只访问YMMn的高字节部分，或者ZMMn的高128位或者256位字部分。<br>SSE还定义了一个新的状态寄存器MXCSR，它包含的标志与RFLAGS中的算术标志大致平行（与x87状态字中的浮点标志一起）。<br>AVX-512还引入了8个OPMask寄存器，k0到k7。k0是一个特殊的情况，它的行为很像一些RISC ISA上的 “零 “寄存器：它不能被存储到，而且从它的加载总是产生一个全部为1的位掩码。</p>
 <p><strong>本部分寄存器总共: 33</strong>.</p>
 <p><strong>到目前为止一共: 134</strong>.</p>
-<h2 id="边界寄存器-Bounds-registers"><a href="#边界寄存器-Bounds-registers" class="headerlink" title="边界寄存器(Bounds registers)"></a>边界寄存器(Bounds registers)</h2><p>英特尔在<a href="https://en.wikipedia.org/wiki/Intel_MPX" target="_blank" rel="noopener">MPX</a>中加入了BR，其目的是提供硬件加速的边界检查。但好像名声并不是很大，暂且放这里把。<br>BND0 - BND3：单独的128位寄存器，每个都包含一对绑定的地址。<br>BNDCFG: 绑定配置，内核模式。<br>BNDCFU: 绑定配置，用户模式。<br>BNDSTATUS: 绑定状态，在一个#BR被提出后。</p>
+<h2 id="边界寄存器-Bounds-registers"><a href="#边界寄存器-Bounds-registers" class="headerlink" title="边界寄存器(Bounds registers)"></a>边界寄存器(Bounds registers)</h2><p>英特尔在<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Intel_MPX">MPX</a>中加入了BR，其目的是提供硬件加速的边界检查。但好像名声并不是很大，暂且放这里把。<br>BND0 - BND3：单独的128位寄存器，每个都包含一对绑定的地址。<br>BNDCFG: 绑定配置，内核模式。<br>BNDCFU: 绑定配置，用户模式。<br>BNDSTATUS: 绑定状态，在一个#BR被提出后。</p>
 <p><strong>本部分寄存器总共: 7</strong>.</p>
 <p><strong>到目前为止一共: 141</strong>.</p>
 <h2 id="调试寄存器-Debug-registers"><a href="#调试寄存器-Debug-registers" class="headerlink" title="调试寄存器(Debug registers)"></a>调试寄存器(Debug registers)</h2><p>正如他们的名字那样，帮助和加速软件调试器的寄存器，如GDB。<br>有6个调试寄存器，分为两种类型：</p>
@@ -616,7 +618,7 @@
 </ul>
 <p><strong>本部分寄存器总共: 6</strong>.</p>
 <p><strong>到目前为止一共: 147</strong>.</p>
-<h2 id="控制寄存器-Control-registers"><a href="#控制寄存器-Control-registers" class="headerlink" title="控制寄存器 (Control registers)"></a>控制寄存器 (Control registers)</h2><p>x86-64 定义了一组控制寄存器，可用于管理和检查 CPU 的状态。有 16 个“主”控制寄存器，所有这些都可以通过<a href="https://www.felixcloutier.com/x86/mov-1" target="_blank" rel="noopener"><code>MOV</code> variant</a>变体访问:</p>
+<h2 id="控制寄存器-Control-registers"><a href="#控制寄存器-Control-registers" class="headerlink" title="控制寄存器 (Control registers)"></a>控制寄存器 (Control registers)</h2><p>x86-64 定义了一组控制寄存器，可用于管理和检查 CPU 的状态。有 16 个“主”控制寄存器，所有这些都可以通过<a target="_blank" rel="noopener" href="https://www.felixcloutier.com/x86/mov-1"><code>MOV</code> variant</a>变体访问:</p>
 <table>
 <thead>
 <tr>
@@ -691,7 +693,7 @@
 </tr>
 </tbody>
 </table>
-<p>所有reserved的控制寄存器在访问时都会产生#UD，不把它们算在本文里。<br>除了 “主 “CRn控制寄存器之外，还有 “扩展 “控制寄存器，由XSAVE功能集引入。截至目前，XCR0是唯一指定的扩展控制寄存器。<br>扩展控制寄存器使用<a href="https://www.felixcloutier.com/x86/xgetbv" target="_blank" rel="noopener"><code>XGETBV</code></a> 和 <a href="https://www.felixcloutier.com/x86/xsetbv" target="_blank" rel="noopener"><code>XSETBV</code></a>而不是MOV的变种。</p>
+<p>所有reserved的控制寄存器在访问时都会产生#UD，不把它们算在本文里。<br>除了 “主 “CRn控制寄存器之外，还有 “扩展 “控制寄存器，由XSAVE功能集引入。截至目前，XCR0是唯一指定的扩展控制寄存器。<br>扩展控制寄存器使用<a target="_blank" rel="noopener" href="https://www.felixcloutier.com/x86/xgetbv"><code>XGETBV</code></a> 和 <a target="_blank" rel="noopener" href="https://www.felixcloutier.com/x86/xsetbv"><code>XSETBV</code></a>而不是MOV的变种。</p>
 <p><strong>本部分寄存器总共: 6</strong>.</p>
 <p><strong>到目前为止一共: 153</strong>.</p>
 <h2 id="“System-table-pointer-registers”"><a href="#“System-table-pointer-registers”" class="headerlink" title="“System table pointer registers”"></a>“System table pointer registers”</h2><p>这就是英特尔SDM对这些寄存器的称呼。这些寄存器保存着各种保护模式表的大小和指针。<br>据我所知，它们有四个：</p>
@@ -704,11 +706,11 @@
 <p>GDTR、LDTR和IDTR在64位模式下都是80位：16个低位是寄存器的表的大小，高64位是表的其实地址。<br>TR同样也是80位。16位用于选择器（其行为与段选择器相同），然后另外64位用于TSS的基本地址。</p>
 <p><strong>本部分寄存器总共: 4</strong>.</p>
 <p><strong>到目前为止一共: 157</strong>.</p>
-<h2 id="Memory-type-ranger-registers"><a href="#Memory-type-ranger-registers" class="headerlink" title="Memory-type-ranger registers"></a>Memory-type-ranger registers</h2><p>这些是有趣的例子：与到目前为止所涉及的所有其他寄存器不同，这些不是多核芯片中某个特定CPU所独有的，相反，它们是所有内核共享的。<br>MTTR的数量似乎因CPU型号而异，并且在很大程度上被页中的所取代<a href="https://en.wikipedia.org/wiki/Page_attribute_table" target="_blank" rel="noopener">page attribute table</a>，该表是用MSR编程的。</p>
+<h2 id="Memory-type-ranger-registers"><a href="#Memory-type-ranger-registers" class="headerlink" title="Memory-type-ranger registers"></a>Memory-type-ranger registers</h2><p>这些是有趣的例子：与到目前为止所涉及的所有其他寄存器不同，这些不是多核芯片中某个特定CPU所独有的，相反，它们是所有内核共享的。<br>MTTR的数量似乎因CPU型号而异，并且在很大程度上被页中的所取代<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Page_attribute_table">page attribute table</a>，该表是用MSR编程的。</p>
 <p><strong>本部分寄存器总共: ?</strong>.</p>
 <p><strong>到目前为止一共: &gt;157</strong>.</p>
 <h2 id="MSR-Model-specific-registers"><a href="#MSR-Model-specific-registers" class="headerlink" title="MSR Model specific registers"></a>MSR Model specific registers</h2><p>像XCR一样，MSR可以通过一对指令间接地（通过标识符）访问，RDMSR和WRMSR。<br>MSR本身是64位的，但起源于32位的时代，所以RDMSR和WRMSR从两个32位的寄存器中读取和写入。EDX和EAX。<br>举个例子：下面是访问IA32_MTRRCAP MSR的设置和RDMSR调用，其中包括（除其他外）系统上可用的MTRR的实际数量。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MOV ECX, 0xFE ; 0xFE = IA32_MTRRCAP</span><br><span class="line">RDMSR  ; The bits of IA32_MTRRCAP are now in EDX:EAX</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MOV ECX, 0xFE ; 0xFE = IA32_MTRRCAP</span><br><span class="line">RDMSR  ; The bits of IA32_MTRRCAP are now in EDX:EAX</span><br></pre></td></tr></table></figure>
 <p>RDMSR和WRMSR是特权指令，所以Ring 3代码不能直接访问MSR。我知道的一个例外是时间戳计数器（TSC），它存储在IA32_TSC MSR中，但是可以通过RDTSC和RDTSCP从非特权上下文中读取。<br>另外两个是FSBASE和GSBASE，除非启用了 FSGSBASE 支持，否则可以直接从环 3 修改 FSBASE 和 GSBASE。Linux 在 5.9 中启用了 FSGSBASE。它们分别存储为IA32_FS_BASE和IA32_GS_BASE。正如在段寄存器部分所提到的，这些存储在x86-64 CPU上的FS和GS段基。这使得它们成为相对频繁使用的目标（根据MSR标准），所以它们有自己专门的R/W操作码。</p>
 <ul>
 <li>RDFSBASE和RDGSBASE用于读取</li>
@@ -716,26 +718,24 @@
 </ul>
 <p>许多MSRs已经从一代IA-32处理器延续到下一代，并延续到Intel 64处理器。MSR的一个子集和相关的位域，被认为是架构MSR。由于历史原因（从奔腾4处理器开始），这些 “架构性MSR “被赋予 “IA32_”的前缀。<br>根据SDM中的Table 2-2， 最高序号的MSR是6097/17D1H，即IA32_HW_FEEDBACK_CONFIG。<br>然而，在记录的MSR序号是存在着明显的洞。SDM直接从3506/DB2H（IA32_THREAD_STALL）跳到6096/17D0H（IA32_HW_FEEDBACK_PTR）。在空的范围之上，还有一些范围被明确地标记为保留的范围。<br>为了计算MSR的实际数量，只提取SDM第4卷中的<a href="ia32-architectural-msrs.txt">表2-2中的值</a>。</p>
 <ul>
-<li><p>解压缩 SDM</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ pdfjam 335592-sdm-vol-4.pdf 19-67 -o 2-2.pdf</span><br></pre></td></tr></table></figure>
-</li>
+<li>解压缩 SDM<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ pdfjam 335592-sdm-vol-4.pdf 19-67 -o 2-2.pdf</span><br></pre></td></tr></table></figure></li>
 <li><p>利用pdftotext，把PDF转换为纯文本。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ pdftotext 2-2.pdf table.txt</span><br><span class="line"># edit table.txt by hand</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ pdftotext 2-2.pdf table.txt</span><br><span class="line"># edit table.txt by hand</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>使用 IA32_ 前缀，筛选字符串</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ tr -s &apos;[:space:]&apos; &apos;\n&apos; &lt; table.txt \</span><br><span class="line">    | grep &apos;IA32_&apos; \</span><br><span class="line">    | tr -d &apos;.&apos; \</span><br><span class="line">    | sed &apos;s/\[.*$//&apos; \</span><br><span class="line">    | sort | uniq | wc -l</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ tr -s &#x27;[:space:]&#x27; &#x27;\n&#x27; &lt; table.txt \</span><br><span class="line">    | grep &#x27;IA32_&#x27; \</span><br><span class="line">    | tr -d &#x27;.&#x27; \</span><br><span class="line">    | sed &#x27;s/\[.*$//&#x27; \</span><br><span class="line">    | sort | uniq | wc -l</span><br></pre></td></tr></table></figure>
 </li>
 </ul>
 <p>最后得到400个MSR，这要比6096合理多了。</p>
 <p><strong>本部分寄存器总共: 400</strong>.</p>
 <p><strong>到目前为止一共: &gt;557</strong>.</p>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li><a href="https://sandpile.org/x86/msr.htm" target="_blank" rel="noopener">sandpile.org</a> MSR 可视化。</li>
+<li><a target="_blank" rel="noopener" href="https://sandpile.org/x86/msr.htm">sandpile.org</a> MSR 可视化。</li>
 <li>Vol. 3A § 8.7.1 (“State of the Logical Processors”) of the Intel SDM has a useful list of<br>  nearly all of the registers that are either unique to or shared between x86-64 cores.</li>
-<li>The <a href="https://wiki.osdev.org/" target="_blank" rel="noopener">OSDev Wiki</a> has collection of helpful pages on various x86-64<br>  registers, including a <a href="https://wiki.osdev.org/SWAPGS" target="_blank" rel="noopener">great page</a> on the behavior of the segment<br>  base MSRs.</li>
+<li>The <a target="_blank" rel="noopener" href="https://wiki.osdev.org/">OSDev Wiki</a> has collection of helpful pages on various x86-64<br>  registers, including a <a target="_blank" rel="noopener" href="https://wiki.osdev.org/SWAPGS">great page</a> on the behavior of the segment<br>  base MSRs.</li>
 </ul>
-<p>总而言之，在相对较新的x86-64 CPU内核上大约有557个寄存器。但一些我不确定的外设情况。<br>现代英特尔CPU使用集成的APICs作为其SMT实现的一部分。这些APICs有自己的寄存器库，可以被内存映射，以便由x86 CPU读取和潜在的修改。本文没有计算它们，因为(1)它们是内存映射的，因此表现得更像来自任意硬件的映射寄存器，而不是CPU寄存器<br>英特尔的SDM 说<a href="https://lwn.net/Articles/680996/" target="_blank" rel="noopener">Last Branch Records</a> 存储在离散的非MSR寄存器中，本文也没有单独计算这些。</p>
-<p><a href="https://blog.yossarian.net/2020/11/30/How-many-registers-does-an-x86-64-cpu-have" target="_blank" rel="noopener">https://blog.yossarian.net/2020/11/30/How-many-registers-does-an-x86-64-cpu-have</a></p>
+<p>总而言之，在相对较新的x86-64 CPU内核上大约有557个寄存器。但一些我不确定的外设情况。<br>现代英特尔CPU使用集成的APICs作为其SMT实现的一部分。这些APICs有自己的寄存器库，可以被内存映射，以便由x86 CPU读取和潜在的修改。本文没有计算它们，因为(1)它们是内存映射的，因此表现得更像来自任意硬件的映射寄存器，而不是CPU寄存器<br>英特尔的SDM 说<a target="_blank" rel="noopener" href="https://lwn.net/Articles/680996/">Last Branch Records</a> 存储在离散的非MSR寄存器中，本文也没有单独计算这些。</p>
+<p><a target="_blank" rel="noopener" href="https://blog.yossarian.net/2020/11/30/How-many-registers-does-an-x86-64-cpu-have">https://blog.yossarian.net/2020/11/30/How-many-registers-does-an-x86-64-cpu-have</a></p>
 
     </div>
 
@@ -840,13 +840,14 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#通用寄存器-general-register"><span class="nav-number">1.</span> <span class="nav-text">通用寄存器 (general register)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#特殊寄存器-Special-registers"><span class="nav-number">2.</span> <span class="nav-text">特殊寄存器 (Special registers)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#段寄存器-Segment-registers"><span class="nav-number">3.</span> <span class="nav-text">段寄存器 (Segment registers)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#单指令多数据SIMD-和浮点运算指令FP"><span class="nav-number">4.</span> <span class="nav-text">单指令多数据SIMD 和浮点运算指令FP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#x87"><span class="nav-number">4.1.</span> <span class="nav-text">x87</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MMX"><span class="nav-number">4.2.</span> <span class="nav-text">MMX</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SSE-and-AVX"><span class="nav-number">4.3.</span> <span class="nav-text">SSE and AVX</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#边界寄存器-Bounds-registers"><span class="nav-number">5.</span> <span class="nav-text">边界寄存器(Bounds registers)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#调试寄存器-Debug-registers"><span class="nav-number">6.</span> <span class="nav-text">调试寄存器(Debug registers)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#控制寄存器-Control-registers"><span class="nav-number">7.</span> <span class="nav-text">控制寄存器 (Control registers)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#“System-table-pointer-registers”"><span class="nav-number">8.</span> <span class="nav-text">“System table pointer registers”</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Memory-type-ranger-registers"><span class="nav-number">9.</span> <span class="nav-text">Memory-type-ranger registers</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MSR-Model-specific-registers"><span class="nav-number">10.</span> <span class="nav-text">MSR Model specific registers</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">11.</span> <span class="nav-text">参考</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E7%94%A8%E5%AF%84%E5%AD%98%E5%99%A8-general-register"><span class="nav-number">1.</span> <span class="nav-text">通用寄存器 (general register)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E6%AE%8A%E5%AF%84%E5%AD%98%E5%99%A8-Special-registers"><span class="nav-number">2.</span> <span class="nav-text">特殊寄存器 (Special registers)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AE%B5%E5%AF%84%E5%AD%98%E5%99%A8-Segment-registers"><span class="nav-number">3.</span> <span class="nav-text">段寄存器 (Segment registers)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%95%E6%8C%87%E4%BB%A4%E5%A4%9A%E6%95%B0%E6%8D%AESIMD-%E5%92%8C%E6%B5%AE%E7%82%B9%E8%BF%90%E7%AE%97%E6%8C%87%E4%BB%A4FP"><span class="nav-number">4.</span> <span class="nav-text">单指令多数据SIMD 和浮点运算指令FP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#x87"><span class="nav-number">4.1.</span> <span class="nav-text">x87</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MMX"><span class="nav-number">4.2.</span> <span class="nav-text">MMX</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SSE-and-AVX"><span class="nav-number">4.3.</span> <span class="nav-text">SSE and AVX</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BE%B9%E7%95%8C%E5%AF%84%E5%AD%98%E5%99%A8-Bounds-registers"><span class="nav-number">5.</span> <span class="nav-text">边界寄存器(Bounds registers)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%83%E8%AF%95%E5%AF%84%E5%AD%98%E5%99%A8-Debug-registers"><span class="nav-number">6.</span> <span class="nav-text">调试寄存器(Debug registers)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A7%E5%88%B6%E5%AF%84%E5%AD%98%E5%99%A8-Control-registers"><span class="nav-number">7.</span> <span class="nav-text">控制寄存器 (Control registers)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E2%80%9CSystem-table-pointer-registers%E2%80%9D"><span class="nav-number">8.</span> <span class="nav-text">“System table pointer registers”</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Memory-type-ranger-registers"><span class="nav-number">9.</span> <span class="nav-text">Memory-type-ranger registers</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MSR-Model-specific-registers"><span class="nav-number">10.</span> <span class="nav-text">MSR Model specific registers</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">11.</span> <span class="nav-text">参考</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
   <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
   <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
 </div>
@@ -855,7 +856,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -882,25 +883,25 @@
     </div>
     <ul class="links-of-blogroll-list">
         <li class="links-of-blogroll-item">
-          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
         </li>
     </ul>
   </div>
@@ -920,7 +921,7 @@
         
 
         
-  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
       <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
   </div>
 
@@ -951,9 +952,17 @@
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
 <script src="/js/schemes/muse.js"></script>
+
+
 <script src="/js/next-boot.js"></script>
+
 
   <script defer src="/lib/three/three.min.js"></script>
     <script defer src="/lib/three/three-waves.min.js"></script>
@@ -973,7 +982,9 @@
 
 
 
-  <script src="/js/local-search.js"></script>
+  
+<script src="/js/local-search.js"></script>
+
 
 
 

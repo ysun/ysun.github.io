@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 3.8.0">
+<meta name="generator" content="Hexo 6.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -23,20 +23,20 @@
   </script>
 
   <meta name="description" content="CPU 虚拟化简介上一篇文章笼统的介绍了一个虚拟机的诞生过程，从demo中也可以看到，运行一个虚拟机再也不需要像以前想象的那样，需要用软件来模拟硬件指令集了。虚拟机的指令集直接运行在宿主机物理CPU上，当虚拟机中的指令设计到IO操作或者一些特殊指令的时候，控制权转让给了宿主机（这里其实是转让给了vm monitor，下面检查VMM），也就是一个demo进程，他在宿主机上的表现形式也就是一个用户级进">
-<meta name="keywords" content="KVM">
 <meta property="og:type" content="article">
 <meta property="og:title" content="KVM 虚拟化原理3--CPU">
 <meta property="og:url" content="http://www.owalle.com/2018/12/10/kvm-cpu/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="CPU 虚拟化简介上一篇文章笼统的介绍了一个虚拟机的诞生过程，从demo中也可以看到，运行一个虚拟机再也不需要像以前想象的那样，需要用软件来模拟硬件指令集了。虚拟机的指令集直接运行在宿主机物理CPU上，当虚拟机中的指令设计到IO操作或者一些特殊指令的时候，控制权转让给了宿主机（这里其实是转让给了vm monitor，下面检查VMM），也就是一个demo进程，他在宿主机上的表现形式也就是一个用户级进">
-<meta property="og:locale" content="zh-Hans">
+<meta property="og:locale">
 <meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-cpu/vcpu-follow.png">
 <meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-cpu/vcpu-ring.png">
 <meta property="og:image" content="http://www.owalle.com/2018/12/10/kvm-cpu/vmm_guest_switch.png">
-<meta property="og:updated_time" content="2021-09-27T09:54:43.062Z">
+<meta property="article:published_time" content="2018-12-10T15:16:24.000Z">
+<meta property="article:modified_time" content="2021-09-27T09:54:43.062Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="KVM">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="KVM 虚拟化原理3--CPU">
-<meta name="twitter:description" content="CPU 虚拟化简介上一篇文章笼统的介绍了一个虚拟机的诞生过程，从demo中也可以看到，运行一个虚拟机再也不需要像以前想象的那样，需要用软件来模拟硬件指令集了。虚拟机的指令集直接运行在宿主机物理CPU上，当虚拟机中的指令设计到IO操作或者一些特殊指令的时候，控制权转让给了宿主机（这里其实是转让给了vm monitor，下面检查VMM），也就是一个demo进程，他在宿主机上的表现形式也就是一个用户级进">
 <meta name="twitter:image" content="http://www.owalle.com/2018/12/10/kvm-cpu/vcpu-follow.png">
 
 <link rel="canonical" href="http://www.owalle.com/2018/12/10/kvm-cpu/">
@@ -167,7 +167,9 @@
     <i class="fa fa-search"></i>
   </span>
   <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
   </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
@@ -203,16 +205,16 @@
     
   
   
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2018/12/10/kvm-cpu/">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Yi颗烂樱桃">
       <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Yi颗烂樱桃">
     </span>
       <header class="post-header">
@@ -241,7 +243,7 @@
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/KVM/" itemprop="url" rel="index"><span itemprop="name">KVM</span></a>
                 </span>
             </span>
@@ -259,15 +261,15 @@
       
         <h2 id="CPU-虚拟化简介"><a href="#CPU-虚拟化简介" class="headerlink" title="CPU 虚拟化简介"></a>CPU 虚拟化简介</h2><p>上一篇文章笼统的介绍了一个虚拟机的诞生过程，从demo中也可以看到，运行一个虚拟机再也不需要像以前想象的那样，需要用软件来模拟硬件指令集了。虚拟机的指令集直接运行在宿主机物理CPU上，当虚拟机中的指令设计到IO操作或者一些特殊指令的时候，控制权转让给了宿主机（这里其实是转让给了vm monitor，下面检查VMM），也就是一个demo进程，他在宿主机上的表现形式也就是一个用户级进程。</p>
 <p>用一张图来解释更为贴切。</p>
-<p><img src="/2018/12/10/kvm-cpu/vcpu-follow.png" alt=""></p>
+<p><img src="/2018/12/10/kvm-cpu/vcpu-follow.png" alt></p>
 <p>VMM完成vCPU，内存的初始化后，通过ioctl调用KVM的接口，完成虚拟机的创建，并创建一个线程来运行VM，由于VM在前期初始化的时候会设置各种寄存器来帮助KVM查找到需要加载的指令的入口（main函数）。所以线程在调用了KVM接口后，物理CPU的控制权就交给了VM。VM运行在VMX non-root模式，这是Intel-V或者AMD-V提供的一种特殊的CPU执行模式。然后当VM执行了特殊指令的时候，CPU将当前VM的上下文保存到VMCS寄存器（这个寄存器是一个指针，保存了实际的上下文地址），然后执行权切换到VMM。VMM 获取 VM 返回原因，并做处理。如果是IO请求，VMM 可以直接读取VM的内存并将IO操作模拟出来，然后再调用VMRESUME指令，VM继续执行，此时在VM看来，IO操作的指令被CPU执行了。</p>
 <h2 id="Intel-V-技术"><a href="#Intel-V-技术" class="headerlink" title="Intel-V 技术"></a>Intel-V 技术</h2><p>Intel-V 技术是Intel为了支持虚拟化而提供的一套CPU特殊运行模式。</p>
 <h3 id="Intel-V虚拟化技术结构"><a href="#Intel-V虚拟化技术结构" class="headerlink" title="Intel-V虚拟化技术结构"></a>Intel-V虚拟化技术结构</h3><p>Intel-V 在IA-32处理器上扩展了处理器等级，原来的CPU支持ring0~ring3 4个等级，但是Linux只使用了其中的两个ring0,ring3。当CPU寄存器标示了当前CPU处于ring0级别的时候，表示此时CPU正在运行的是内核的代码。而当CPU处于ring3级别的时候，表示此时CPU正在运行的是用户级别的代码。当发生系统调用或者进程切换的时候，CPU会从ring3级别转到ring0级别。ring3级别是不允许执行硬件操作的，所有硬件操作都需要系统提供的API来完成。<br>比如说一个IO操作：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">int nread = read(fd, buffer, 1024);</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">int nread = read(fd, buffer, 1024);</span><br></pre></td></tr></table></figure>
 <p>当执行到此段代码的时候，然后查找到系统调用号，保存到寄存器eax，然后会将对应的参数压栈后产生一个系统调用中断，对应的是 int $0x80。产生了系统调用中断后，此时CPU将切换到ring0模式，内核通过寄存器读取到参数，并完成最后的IO后续操作，操作完成后返回ring3模式。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">movel　　$3,%eax</span><br><span class="line">movel　　fd,%ebx</span><br><span class="line">movel　　buffer,%ecx</span><br><span class="line">movel　　1024,%edx　　　　　　</span><br><span class="line">int　　  $0x80</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">movel　　$3,%eax</span><br><span class="line">movel　　fd,%ebx</span><br><span class="line">movel　　buffer,%ecx</span><br><span class="line">movel　　1024,%edx　　　　　　</span><br><span class="line">int　　  $0x80</span><br></pre></td></tr></table></figure>
 <p>Intel-V 在 ring0~ring3 的基础上，增加了VMX模式，VMX分为root和non-root。这里的VMX root模式是给VMM（前面有提到VM monitor)，在KVM体系中，就是qemu-kvm进程所运行的模式。VMX non-root模式就是运行的Guest，Guest也分ring0~ring3，不过他并不感知自己处于VMX non-root模式下。</p>
-<p><img src="/2018/12/10/kvm-cpu/vcpu-ring.png" alt=""></p>
+<p><img src="/2018/12/10/kvm-cpu/vcpu-ring.png" alt></p>
 <p>Intel的虚拟架构基本上分两个部分:</p>
 <ul>
 <li>虚拟机监视器</li>
@@ -275,12 +277,12 @@
 </ul>
 <h4 id="虚拟机监视器（Virtual-machine-monitors-VMM"><a href="#虚拟机监视器（Virtual-machine-monitors-VMM" class="headerlink" title="虚拟机监视器（Virtual-machine monitors - VMM)"></a>虚拟机监视器（Virtual-machine monitors - VMM)</h4><p>虚拟机监视器在宿主机上表现为一个提供虚拟机CPU，内存以及一系列硬件虚拟的实体，这个实体在KVM体系中就是一个进程，如qemu-kvm。VMM负责管理虚拟机的资源，并拥有所有虚拟机资源的控制权，包括切换虚拟机的CPU上下文等。</p>
 <h4 id="Guest"><a href="#Guest" class="headerlink" title="Guest"></a>Guest</h4><p>这个Guest在前面的Demo里面也提到，可能是一个操作系统（OS），也可能就是一个二进制程序，whatever，对于VMM来说，他就是一堆指令集，只需要知道入口（rip寄存器值）就可以加载。<br>Guest运行需要虚拟CPU，当Guest代码运行的时候，处于VMX non-root模式，此模式下，该用什么指令还是用什么指令，该用寄存器该用cache还是用cache，但是在执行到特殊指令的时候（比如Demo中的out指令），把CPU控制权交给VMM，由VMM来处理特殊指令，完成硬件操作。</p>
-<h4 id="VMM-与-Guest-的切换"><a href="#VMM-与-Guest-的切换" class="headerlink" title="VMM 与 Guest 的切换"></a>VMM 与 Guest 的切换</h4><p><img src="/2018/12/10/kvm-cpu/vmm_guest_switch.png" alt=""></p>
+<h4 id="VMM-与-Guest-的切换"><a href="#VMM-与-Guest-的切换" class="headerlink" title="VMM 与 Guest 的切换"></a>VMM 与 Guest 的切换</h4><p><img src="/2018/12/10/kvm-cpu/vmm_guest_switch.png" alt></p>
 <p>Guest与VMM之间的切换分两个部分：VM entry 和 VM exit。有几种情况会导致VM exit，比如说Guest执行了硬件访问操作，或者Guest调用了VMCALL指令或者调用了退出指令或者产生了一个page fault，或者访问了特殊设备的寄存器等。当Guest处于VMX模式的时候，没有提供获取是否处于此模式下的指令或者寄存器，也就是说，Guest不能判断当前CPU是否处于VMX模式。当产生VM exit的时候，CPU会将exit reason保存到MSRs（VMX模式的特殊寄存器组），对应到KVM就是vCPU-&gt;kvm_run-&gt;exit_reason。VMM根据exit_reason做相应的处理。</p>
 <h4 id="VMM-的生命周期"><a href="#VMM-的生命周期" class="headerlink" title="VMM 的生命周期"></a>VMM 的生命周期</h4><p>如上图所示，VMM 开始于VMXON 指令，结束与VMXOFF指令。<br>第一次启动Guest，通过VMLAUNCH指令加载Guest，这时候一切都是新的，比如说起始的rip寄存器等。后续Guest exit后再entry，是通过VMRESUME指令，此指令会将VMCS(后面会介绍到）所指向的内容加载到当前Guest的上下文，以便Guest继续执行。</p>
 <h4 id="VMCS-（Virtual-Machine-control-structure"><a href="#VMCS-（Virtual-Machine-control-structure" class="headerlink" title="VMCS （Virtual-Machine control structure)"></a>VMCS （Virtual-Machine control structure)</h4><p>顾名思义，VMCS就是虚拟机控制结构，前面提到过很多次，Guest Exit的时候，会将当前Guest的上下文保存到VMCS中，Guest entry的时候把VMCS上下文恢复到VMM。VMCS是一个64位的指针，指向一个真实的内存地址，VMCS是以vCPU为单位的，就是说当前有多少个vCPU，就有多少个VMCS指针。VMCS的操作包括VMREAD，VMWRITE，VMCLEAR。</p>
 <h4 id="Guest-exit-Reason"><a href="#Guest-exit-Reason" class="headerlink" title="Guest exit Reason"></a>Guest exit Reason</h4><p>下面是qemu-kvm定义的exit reason。可以看到有很多可能会导致Guest转让控制权。选取几个解释一下。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">static int (*const kvm_vmx_exit_handlers[])(struct kvm_vcpu *vcpu) = &#123;</span><br><span class="line">    [EXIT_REASON_EXCEPTION_NMI]           = handle_exception, </span><br><span class="line">    [EXIT_REASON_EXTERNAL_INTERRUPT]      = handle_external_interrupt, </span><br><span class="line">    [EXIT_REASON_TRIPLE_FAULT]            = handle_triple_fault,</span><br><span class="line">    [EXIT_REASON_NMI_WINDOW]              = handle_nmi_window,</span><br><span class="line">     // 访问了IO设备</span><br><span class="line">    [EXIT_REASON_IO_INSTRUCTION]          = handle_io,</span><br><span class="line">     // 访问了CR寄存器，地址寄存器，和DR寄存器（debug register)一样，用于调试</span><br><span class="line">    [EXIT_REASON_CR_ACCESS]               = handle_cr,</span><br><span class="line">    [EXIT_REASON_DR_ACCESS]               = handle_dr, </span><br><span class="line">    [EXIT_REASON_CPUID]                   = handle_cpuid,</span><br><span class="line">    // 访问了MSR寄存器</span><br><span class="line">    [EXIT_REASON_MSR_READ]                = handle_rdmsr,</span><br><span class="line">    [EXIT_REASON_MSR_WRITE]               = handle_wrmsr,</span><br><span class="line">    [EXIT_REASON_PENDING_INTERRUPT]       = handle_interrupt_window,</span><br><span class="line">    // Guest执行了HLT指令，Demo开胃菜就是这个指令</span><br><span class="line">    [EXIT_REASON_HLT]                     = handle_halt,</span><br><span class="line">    [EXIT_REASON_INVD]                    = handle_invd,</span><br><span class="line">    [EXIT_REASON_INVLPG]                  = handle_invlpg,</span><br><span class="line">    [EXIT_REASON_RDPMC]                   = handle_rdpmc,</span><br><span class="line">    // 不太清楚以下VM系列的指令有什么用，猜测是递归VM（虚拟机里面运行虚拟机）</span><br><span class="line">    [EXIT_REASON_VMCALL]                  = handle_vmcall, </span><br><span class="line">    [EXIT_REASON_VMCLEAR]                 = handle_vmclear,</span><br><span class="line">    [EXIT_REASON_VMLAUNCH]                = handle_vmlaunch,</span><br><span class="line">    [EXIT_REASON_VMPTRLD]                 = handle_vmptrld,</span><br><span class="line">    [EXIT_REASON_VMPTRST]                 = handle_vmptrst,</span><br><span class="line">    [EXIT_REASON_VMREAD]                  = handle_vmread,</span><br><span class="line">    [EXIT_REASON_VMRESUME]                = handle_vmresume,</span><br><span class="line">    [EXIT_REASON_VMWRITE]                 = handle_vmwrite,</span><br><span class="line">    [EXIT_REASON_VMOFF]                   = handle_vmoff,</span><br><span class="line">    [EXIT_REASON_VMON]                    = handle_vmon,</span><br><span class="line"></span><br><span class="line">    [EXIT_REASON_TPR_BELOW_THRESHOLD]     = handle_tpr_below_threshold,</span><br><span class="line">    // 访问了高级PCI设备</span><br><span class="line">    [EXIT_REASON_APIC_ACCESS]             = handle_apic_access,</span><br><span class="line">    [EXIT_REASON_APIC_WRITE]              = handle_apic_write,</span><br><span class="line">    [EXIT_REASON_EOI_INDUCED]             = handle_apic_eoi_induced,</span><br><span class="line">    [EXIT_REASON_WBINVD]                  = handle_wbinvd,</span><br><span class="line">    [EXIT_REASON_XSETBV]                  = handle_xsetbv,</span><br><span class="line">    // 进程切换</span><br><span class="line">    [EXIT_REASON_TASK_SWITCH]             = handle_task_switch,</span><br><span class="line">    [EXIT_REASON_MCE_DURING_VMENTRY]      = handle_machine_check,</span><br><span class="line">    // ept 是Intel的一个硬件内存虚拟化技术</span><br><span class="line">    [EXIT_REASON_EPT_VIOLATION]           = handle_ept_violation,</span><br><span class="line">    [EXIT_REASON_EPT_MISCONFIG]           = handle_ept_misconfig,</span><br><span class="line">    // 执行了暂停指令</span><br><span class="line">    [EXIT_REASON_PAUSE_INSTRUCTION]       = handle_pause,</span><br><span class="line">    [EXIT_REASON_MWAIT_INSTRUCTION]       = handle_invalid_op,</span><br><span class="line">    [EXIT_REASON_MONITOR_INSTRUCTION]     = handle_invalid_op,</span><br><span class="line">    [EXIT_REASON_INVEPT]                  = handle_invept,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">static int (*const kvm_vmx_exit_handlers[])(struct kvm_vcpu *vcpu) = &#123;</span><br><span class="line">    [EXIT_REASON_EXCEPTION_NMI]           = handle_exception, </span><br><span class="line">    [EXIT_REASON_EXTERNAL_INTERRUPT]      = handle_external_interrupt, </span><br><span class="line">    [EXIT_REASON_TRIPLE_FAULT]            = handle_triple_fault,</span><br><span class="line">    [EXIT_REASON_NMI_WINDOW]              = handle_nmi_window,</span><br><span class="line">     // 访问了IO设备</span><br><span class="line">    [EXIT_REASON_IO_INSTRUCTION]          = handle_io,</span><br><span class="line">     // 访问了CR寄存器，地址寄存器，和DR寄存器（debug register)一样，用于调试</span><br><span class="line">    [EXIT_REASON_CR_ACCESS]               = handle_cr,</span><br><span class="line">    [EXIT_REASON_DR_ACCESS]               = handle_dr, </span><br><span class="line">    [EXIT_REASON_CPUID]                   = handle_cpuid,</span><br><span class="line">    // 访问了MSR寄存器</span><br><span class="line">    [EXIT_REASON_MSR_READ]                = handle_rdmsr,</span><br><span class="line">    [EXIT_REASON_MSR_WRITE]               = handle_wrmsr,</span><br><span class="line">    [EXIT_REASON_PENDING_INTERRUPT]       = handle_interrupt_window,</span><br><span class="line">    // Guest执行了HLT指令，Demo开胃菜就是这个指令</span><br><span class="line">    [EXIT_REASON_HLT]                     = handle_halt,</span><br><span class="line">    [EXIT_REASON_INVD]                    = handle_invd,</span><br><span class="line">    [EXIT_REASON_INVLPG]                  = handle_invlpg,</span><br><span class="line">    [EXIT_REASON_RDPMC]                   = handle_rdpmc,</span><br><span class="line">    // 不太清楚以下VM系列的指令有什么用，猜测是递归VM（虚拟机里面运行虚拟机）</span><br><span class="line">    [EXIT_REASON_VMCALL]                  = handle_vmcall, </span><br><span class="line">    [EXIT_REASON_VMCLEAR]                 = handle_vmclear,</span><br><span class="line">    [EXIT_REASON_VMLAUNCH]                = handle_vmlaunch,</span><br><span class="line">    [EXIT_REASON_VMPTRLD]                 = handle_vmptrld,</span><br><span class="line">    [EXIT_REASON_VMPTRST]                 = handle_vmptrst,</span><br><span class="line">    [EXIT_REASON_VMREAD]                  = handle_vmread,</span><br><span class="line">    [EXIT_REASON_VMRESUME]                = handle_vmresume,</span><br><span class="line">    [EXIT_REASON_VMWRITE]                 = handle_vmwrite,</span><br><span class="line">    [EXIT_REASON_VMOFF]                   = handle_vmoff,</span><br><span class="line">    [EXIT_REASON_VMON]                    = handle_vmon,</span><br><span class="line"></span><br><span class="line">    [EXIT_REASON_TPR_BELOW_THRESHOLD]     = handle_tpr_below_threshold,</span><br><span class="line">    // 访问了高级PCI设备</span><br><span class="line">    [EXIT_REASON_APIC_ACCESS]             = handle_apic_access,</span><br><span class="line">    [EXIT_REASON_APIC_WRITE]              = handle_apic_write,</span><br><span class="line">    [EXIT_REASON_EOI_INDUCED]             = handle_apic_eoi_induced,</span><br><span class="line">    [EXIT_REASON_WBINVD]                  = handle_wbinvd,</span><br><span class="line">    [EXIT_REASON_XSETBV]                  = handle_xsetbv,</span><br><span class="line">    // 进程切换</span><br><span class="line">    [EXIT_REASON_TASK_SWITCH]             = handle_task_switch,</span><br><span class="line">    [EXIT_REASON_MCE_DURING_VMENTRY]      = handle_machine_check,</span><br><span class="line">    // ept 是Intel的一个硬件内存虚拟化技术</span><br><span class="line">    [EXIT_REASON_EPT_VIOLATION]           = handle_ept_violation,</span><br><span class="line">    [EXIT_REASON_EPT_MISCONFIG]           = handle_ept_misconfig,</span><br><span class="line">    // 执行了暂停指令</span><br><span class="line">    [EXIT_REASON_PAUSE_INSTRUCTION]       = handle_pause,</span><br><span class="line">    [EXIT_REASON_MWAIT_INSTRUCTION]       = handle_invalid_op,</span><br><span class="line">    [EXIT_REASON_MONITOR_INSTRUCTION]     = handle_invalid_op,</span><br><span class="line">    [EXIT_REASON_INVEPT]                  = handle_invept,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>KVM的CPU虚拟化依托于Intel-V提供的虚拟化技术，将Guest运行于VMX模式，当执行了特殊操作的时候，将控制权返回给VMM。VMM处理完特殊操作后再把结果返回给Guest。<br>CPU虚拟化可以说是KVM的最关键的核心，弄清楚了VM Exit和VM Entry。后续的IO虚拟化，内存虚拟化都是建立在此基础上。下一章介绍内存虚拟化。</p>
 
     </div>
@@ -386,13 +388,14 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU-虚拟化简介"><span class="nav-number">1.</span> <span class="nav-text">CPU 虚拟化简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Intel-V-技术"><span class="nav-number">2.</span> <span class="nav-text">Intel-V 技术</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Intel-V虚拟化技术结构"><span class="nav-number">2.1.</span> <span class="nav-text">Intel-V虚拟化技术结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#虚拟机监视器（Virtual-machine-monitors-VMM"><span class="nav-number">2.1.1.</span> <span class="nav-text">虚拟机监视器（Virtual-machine monitors - VMM)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Guest"><span class="nav-number">2.1.2.</span> <span class="nav-text">Guest</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#VMM-与-Guest-的切换"><span class="nav-number">2.1.3.</span> <span class="nav-text">VMM 与 Guest 的切换</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#VMM-的生命周期"><span class="nav-number">2.1.4.</span> <span class="nav-text">VMM 的生命周期</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#VMCS-（Virtual-Machine-control-structure"><span class="nav-number">2.1.5.</span> <span class="nav-text">VMCS （Virtual-Machine control structure)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Guest-exit-Reason"><span class="nav-number">2.1.6.</span> <span class="nav-text">Guest exit Reason</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU-%E8%99%9A%E6%8B%9F%E5%8C%96%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">CPU 虚拟化简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Intel-V-%E6%8A%80%E6%9C%AF"><span class="nav-number">2.</span> <span class="nav-text">Intel-V 技术</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Intel-V%E8%99%9A%E6%8B%9F%E5%8C%96%E6%8A%80%E6%9C%AF%E7%BB%93%E6%9E%84"><span class="nav-number">2.1.</span> <span class="nav-text">Intel-V虚拟化技术结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9B%91%E8%A7%86%E5%99%A8%EF%BC%88Virtual-machine-monitors-VMM"><span class="nav-number">2.1.1.</span> <span class="nav-text">虚拟机监视器（Virtual-machine monitors - VMM)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Guest"><span class="nav-number">2.1.2.</span> <span class="nav-text">Guest</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#VMM-%E4%B8%8E-Guest-%E7%9A%84%E5%88%87%E6%8D%A2"><span class="nav-number">2.1.3.</span> <span class="nav-text">VMM 与 Guest 的切换</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#VMM-%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">2.1.4.</span> <span class="nav-text">VMM 的生命周期</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#VMCS-%EF%BC%88Virtual-Machine-control-structure"><span class="nav-number">2.1.5.</span> <span class="nav-text">VMCS （Virtual-Machine control structure)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Guest-exit-Reason"><span class="nav-number">2.1.6.</span> <span class="nav-text">Guest exit Reason</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
   <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
   <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
 </div>
@@ -401,7 +404,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -428,25 +431,25 @@
     </div>
     <ul class="links-of-blogroll-list">
         <li class="links-of-blogroll-item">
-          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
         </li>
     </ul>
   </div>
@@ -466,7 +469,7 @@
         
 
         
-  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
       <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
   </div>
 
@@ -497,9 +500,17 @@
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
 <script src="/js/schemes/muse.js"></script>
+
+
 <script src="/js/next-boot.js"></script>
+
 
   <script defer src="/lib/three/three.min.js"></script>
     <script defer src="/lib/three/three-waves.min.js"></script>
@@ -519,7 +530,9 @@
 
 
 
-  <script src="/js/local-search.js"></script>
+  
+<script src="/js/local-search.js"></script>
+
 
 
 

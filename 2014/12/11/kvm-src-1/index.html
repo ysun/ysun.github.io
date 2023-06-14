@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 3.8.0">
+<meta name="generator" content="Hexo 6.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -22,21 +22,21 @@
     var CONFIG = {"hostname":"www.owalle.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="原文出自：http://oenhan.com/kvm-src-1文章写作以及技术水平远远在我之上，感觉自己无力写出如此精炼的文章，膜拜并转发 1.KVM模型结构">
-<meta name="keywords" content="KVM">
+  <meta name="description" content="原文出自：http:&#x2F;&#x2F;oenhan.com&#x2F;kvm-src-1文章写作以及技术水平远远在我之上，感觉自己无力写出如此精炼的文章，膜拜并转发 1.KVM模型结构">
 <meta property="og:type" content="article">
 <meta property="og:title" content="KVM源代码分析1:基本工作原理">
 <meta property="og:url" content="http://www.owalle.com/2014/12/11/kvm-src-1/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="原文出自：http://oenhan.com/kvm-src-1文章写作以及技术水平远远在我之上，感觉自己无力写出如此精炼的文章，膜拜并转发 1.KVM模型结构">
-<meta property="og:locale" content="zh-Hans">
+<meta property="og:description" content="原文出自：http:&#x2F;&#x2F;oenhan.com&#x2F;kvm-src-1文章写作以及技术水平远远在我之上，感觉自己无力写出如此精炼的文章，膜拜并转发 1.KVM模型结构">
+<meta property="og:locale">
 <meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-1/hypervisor-1.png">
 <meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-1/kvm_arch_map-1.png">
 <meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-1/kvm_process-1.png">
-<meta property="og:updated_time" content="2021-09-27T09:54:43.098Z">
+<meta property="article:published_time" content="2014-12-11T01:28:48.000Z">
+<meta property="article:modified_time" content="2021-09-27T09:54:43.098Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="KVM">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="KVM源代码分析1:基本工作原理">
-<meta name="twitter:description" content="原文出自：http://oenhan.com/kvm-src-1文章写作以及技术水平远远在我之上，感觉自己无力写出如此精炼的文章，膜拜并转发 1.KVM模型结构">
 <meta name="twitter:image" content="http://www.owalle.com/2014/12/11/kvm-src-1/hypervisor-1.png">
 
 <link rel="canonical" href="http://www.owalle.com/2014/12/11/kvm-src-1/">
@@ -167,7 +167,9 @@
     <i class="fa fa-search"></i>
   </span>
   <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
   </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
@@ -203,16 +205,16 @@
     
   
   
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2014/12/11/kvm-src-1/">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Yi颗烂樱桃">
       <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Yi颗烂樱桃">
     </span>
       <header class="post-header">
@@ -241,7 +243,7 @@
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/KVM/" itemprop="url" rel="index"><span itemprop="name">KVM</span></a>
                 </span>
             </span>
@@ -257,19 +259,19 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>原文出自：<a href="http://oenhan.com/kvm-src-1" target="_blank" rel="noopener">http://oenhan.com/kvm-src-1</a><br>文章写作以及技术水平远远在我之上，感觉自己无力写出如此精炼的文章，膜拜并转发</p>
+        <p>原文出自：<a target="_blank" rel="noopener" href="http://oenhan.com/kvm-src-1">http://oenhan.com/kvm-src-1</a><br>文章写作以及技术水平远远在我之上，感觉自己无力写出如此精炼的文章，膜拜并转发</p>
 <h4 id="1-KVM模型结构"><a href="#1-KVM模型结构" class="headerlink" title="1.KVM模型结构"></a>1.KVM模型结构</h4><p>为什么有OS虚拟化？随着CPU计算能力的提高，单独的OS已不能充分利用CPU的计算能力，1.很多应用的执行需要单独占用一个OS环境，如安全测试等；2.而IAAS云计算厂商也是以OS为范围销售计算能力。那么在所有虚拟化方案中，都是由hypervisor取代原生的OS去控制具体硬件资源，而同时hypervisor将资源分配具体的VM，VM中运行的是没有修改过的OS，如果让VM中的OS能正常运行，hypervisor的任务就是模拟具体的硬件资源，让OS不能识别出是真是假。</p>
-<p><img src="/2014/12/11/kvm-src-1/hypervisor-1.png" alt=""></p>
-<p>当然上面的模型是Xen示例，OS对应用而言是硬件资源管理中心，那么hypervisor就是具体VM的OS了，KVM是就利用了这一点，利用现有的kernel代码，构建了一个hypervisor，这个样子<a href="http://www.oenhan.com/kernel-program-exec" target="_blank" rel="noopener">内存分配</a>，<a href="http://www.oenhan.com/task-group-sched" target="_blank" rel="noopener">进程调度</a>等就无需重写代码，如此hypervisor就是所谓的host，VM中的OS就是guest。</p>
-<p>guest OS保证具体运行场景中的程序正常执行，而KVM的代码则部署在HOST上，Userspace对应的是QEMU，Kernel对应的是KVM Driver，KVM Driver负责模拟虚拟机的CPU运行，<a href="http://www.oenhan.com/size-512-slab-kmalloc" title="从size-512内存泄露看slab分配" target="_blank" rel="noopener">内存管理</a>，设备管理等；QEMU则模拟虚拟机的IO设备接口以及用户态控制接口。QEMU通过KVM等fd进行IOCTL控制KVM驱动的运行过程。</p>
-<p><img src="/2014/12/11/kvm-src-1/kvm_arch_map-1.png" alt=""></p>
-<p>如上图所示，guest自身有自己的用户模式和<a href="http://www.oenhan.com/iowait-wa-vmstat" title="iowait的形成原因和内核分析" target="_blank" rel="noopener">内核模式</a>；guest是在host中是作为一个用户态进程存在的，这个进程就是qemu，qemu本身就是一个虚拟化程序，只是纯软件虚拟化效率很低，它被KVM进行改造后，作为KVM的前端存在，用来进行<a href="http://www.oenhan.com/cpu-load-balance" title="Linux内核CPU负载均衡机制" target="_blank" rel="noopener">创建进程</a>或者IO交互等；而KVM Driver则是Linux内核模式，它提供KVM fd给qemu调用，用来进行cpu虚拟化，内存虚拟化等。QEMU通KVM提供的fd接口，通过ioctl系统调用创建和运行虚拟机。KVM Driver使得整个Linux成为一个虚拟机监控器，负责接收qemu模拟效率很低的命令。</p>
-<h4 id="2-KVM工作原理"><a href="#2-KVM工作原理" class="headerlink" title="2.KVM工作原理"></a>2.KVM工作原理</h4><p><img src="/2014/12/11/kvm-src-1/kvm_process-1.png" alt=""></p>
+<p><img src="/2014/12/11/kvm-src-1/hypervisor-1.png" alt></p>
+<p>当然上面的模型是Xen示例，OS对应用而言是硬件资源管理中心，那么hypervisor就是具体VM的OS了，KVM是就利用了这一点，利用现有的kernel代码，构建了一个hypervisor，这个样子<a target="_blank" rel="noopener" href="http://www.oenhan.com/kernel-program-exec">内存分配</a>，<a target="_blank" rel="noopener" href="http://www.oenhan.com/task-group-sched">进程调度</a>等就无需重写代码，如此hypervisor就是所谓的host，VM中的OS就是guest。</p>
+<p>guest OS保证具体运行场景中的程序正常执行，而KVM的代码则部署在HOST上，Userspace对应的是QEMU，Kernel对应的是KVM Driver，KVM Driver负责模拟虚拟机的CPU运行，<a target="_blank" rel="noopener" href="http://www.oenhan.com/size-512-slab-kmalloc" title="从size-512内存泄露看slab分配">内存管理</a>，设备管理等；QEMU则模拟虚拟机的IO设备接口以及用户态控制接口。QEMU通过KVM等fd进行IOCTL控制KVM驱动的运行过程。</p>
+<p><img src="/2014/12/11/kvm-src-1/kvm_arch_map-1.png" alt></p>
+<p>如上图所示，guest自身有自己的用户模式和<a target="_blank" rel="noopener" href="http://www.oenhan.com/iowait-wa-vmstat" title="iowait的形成原因和内核分析">内核模式</a>；guest是在host中是作为一个用户态进程存在的，这个进程就是qemu，qemu本身就是一个虚拟化程序，只是纯软件虚拟化效率很低，它被KVM进行改造后，作为KVM的前端存在，用来进行<a target="_blank" rel="noopener" href="http://www.oenhan.com/cpu-load-balance" title="Linux内核CPU负载均衡机制">创建进程</a>或者IO交互等；而KVM Driver则是Linux内核模式，它提供KVM fd给qemu调用，用来进行cpu虚拟化，内存虚拟化等。QEMU通KVM提供的fd接口，通过ioctl系统调用创建和运行虚拟机。KVM Driver使得整个Linux成为一个虚拟机监控器，负责接收qemu模拟效率很低的命令。</p>
+<h4 id="2-KVM工作原理"><a href="#2-KVM工作原理" class="headerlink" title="2.KVM工作原理"></a>2.KVM工作原理</h4><p><img src="/2014/12/11/kvm-src-1/kvm_process-1.png" alt></p>
 <p>上图是一个执行过程图，首先启动一个虚拟化管理软件qemu，开始启动一个虚拟机，通过ioctl等系统调用向内核中申请指定的资源，搭建好虚拟环境，启动虚拟机内的OS，执行 VMLAUCH 指令，即进入了guest代码执行过程。如果 Guest OS 发生外部中断或者影子页表缺页之类的事件，暂停 Guest OS 的执行，退出QEMU即guest VM-exit，进行一些必要的处理，然后重新进入客户模式，执行guest代码；这个时候如果是io请求，则提交给用户态下的qemu处理，qemu处理后再次通过IOCTL反馈给KVM驱动。</p>
 <h4 id="3-CPU虚拟化"><a href="#3-CPU虚拟化" class="headerlink" title="3.CPU虚拟化"></a>3.CPU虚拟化</h4><p>X86体系结构CPU虚拟化技术的称为 Intel VT-x 技术，引入了VMX，提供了两种处理器的工作环境。 VMCS 结构实现两种环境之间的切换。 VM Entry 使虚拟机进去guest模式，VM Exit 使虚拟机退出guest模式。</p>
-<p>VMM调度guest执行时，qemu 通过 ioctl <a href="http://www.oenhan.com/kernel-program-exec" target="_blank" rel="noopener">系统调用</a>进入内核模式，在 KVM Driver中获得当前物理 CPU的引用。之后将guest状态从VMCS中读出， 并装入物理CPU中。执行 VMLAUCH 指令使得物理处理器进入非根操作环境，运行guest OS代码。</p>
+<p>VMM调度guest执行时，qemu 通过 ioctl <a target="_blank" rel="noopener" href="http://www.oenhan.com/kernel-program-exec">系统调用</a>进入内核模式，在 KVM Driver中获得当前物理 CPU的引用。之后将guest状态从VMCS中读出， 并装入物理CPU中。执行 VMLAUCH 指令使得物理处理器进入非根操作环境，运行guest OS代码。</p>
 <p>当 guest OS 执行一些特权指令或者外部事件时， 比如I/O访问，对控制寄存器的操作，MSR的读写等， 都会导致物理CPU发生 VMExit， 停止运行 Guest OS，将 Guest OS保存到VMCS中， Host 状态装入物理处理器中， 处理器进入根操作环境，KVM取得控制权，通过读取 VMCS 中 VM_EXIT_REASON 字段得到引起 VM Exit 的原因。 从而调用kvm_exit_handler 处理函数。 如果由于 I/O 获得信号到达，则退出到userspace模式的 Qemu 处理。处理完毕后，重新进入guest模式运行虚拟 CPU。</p>
-<h4 id="4-Mem虚拟化"><a href="#4-Mem虚拟化" class="headerlink" title="4.Mem虚拟化"></a>4.Mem虚拟化</h4><p>OS对于物理内存主要有两点认识：1.物理地址从0开始；2.<a href="http://www.oenhan.com/kernel-program-exec" target="_blank" rel="noopener">内存地址</a>是连续的。VMM接管了所有内存，但guest OS的对内存的使用就存在这两点冲突了，除此之外，一个guest对内存的操作很有可能影响到另外一个guest乃至host的运行。VMM的内存虚拟化就要解决这些问题。</p>
+<h4 id="4-Mem虚拟化"><a href="#4-Mem虚拟化" class="headerlink" title="4.Mem虚拟化"></a>4.Mem虚拟化</h4><p>OS对于物理内存主要有两点认识：1.物理地址从0开始；2.<a target="_blank" rel="noopener" href="http://www.oenhan.com/kernel-program-exec">内存地址</a>是连续的。VMM接管了所有内存，但guest OS的对内存的使用就存在这两点冲突了，除此之外，一个guest对内存的操作很有可能影响到另外一个guest乃至host的运行。VMM的内存虚拟化就要解决这些问题。</p>
 <p>在OS代码中，应用也是占用所有的逻辑地址，同时不影响其他应用的关键点在于有线性地址这个中间层；解决方法则是添加了一个中间层：guest物理地址空间；guest看到是从0开始的guest物理地址空间（类比从0开始的线性地址），而且是连续的，虽然有些地址没有映射；同时guest物理地址映射到不同的host逻辑地址，如此保证了VM之间的安全性要求。</p>
 <p>这样MEM虚拟化就是GVA-&gt;GPA-&gt;HPA的寻址过程，传统软件方法有影子页表，硬件虚拟化提供了EPT支持。</p>
 <p>总体描述到此，后面代码里面见真相。</p>
@@ -377,13 +379,14 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-KVM模型结构"><span class="nav-number">1.</span> <span class="nav-text">1.KVM模型结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-KVM工作原理"><span class="nav-number">2.</span> <span class="nav-text">2.KVM工作原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-CPU虚拟化"><span class="nav-number">3.</span> <span class="nav-text">3.CPU虚拟化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-Mem虚拟化"><span class="nav-number">4.</span> <span class="nav-text">4.Mem虚拟化</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-KVM%E6%A8%A1%E5%9E%8B%E7%BB%93%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">1.KVM模型结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-KVM%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">2.KVM工作原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-CPU%E8%99%9A%E6%8B%9F%E5%8C%96"><span class="nav-number">3.</span> <span class="nav-text">3.CPU虚拟化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-Mem%E8%99%9A%E6%8B%9F%E5%8C%96"><span class="nav-number">4.</span> <span class="nav-text">4.Mem虚拟化</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
   <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
   <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
 </div>
@@ -392,7 +395,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -419,25 +422,25 @@
     </div>
     <ul class="links-of-blogroll-list">
         <li class="links-of-blogroll-item">
-          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
         </li>
     </ul>
   </div>
@@ -457,7 +460,7 @@
         
 
         
-  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
       <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
   </div>
 
@@ -488,9 +491,17 @@
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
 <script src="/js/schemes/muse.js"></script>
+
+
 <script src="/js/next-boot.js"></script>
+
 
   <script defer src="/lib/three/three.min.js"></script>
     <script defer src="/lib/three/three-waves.min.js"></script>
@@ -510,7 +521,9 @@
 
 
 
-  <script src="/js/local-search.js"></script>
+  
+<script src="/js/local-search.js"></script>
+
 
 
 

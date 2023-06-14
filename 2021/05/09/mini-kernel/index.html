@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 3.8.0">
+<meta name="generator" content="Hexo 6.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -23,17 +23,17 @@
   </script>
 
   <meta name="description" content="本文我们来解释下怎样创建一个mini x86操作系统。当然这个操作系统小到并不具备一个操作系统应该具有的功能，而仅仅是打印一个字符串到显示器上。 概述">
-<meta name="keywords" content="KVM Linux Kernel Qemu">
 <meta property="og:type" content="article">
 <meta property="og:title" content="创建一个mini内核">
 <meta property="og:url" content="http://www.owalle.com/2021/05/09/mini-kernel/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="本文我们来解释下怎样创建一个mini x86操作系统。当然这个操作系统小到并不具备一个操作系统应该具有的功能，而仅仅是打印一个字符串到显示器上。 概述">
-<meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2021-09-27T09:54:43.534Z">
+<meta property="og:locale">
+<meta property="article:published_time" content="2021-05-09T03:20:28.000Z">
+<meta property="article:modified_time" content="2021-09-27T09:54:43.534Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="KVM Linux Kernel Qemu">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="创建一个mini内核">
-<meta name="twitter:description" content="本文我们来解释下怎样创建一个mini x86操作系统。当然这个操作系统小到并不具备一个操作系统应该具有的功能，而仅仅是打印一个字符串到显示器上。 概述">
 
 <link rel="canonical" href="http://www.owalle.com/2021/05/09/mini-kernel/">
 
@@ -163,7 +163,9 @@
     <i class="fa fa-search"></i>
   </span>
   <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
   </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
@@ -199,16 +201,16 @@
     
   
   
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2021/05/09/mini-kernel/">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Yi颗烂樱桃">
       <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Yi颗烂樱桃">
     </span>
       <header class="post-header">
@@ -246,8 +248,8 @@
       
         <p>本文我们来解释下怎样创建一个mini x86操作系统。当然这个操作系统小到并不具备一个操作系统应该具有的功能，而仅仅是打印一个字符串到显示器上。</p>
 <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>当打开的电脑的时候，处理器首先会从某个特别的闪存(ROM)中加载BIOS。BIOS会自检以及初始化硬件，然后会寻找可以启动的设备。如果找到，就把控制权交给bootloader。所谓bootloader，就是储存在设备开头并且可以执行的一小段程序代码。bootloader决定内核镜像在存储设备上的位置，并且把他们加载到内存中。bootloader还需要把CPU从实模式(real mode)切换到保护模式(protected mode)。为了向前兼容(real mode产生于1987年)，x86 CPU启动的时候是实模式，功能非常有限。</p>
-<p>本文不涉及bootloader的实现，的确有些复杂，可能后面的博客在更新吧，如果有兴趣可以参考<a href="https://wiki.osdev.org/Rolling_Your_Own_Bootloader" target="_blank" rel="noopener">Rolling Your Own Bootloader</a>。但众多的bootloader，我们如何选择呢？</p>
-<h2 id="Multiboot"><a href="#Multiboot" class="headerlink" title="Multiboot"></a>Multiboot</h2><p>对于bootloader，有一个现成的标准<a href="https://nongnu.askapache.com/grub/phcoder/multiboot.pdf" target="_blank" rel="noopener">Multiboot Specification</a>。内核只需要遵从这个标准，就可以启动了。下面我们就来从Multiboot 2 specification 和用的最为广泛的bootloader GRUB2开始着手。</p>
+<p>本文不涉及bootloader的实现，的确有些复杂，可能后面的博客在更新吧，如果有兴趣可以参考<a target="_blank" rel="noopener" href="https://wiki.osdev.org/Rolling_Your_Own_Bootloader">Rolling Your Own Bootloader</a>。但众多的bootloader，我们如何选择呢？</p>
+<h2 id="Multiboot"><a href="#Multiboot" class="headerlink" title="Multiboot"></a>Multiboot</h2><p>对于bootloader，有一个现成的标准<a target="_blank" rel="noopener" href="https://nongnu.askapache.com/grub/phcoder/multiboot.pdf">Multiboot Specification</a>。内核只需要遵从这个标准，就可以启动了。下面我们就来从Multiboot 2 specification 和用的最为广泛的bootloader GRUB2开始着手。</p>
 <p>为了遵从Multiboot2 bootloader的标准，内核必须以Multiboot Header开头，格式如下:</p>
 <table>
 <thead>
@@ -291,7 +293,7 @@
 </tbody>
 </table>
 <p>改写成x86汇编语言，长这样(Intel syntax):</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">section .multiboot_header</span><br><span class="line">header_start:</span><br><span class="line">    dd 0xe85250d6                ; magic number (multiboot 2)</span><br><span class="line">    dd 0                         ; architecture 0 (protected mode i386)</span><br><span class="line">    dd header_end - header_start ; header length</span><br><span class="line">    ; checksum</span><br><span class="line">    dd 0x100000000 - (0xe85250d6 + 0 + (header_end - header_start))</span><br><span class="line"></span><br><span class="line">    ; insert optional multiboot tags here</span><br><span class="line"></span><br><span class="line">    ; required end tag</span><br><span class="line">    dw 0    ; type</span><br><span class="line">    dw 0    ; flags</span><br><span class="line">    dd 8    ; size</span><br><span class="line">header_end:</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">section .multiboot_header</span><br><span class="line">header_start:</span><br><span class="line">    dd 0xe85250d6                ; magic number (multiboot 2)</span><br><span class="line">    dd 0                         ; architecture 0 (protected mode i386)</span><br><span class="line">    dd header_end - header_start ; header length</span><br><span class="line">    ; checksum</span><br><span class="line">    dd 0x100000000 - (0xe85250d6 + 0 + (header_end - header_start))</span><br><span class="line"></span><br><span class="line">    ; insert optional multiboot tags here</span><br><span class="line"></span><br><span class="line">    ; required end tag</span><br><span class="line">    dw 0    ; type</span><br><span class="line">    dw 0    ; flags</span><br><span class="line">    dd 8    ; size</span><br><span class="line">header_end:</span><br></pre></td></tr></table></figure>
 <ul>
 <li>Multiboot header存在名为.multiboot_header的section中，我们稍后会用到这个名字</li>
 <li>header_start 和 header_end是标签，用来标记内存位置/地址，用来计算方便的计算这个header的长度。</li>
@@ -299,9 +301,9 @@
 <li>Header中的checksum最后这样计算是为了防止出现警告。如果使用前面表格里的公式<code>-(magic + architecture + header_length)</code>需要’带符号的32bit’ sign 32，而文档中使用无符号整型<code>u32</code>。所以如果使用负号不满足u32这个类型，引入编译时一个警告。所以从0x100000000 (= 2^(32))减掉，并且保持u32，而不会被截断，也没有引入负号，尽管计算结果跟有符号位是会一样的。:) </li>
 </ul>
 <p>然后可以很方便的使用工具<code>nasm</code>来把这个文件汇编，multiboot_header.asm。 using nasm. It produces a flat binary by default, so the resulting file just contains our 24 bytes (in little endian if you work on a x86 machine):</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&gt; nasm multiboot_header.asm</span><br><span class="line">&gt; hexdump -x multiboot_header</span><br><span class="line">0000000    50d6    e852    0000    0000    0018    0000    af12    17ad</span><br><span class="line">0000010    0000    0000    0008    0000</span><br><span class="line">0000018</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&gt; nasm multiboot_header.asm</span><br><span class="line">&gt; hexdump -x multiboot_header</span><br><span class="line">0000000    50d6    e852    0000    0000    0018    0000    af12    17ad</span><br><span class="line">0000010    0000    0000    0008    0000</span><br><span class="line">0000018</span><br></pre></td></tr></table></figure>
 <h2 id="启动代码"><a href="#启动代码" class="headerlink" title="启动代码"></a>启动代码</h2><p>为了启动内核，我们需要加入一些能被bootloader调用的代码。创建一个文件，叫做boot.asm</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">global start</span><br><span class="line"></span><br><span class="line">section .text</span><br><span class="line">bits 32</span><br><span class="line">start:</span><br><span class="line">    ; print `OK` to screen</span><br><span class="line">    mov dword [0xb8000], 0x2f4b2f4f</span><br><span class="line">    hlt</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">global start</span><br><span class="line"></span><br><span class="line">section .text</span><br><span class="line">bits 32</span><br><span class="line">start:</span><br><span class="line">    ; print `OK` to screen</span><br><span class="line">    mov dword [0xb8000], 0x2f4b2f4f</span><br><span class="line">    hlt</span><br></pre></td></tr></table></figure>
 <ul>
 <li>全局label， start，作为内核的入口。</li>
 <li>代码段 .text 是默认的可执行的代码。</li>
@@ -311,10 +313,10 @@
 </ul>
 <p>然后再来些函数调用。<code>函数</code>可以理解为普通的标签，再加上结尾的返回指令(ret)。并且使用指令call来调用函数。相比较指令jmp，jmp仅仅是跳转到指定的内存地址，而call指令会使用push指令，在栈(stack)中保存一个返回的地址，然后ret指令会跳转到这个地址，返回到函数调用前。</p>
 <p>但目前为止，系统还没有栈(stack)。栈指针(esp)目前可能指向了任意数据或者内存地址。所以，我们需要更新栈指针，让它指向有效的内存地址。</p>
-<p>观察反汇编后的可执行文件:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&gt; nasm boot.asm</span><br><span class="line">&gt; hexdump -x boot</span><br><span class="line">0000000    05c7    8000    000b    2f4b    2f4f    00f4</span><br><span class="line">000000b</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&gt; ndisasm -b 32 boot</span><br><span class="line">00000000  C70500800B004B2F  mov dword [dword 0xb8000],0x2f4b2f4f</span><br><span class="line">         -4F2F</span><br><span class="line">0000000A  F4                hlt</span><br></pre></td></tr></table></figure></p>
+<p>观察反汇编后的可执行文件:<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&gt; nasm boot.asm</span><br><span class="line">&gt; hexdump -x boot</span><br><span class="line">0000000    05c7    8000    000b    2f4b    2f4f    00f4</span><br><span class="line">000000b</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&gt; ndisasm -b 32 boot</span><br><span class="line">00000000  C70500800B004B2F  mov dword [dword 0xb8000],0x2f4b2f4f</span><br><span class="line">         -4F2F</span><br><span class="line">0000000A  F4                hlt</span><br></pre></td></tr></table></figure></p>
 <h2 id="编译可执行文件"><a href="#编译可执行文件" class="headerlink" title="编译可执行文件"></a>编译可执行文件</h2><p>要让GRUB执行boot文件，需要boot是一个ELF可执行文件。所以需要利用<code>nasm</code>创建ELF目标文件。为此，我们可以传参数<code>-f elf64</code>给nasm来实现。</p>
 <p>同时，为了创建ELF可执行文件，需要把这些目标文件链接到一起。这就需要一个自定义的链接脚本 linker.ld:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">ENTRY(start)</span><br><span class="line"></span><br><span class="line">SECTIONS &#123;</span><br><span class="line">    . = 1M;</span><br><span class="line"></span><br><span class="line">    .boot :</span><br><span class="line">    &#123;</span><br><span class="line">        /* ensure that the multiboot header is at the beginning */</span><br><span class="line">        *(.multiboot_header)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    .text :</span><br><span class="line">    &#123;</span><br><span class="line">        *(.text)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">ENTRY(start)</span><br><span class="line"></span><br><span class="line">SECTIONS &#123;</span><br><span class="line">    . = 1M;</span><br><span class="line"></span><br><span class="line">    .boot :</span><br><span class="line">    &#123;</span><br><span class="line">        /* ensure that the multiboot header is at the beginning */</span><br><span class="line">        *(.multiboot_header)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    .text :</span><br><span class="line">    &#123;</span><br><span class="line">        *(.text)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>来理解一下这段脚本:</p>
 <ul>
 <li><code>start</code>是入口点，bootloader加载完内核之后，会跳转到这里开始执行。</li>
@@ -324,34 +326,33 @@
 <li>生成二进制中的<code>.text</code>段，包含了所有code中名为’.text’的段。</li>
 </ul>
 <p>现在可以生成ELF目标文件并且使用连接脚本生成最终的可执行二进制:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; nasm -f elf64 multiboot_header.asm</span><br><span class="line">&gt; nasm -f elf64 boot.asm</span><br><span class="line">&gt; ld -n -o kernel.bin -T linker.ld multiboot_header.o boot.o</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; nasm -f elf64 multiboot_header.asm</span><br><span class="line">&gt; nasm -f elf64 boot.asm</span><br><span class="line">&gt; ld -n -o kernel.bin -T linker.ld multiboot_header.o boot.o</span><br></pre></td></tr></table></figure>
 <p>参数<code>-n</code>或者<code>--nmagic</code>很重要，这样会禁止段的自动重排列。否则链接器可能会自作主张的改变.boot段在可执行文件中的位置，导致GRUB无法找到Multiboot header。</p>
 <p>得到ELF文件之后，可以使用工具objdump查看生成的代码段，以及.boot段</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&gt; objdump -h kernel.bin</span><br><span class="line">kernel.bin:     file format elf64-x86-64</span><br><span class="line"></span><br><span class="line">Sections:</span><br><span class="line">Idx Name      Size      VMA               LMA               File off  Algn</span><br><span class="line">  0 .boot     00000018  0000000000100000  0000000000100000  00000080  2**0</span><br><span class="line">              CONTENTS, ALLOC, LOAD, READONLY, DATA</span><br><span class="line">  1 .text     0000000b  0000000000100020  0000000000100020  000000a0  2**4</span><br><span class="line">              CONTENTS, ALLOC, LOAD, READONLY, CODE</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&gt; objdump -h kernel.bin</span><br><span class="line">kernel.bin:     file format elf64-x86-64</span><br><span class="line"></span><br><span class="line">Sections:</span><br><span class="line">Idx Name      Size      VMA               LMA               File off  Algn</span><br><span class="line">  0 .boot     00000018  0000000000100000  0000000000100000  00000080  2**0</span><br><span class="line">              CONTENTS, ALLOC, LOAD, READONLY, DATA</span><br><span class="line">  1 .text     0000000b  0000000000100020  0000000000100020  000000a0  2**4</span><br><span class="line">              CONTENTS, ALLOC, LOAD, READONLY, CODE</span><br></pre></td></tr></table></figure>
 <h2 id="创建ISO"><a href="#创建ISO" class="headerlink" title="创建ISO"></a>创建ISO</h2><p>所有的BIOS都可以启动CD-ROM，所以这里创建一个开启动的CD-ROM镜像，包含上面创建的最小的内核以及GRUB bootloader。镜像内部的文件结构如下:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">isofiles</span><br><span class="line">└── boot</span><br><span class="line">    ├── grub</span><br><span class="line">    │   └── grub.cfg</span><br><span class="line">    └── kernel.bin</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">isofiles</span><br><span class="line">└── boot</span><br><span class="line">    ├── grub</span><br><span class="line">    │   └── grub.cfg</span><br><span class="line">    └── kernel.bin</span><br></pre></td></tr></table></figure>
 <ul>
 <li>grub.cfg 指定了内核的名字，以及满足Multiboot2协议标准。内容如下:</li>
 </ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">set timeout=0</span><br><span class="line">set default=0</span><br><span class="line"></span><br><span class="line">menuentry &quot;my os&quot; &#123;</span><br><span class="line">    multiboot2 /boot/kernel.bin</span><br><span class="line">    boot</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>完事具备了，现在可以生成ISO镜像了:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grub-mkrescue -o os.iso isofiles</span><br></pre></td></tr></table></figure></p>
-<p>如果grub-mkrescue不工作，尝试先的步骤，网上搜来的，笔者没有试过这个方法L:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">make sure xorriso is installed (xorriso or libisoburn package)</span><br><span class="line">If you&apos;re using an EFI-system, grub-mkrescue tries to create an EFI image by default. You can either pass -d /usr/lib/grub/i386-pc to avoid EFI or install the mtools package to get a working EFI image</span><br><span class="line">on some system the command is named grub2-mkrescue</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">set timeout=0</span><br><span class="line">set default=0</span><br><span class="line"></span><br><span class="line">menuentry &quot;my os&quot; &#123;</span><br><span class="line">    multiboot2 /boot/kernel.bin</span><br><span class="line">    boot</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>完事具备了，现在可以生成ISO镜像了:<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grub-mkrescue -o os.iso isofiles</span><br></pre></td></tr></table></figure><br>如果grub-mkrescue不工作，尝试先的步骤，网上搜来的，笔者没有试过这个方法L:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">make sure xorriso is installed (xorriso or libisoburn package)</span><br><span class="line">If you&#x27;re using an EFI-system, grub-mkrescue tries to create an EFI image by default. You can either pass -d /usr/lib/grub/i386-pc to avoid EFI or install the mtools package to get a working EFI image</span><br><span class="line">on some system the command is named grub2-mkrescue</span><br></pre></td></tr></table></figure>
 <h2 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h2><p>可以启动了，还是借助QEMU在虚拟机中试下:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-x86_64 -cdrom os.iso</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-x86_64 -cdrom os.iso</span><br></pre></td></tr></table></figure>
 <p>在seaBIOS之后，虚拟机屏幕的左上角，有一个绿色的OK，说明前面的code都是工作了的。</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>BIOS 从ISO镜像中加载bootloader(GRUB)。<br>Bootloader读内核ELF，并且找到Multiboot header。<br>Bootloader复制.boot和.text 段到内存中，分别为0x100000 和 0x100020的内存地址。<br>然后跳转到entry point (0x100020)，前面<code>objdump -f</code>可以获取这个入口地址。</p>
 <p>内核打印绿色的OK到屏幕左上角，然后CPU HLT。当然也可以在物理机上测试镜像，只需要把ISO烧录到U盘上，然后从U盘启动即可。</p>
 <h2 id="自动创建"><a href="#自动创建" class="headerlink" title="自动创建"></a>自动创建</h2><p>以上为了讲解，分布执行操作，现在可以用Makefile来自动化这个过程。但第一步还是需要创建一个文件夹，其中文件结构如下:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">…</span><br><span class="line">├── Makefile</span><br><span class="line">└── src</span><br><span class="line">    └── arch</span><br><span class="line">        └── x86_64</span><br><span class="line">            ├── multiboot_header.asm</span><br><span class="line">            ├── boot.asm</span><br><span class="line">            ├── linker.ld</span><br><span class="line">            └── grub.cfg</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">…</span><br><span class="line">├── Makefile</span><br><span class="line">└── src</span><br><span class="line">    └── arch</span><br><span class="line">        └── x86_64</span><br><span class="line">            ├── multiboot_header.asm</span><br><span class="line">            ├── boot.asm</span><br><span class="line">            ├── linker.ld</span><br><span class="line">            └── grub.cfg</span><br></pre></td></tr></table></figure>
 <p>Makefile 内如如下:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">arch ?= x86_64</span><br><span class="line">kernel := build/kernel-$(arch).bin</span><br><span class="line">iso := build/os-$(arch).iso</span><br><span class="line"></span><br><span class="line">linker_script := src/arch/$(arch)/linker.ld</span><br><span class="line">grub_cfg := src/arch/$(arch)/grub.cfg</span><br><span class="line">assembly_source_files := $(wildcard src/arch/$(arch)/*.asm)</span><br><span class="line">assembly_object_files := $(patsubst src/arch/$(arch)/%.asm, \</span><br><span class="line">	build/arch/$(arch)/%.o, $(assembly_source_files))</span><br><span class="line"></span><br><span class="line">.PHONY: all clean run iso</span><br><span class="line"></span><br><span class="line">all: $(kernel)</span><br><span class="line"></span><br><span class="line">clean:</span><br><span class="line">	@rm -r build</span><br><span class="line"></span><br><span class="line">run: $(iso)</span><br><span class="line">	@qemu-system-x86_64 -cdrom $(iso)</span><br><span class="line"></span><br><span class="line">iso: $(iso)</span><br><span class="line"></span><br><span class="line">$(iso): $(kernel) $(grub_cfg)</span><br><span class="line">	@mkdir -p build/isofiles/boot/grub</span><br><span class="line">	@cp $(kernel) build/isofiles/boot/kernel.bin</span><br><span class="line">	@cp $(grub_cfg) build/isofiles/boot/grub</span><br><span class="line">	@grub-mkrescue -o $(iso) build/isofiles 2&gt; /dev/null</span><br><span class="line">	@rm -r build/isofiles</span><br><span class="line"></span><br><span class="line">$(kernel): $(assembly_object_files) $(linker_script)</span><br><span class="line">	@ld -n -T $(linker_script) -o $(kernel) $(assembly_object_files)</span><br><span class="line"></span><br><span class="line"># compile assembly files</span><br><span class="line">build/arch/$(arch)/%.o: src/arch/$(arch)/%.asm</span><br><span class="line">	@mkdir -p $(shell dirname $@)</span><br><span class="line">	@nasm -felf64 $&lt; -o $@</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">arch ?= x86_64</span><br><span class="line">kernel := build/kernel-$(arch).bin</span><br><span class="line">iso := build/os-$(arch).iso</span><br><span class="line"></span><br><span class="line">linker_script := src/arch/$(arch)/linker.ld</span><br><span class="line">grub_cfg := src/arch/$(arch)/grub.cfg</span><br><span class="line">assembly_source_files := $(wildcard src/arch/$(arch)/*.asm)</span><br><span class="line">assembly_object_files := $(patsubst src/arch/$(arch)/%.asm, \</span><br><span class="line">	build/arch/$(arch)/%.o, $(assembly_source_files))</span><br><span class="line"></span><br><span class="line">.PHONY: all clean run iso</span><br><span class="line"></span><br><span class="line">all: $(kernel)</span><br><span class="line"></span><br><span class="line">clean:</span><br><span class="line">	@rm -r build</span><br><span class="line"></span><br><span class="line">run: $(iso)</span><br><span class="line">	@qemu-system-x86_64 -cdrom $(iso)</span><br><span class="line"></span><br><span class="line">iso: $(iso)</span><br><span class="line"></span><br><span class="line">$(iso): $(kernel) $(grub_cfg)</span><br><span class="line">	@mkdir -p build/isofiles/boot/grub</span><br><span class="line">	@cp $(kernel) build/isofiles/boot/kernel.bin</span><br><span class="line">	@cp $(grub_cfg) build/isofiles/boot/grub</span><br><span class="line">	@grub-mkrescue -o $(iso) build/isofiles 2&gt; /dev/null</span><br><span class="line">	@rm -r build/isofiles</span><br><span class="line"></span><br><span class="line">$(kernel): $(assembly_object_files) $(linker_script)</span><br><span class="line">	@ld -n -T $(linker_script) -o $(kernel) $(assembly_object_files)</span><br><span class="line"></span><br><span class="line"># compile assembly files</span><br><span class="line">build/arch/$(arch)/%.o: src/arch/$(arch)/%.asm</span><br><span class="line">	@mkdir -p $(shell dirname $@)</span><br><span class="line">	@nasm -felf64 $&lt; -o $@</span><br></pre></td></tr></table></figure>
 <ul>
 <li>$(wildcard src/arch/$(arch)/*.asm) 包含了所有文件夹src/arch/$(arch)中的汇编文件，所以，如果有增加文件的话，不需要修改MAkefile文件。</li>
 <li>patsubst 操作是将src/arch/$(arch)/XYZ.asm 转变为 build/arch/$(arch)/XYZ.o</li>
 <li>$&lt; 和 $@ 是两个自动变量，分别代表输入文件和输出文件。<br>命令<code>make iso</code> 会生成ISO，<code>make run</code>会直接启动QEMU虚拟机。</li>
 </ul>
-<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="https://os.phil-opp.com/multiboot-kernel/" target="_blank" rel="noopener">A minimal Multiboot Kernel</a></p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a target="_blank" rel="noopener" href="https://os.phil-opp.com/multiboot-kernel/">A minimal Multiboot Kernel</a></p>
 
     </div>
 
@@ -453,13 +454,14 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Multiboot"><span class="nav-number">2.</span> <span class="nav-text">Multiboot</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#启动代码"><span class="nav-number">3.</span> <span class="nav-text">启动代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译可执行文件"><span class="nav-number">4.</span> <span class="nav-text">编译可执行文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#创建ISO"><span class="nav-number">5.</span> <span class="nav-text">创建ISO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#启动"><span class="nav-number">6.</span> <span class="nav-text">启动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#自动创建"><span class="nav-number">8.</span> <span class="nav-text">自动创建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">9.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Multiboot"><span class="nav-number">2.</span> <span class="nav-text">Multiboot</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E4%BB%A3%E7%A0%81"><span class="nav-number">3.</span> <span class="nav-text">启动代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6"><span class="nav-number">4.</span> <span class="nav-text">编译可执行文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAISO"><span class="nav-number">5.</span> <span class="nav-text">创建ISO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8"><span class="nav-number">6.</span> <span class="nav-text">启动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E5%88%9B%E5%BB%BA"><span class="nav-number">8.</span> <span class="nav-text">自动创建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-number">9.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
   <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
   <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
 </div>
@@ -468,7 +470,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -495,25 +497,25 @@
     </div>
     <ul class="links-of-blogroll-list">
         <li class="links-of-blogroll-item">
-          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
         </li>
     </ul>
   </div>
@@ -533,7 +535,7 @@
         
 
         
-  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
       <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
   </div>
 
@@ -564,9 +566,17 @@
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
 <script src="/js/schemes/muse.js"></script>
+
+
 <script src="/js/next-boot.js"></script>
+
 
   <script defer src="/lib/three/three.min.js"></script>
     <script defer src="/lib/three/three-waves.min.js"></script>
@@ -586,7 +596,9 @@
 
 
 
-  <script src="/js/local-search.js"></script>
+  
+<script src="/js/local-search.js"></script>
+
 
 
 

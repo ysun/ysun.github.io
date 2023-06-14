@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 3.8.0">
+<meta name="generator" content="Hexo 6.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -23,17 +23,18 @@
   </script>
 
   <meta name="description" content="所有虚拟机都面临的问题——网络访问。关于虚拟机的网络模型在前文 QEMU虚拟机网络模拟已经有过详细的描述。基于上篇文章，这里简要说明下如何在CrosVM的虚拟机中使用网络。 NAT模式">
-<meta name="keywords" content="ChromeOS,CrosVM">
 <meta property="og:type" content="article">
 <meta property="og:title" content="由浅入深CrosVM（三）—— 虚拟机的网络配置">
 <meta property="og:url" content="http://www.owalle.com/2020/04/07/crosvm-network/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="所有虚拟机都面临的问题——网络访问。关于虚拟机的网络模型在前文 QEMU虚拟机网络模拟已经有过详细的描述。基于上篇文章，这里简要说明下如何在CrosVM的虚拟机中使用网络。 NAT模式">
-<meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2021-09-27T09:54:43.210Z">
+<meta property="og:locale">
+<meta property="article:published_time" content="2020-04-07T03:28:32.000Z">
+<meta property="article:modified_time" content="2021-09-27T09:54:43.210Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="ChromeOS">
+<meta property="article:tag" content="CrosVM">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="由浅入深CrosVM（三）—— 虚拟机的网络配置">
-<meta name="twitter:description" content="所有虚拟机都面临的问题——网络访问。关于虚拟机的网络模型在前文 QEMU虚拟机网络模拟已经有过详细的描述。基于上篇文章，这里简要说明下如何在CrosVM的虚拟机中使用网络。 NAT模式">
 
 <link rel="canonical" href="http://www.owalle.com/2020/04/07/crosvm-network/">
 
@@ -163,7 +164,9 @@
     <i class="fa fa-search"></i>
   </span>
   <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
   </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
@@ -199,16 +202,16 @@
     
   
   
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2020/04/07/crosvm-network/">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Yi颗烂樱桃">
       <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Yi颗烂樱桃">
     </span>
       <header class="post-header">
@@ -237,7 +240,7 @@
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/CROSVM/" itemprop="url" rel="index"><span itemprop="name">CROSVM</span></a>
                 </span>
             </span>
@@ -254,15 +257,12 @@
 
       
         <p>所有虚拟机都面临的问题——网络访问。关于虚拟机的网络模型在前文 <a href="https://www.owalle.com/2019/12/26/network-in-vm/">QEMU虚拟机网络模拟</a>已经有过详细的描述。基于上篇文章，这里简要说明下如何在CrosVM的虚拟机中使用网络。</p>
-<h2 id="NAT模式"><a href="#NAT模式" class="headerlink" title="NAT模式"></a>NAT模式</h2><p>网络拓扑结构参照<a href="[https://www.owalle.com/2019/12/26/network-in-vm/">QEMU虚拟机网络模拟</a><br>配置很简单，在启动虚拟机的时候，增加三个参数<code>--host_ip --netmask --mac</code>:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">./crosvm run --disable-sandbox \</span><br><span class="line">	--cpus 4 --mem 4096 \</span><br><span class="line">	--rwdisk=ubuntu-rootfs.img \</span><br><span class="line">	--params=root=/dev/vda \</span><br><span class="line">	--gpu --x-display :0 \</span><br><span class="line">	--socket=crosvm.sock \</span><br><span class="line">	--evdev /dev/input/event18 --evdev /dev/input/event19 \</span><br><span class="line">	--host_ip 192.168.0.1 --netmask 255.255.255.0 --mac AA:BB:CC:00:00:12 \</span><br><span class="line">	vmlinux-5.4.18</span><br></pre></td></tr></table></figure></p>
-<p>这样crosvm会在host中创建一个虚拟网卡，IP地址，子网掩码以及Mac地址都是参数给定的样子:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">vmtap0: flags=67&lt;UP,BROADCAST,RUNNING&gt;  mtu 1500</span><br><span class="line">        inet 192.168.0.1  netmask 255.255.255.0  broadcast 192.168.0.255</span><br><span class="line">        inet6 fe80::a8bb:ccff:fe00:12  prefixlen 64  scopeid 0x20&lt;link&gt;</span><br><span class="line">        ether aa:bb:cc:00:00:12  txqueuelen 1000  (Ethernet)</span><br><span class="line">        RX packets 0  bytes 0 (0.0 B)</span><br><span class="line">        RX errors 0  dropped 0  overruns 0  frame 0</span><br><span class="line">        TX packets 0  bytes 0 (0.0 B)</span><br><span class="line">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span><br></pre></td></tr></table></figure></p>
-<p>然后登录虚拟机之后，给虚拟机中的网卡配置同网段的IP之后，就可以相互访问了:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ifconfig eth0 192.168.0.22 netmask 255.255.255.0</span><br></pre></td></tr></table></figure></p>
+<h2 id="NAT模式"><a href="#NAT模式" class="headerlink" title="NAT模式"></a>NAT模式</h2><p>网络拓扑结构参照<a href="[https://www.owalle.com/2019/12/26/network-in-vm/">QEMU虚拟机网络模拟</a><br>配置很简单，在启动虚拟机的时候，增加三个参数<code>--host_ip --netmask --mac</code>:<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">./crosvm run --disable-sandbox \</span><br><span class="line">	--cpus 4 --mem 4096 \</span><br><span class="line">	--rwdisk=ubuntu-rootfs.img \</span><br><span class="line">	--params=root=/dev/vda \</span><br><span class="line">	--gpu --x-display :0 \</span><br><span class="line">	--socket=crosvm.sock \</span><br><span class="line">	--evdev /dev/input/event18 --evdev /dev/input/event19 \</span><br><span class="line">	--host_ip 192.168.0.1 --netmask 255.255.255.0 --mac AA:BB:CC:00:00:12 \</span><br><span class="line">	vmlinux-5.4.18</span><br></pre></td></tr></table></figure><br>这样crosvm会在host中创建一个虚拟网卡，IP地址，子网掩码以及Mac地址都是参数给定的样子:<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">vmtap0: flags=67&lt;UP,BROADCAST,RUNNING&gt;  mtu 1500</span><br><span class="line">        inet 192.168.0.1  netmask 255.255.255.0  broadcast 192.168.0.255</span><br><span class="line">        inet6 fe80::a8bb:ccff:fe00:12  prefixlen 64  scopeid 0x20&lt;link&gt;</span><br><span class="line">        ether aa:bb:cc:00:00:12  txqueuelen 1000  (Ethernet)</span><br><span class="line">        RX packets 0  bytes 0 (0.0 B)</span><br><span class="line">        RX errors 0  dropped 0  overruns 0  frame 0</span><br><span class="line">        TX packets 0  bytes 0 (0.0 B)</span><br><span class="line">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span><br></pre></td></tr></table></figure><br>然后登录虚拟机之后，给虚拟机中的网卡配置同网段的IP之后，就可以相互访问了:<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ifconfig eth0 192.168.0.22 netmask 255.255.255.0</span><br></pre></td></tr></table></figure></p>
 <h2 id="Bridge模式"><a href="#Bridge模式" class="headerlink" title="Bridge模式"></a>Bridge模式</h2><p>这方法跟”QEMU虚拟机网络模拟”中描述的Bridge思路一致，甚至方法都一样:<br>首先在host中创建一个bridge:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ip link add br0 type bridge</span><br><span class="line">ip link set eth0 master br0</span><br><span class="line">ip link set dev br0 up </span><br><span class="line">dhclient br0</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ip link add br0 type bridge</span><br><span class="line">ip link set eth0 master br0</span><br><span class="line">ip link set dev br0 up </span><br><span class="line">dhclient br0 </span><br></pre></td></tr></table></figure>
 <p>然后启动VM的时候，同样加上上述三个参数<code>--host_ip --netmask --mac</code>用于创建vmtap0和虚拟机中的virtio network设备。</p>
-<p>当虚拟机启动起来之后，需要在Host中，把vmtap0绑定到br0上<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip link set vmtap0 master br0</span><br><span class="line">ip link set vmtap0 up</span><br></pre></td></tr></table></figure></p>
-<p>最后，回到虚拟机中动态获得IP<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dhclient</span><br></pre></td></tr></table></figure></p>
-<p>虚拟机就可以获得跟Host同一网段的IP地址了。</p>
+<p>当虚拟机启动起来之后，需要在Host中，把vmtap0绑定到br0上<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip link set vmtap0 master br0</span><br><span class="line">ip link set vmtap0 up</span><br></pre></td></tr></table></figure></p>
+<p>最后，回到虚拟机中动态获得IP<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dhclient</span><br></pre></td></tr></table></figure><br>虚拟机就可以获得跟Host同一网段的IP地址了。</p>
 
     </div>
 
@@ -368,13 +368,14 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT模式"><span class="nav-number">1.</span> <span class="nav-text">NAT模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bridge模式"><span class="nav-number">2.</span> <span class="nav-text">Bridge模式</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.</span> <span class="nav-text">NAT模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bridge%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">Bridge模式</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
   <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
   <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
 </div>
@@ -383,7 +384,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -410,25 +411,25 @@
     </div>
     <ul class="links-of-blogroll-list">
         <li class="links-of-blogroll-item">
-          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
         </li>
     </ul>
   </div>
@@ -448,7 +449,7 @@
         
 
         
-  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
       <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
   </div>
 
@@ -479,9 +480,17 @@
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
 <script src="/js/schemes/muse.js"></script>
+
+
 <script src="/js/next-boot.js"></script>
+
 
   <script defer src="/lib/three/three.min.js"></script>
     <script defer src="/lib/three/three-waves.min.js"></script>
@@ -501,7 +510,9 @@
 
 
 
-  <script src="/js/local-search.js"></script>
+  
+<script src="/js/local-search.js"></script>
+
 
 
 

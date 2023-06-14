@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 3.8.0">
+<meta name="generator" content="Hexo 6.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -23,17 +23,17 @@
   </script>
 
   <meta name="description" content="接上篇，我们起了图形以及桌面之后，发现没有办法通过虚拟机窗口与其交互。这篇文章我们简单说下如何跟虚拟机进行交互。 模拟鼠标键盘事件">
-<meta name="keywords" content="crosvm">
 <meta property="og:type" content="article">
 <meta property="og:title" content="由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入">
 <meta property="og:url" content="http://www.owalle.com/2020/04/19/crosvm-input/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="接上篇，我们起了图形以及桌面之后，发现没有办法通过虚拟机窗口与其交互。这篇文章我们简单说下如何跟虚拟机进行交互。 模拟鼠标键盘事件">
-<meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2021-09-27T09:54:43.334Z">
+<meta property="og:locale">
+<meta property="article:published_time" content="2020-04-19T08:07:41.000Z">
+<meta property="article:modified_time" content="2021-09-27T09:54:43.334Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="crosvm">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="由浅入深CrosVM（四）—— 虚拟机的键盘鼠标输入">
-<meta name="twitter:description" content="接上篇，我们起了图形以及桌面之后，发现没有办法通过虚拟机窗口与其交互。这篇文章我们简单说下如何跟虚拟机进行交互。 模拟鼠标键盘事件">
 
 <link rel="canonical" href="http://www.owalle.com/2020/04/19/crosvm-input/">
 
@@ -163,7 +163,9 @@
     <i class="fa fa-search"></i>
   </span>
   <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
   </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
@@ -199,16 +201,16 @@
     
   
   
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2020/04/19/crosvm-input/">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Yi颗烂樱桃">
       <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Yi颗烂樱桃">
     </span>
       <header class="post-header">
@@ -237,7 +239,7 @@
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/CROSVM/" itemprop="url" rel="index"><span itemprop="name">CROSVM</span></a>
                 </span>
             </span>
@@ -257,8 +259,7 @@
 <h2 id="模拟鼠标键盘事件"><a href="#模拟鼠标键盘事件" class="headerlink" title="模拟鼠标键盘事件"></a>模拟鼠标键盘事件</h2><p>在用CrosVM创建虚拟机的时候，加上下面的参数<br><code>--display-window-keyboard --display-window-mouse</code></p>
 <p>这样，当鼠标移动到虚拟机窗口范围内的时候，所有的鼠标和键盘事件就会被映射给虚拟机的鼠标和键盘事件。</p>
 <p>优点：参数使用方便<br>缺点：对于Host中已经定义过的全局快捷键，即便在虚拟机中执行，也会被Host系统捕获，比如切换终端Ctrl+Alt+F2</p>
-<h2 id="键盘和鼠标passthrough给虚拟机"><a href="#键盘和鼠标passthrough给虚拟机" class="headerlink" title="键盘和鼠标passthrough给虚拟机"></a>键盘和鼠标passthrough给虚拟机</h2><p>首先查看host OS中键盘鼠标的event:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># ls /dev/input/</span><br></pre></td></tr></table></figure></p>
-<p>确定需要passthrough的键盘和鼠标使用的是哪两个event。<br>这里我没有好方法，对input device的研究不是很深入。通过插拔键盘鼠标，确定想要passthrough给虚拟机的键盘和鼠标。<br>比如键盘和鼠标分别是<code>event3</code>和<code>evnet4</code>那么就给CrosVM添加参数:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">--evdev /dev/input/event3 --evdev /dev/input/event4</span><br></pre></td></tr></table></figure></p>
+<h2 id="键盘和鼠标passthrough给虚拟机"><a href="#键盘和鼠标passthrough给虚拟机" class="headerlink" title="键盘和鼠标passthrough给虚拟机"></a>键盘和鼠标passthrough给虚拟机</h2><p>首先查看host OS中键盘鼠标的event:<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># ls /dev/input/</span><br></pre></td></tr></table></figure><br>确定需要passthrough的键盘和鼠标使用的是哪两个event。<br>这里我没有好方法，对input device的研究不是很深入。通过插拔键盘鼠标，确定想要passthrough给虚拟机的键盘和鼠标。<br>比如键盘和鼠标分别是<code>event3</code>和<code>evnet4</code>那么就给CrosVM添加参数:<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">--evdev /dev/input/event3 --evdev /dev/input/event4</span><br></pre></td></tr></table></figure></p>
 <p>优点：虚拟机拥有全部的键盘和鼠标。<br>缺点：已经passthrough的键盘和鼠标不再控制Host，如果Host也需要交互的话，需要Host接两道键盘和鼠标。且系统中event不是固定不变的，CrosVM的相对复杂一点。</p>
 <p>这篇先写到这里吧，对于code分析，放在日后吧～ :p</p>
 
@@ -365,13 +366,14 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#模拟鼠标键盘事件"><span class="nav-number">1.</span> <span class="nav-text">模拟鼠标键盘事件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#键盘和鼠标passthrough给虚拟机"><span class="nav-number">2.</span> <span class="nav-text">键盘和鼠标passthrough给虚拟机</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E6%8B%9F%E9%BC%A0%E6%A0%87%E9%94%AE%E7%9B%98%E4%BA%8B%E4%BB%B6"><span class="nav-number">1.</span> <span class="nav-text">模拟鼠标键盘事件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%94%AE%E7%9B%98%E5%92%8C%E9%BC%A0%E6%A0%87passthrough%E7%BB%99%E8%99%9A%E6%8B%9F%E6%9C%BA"><span class="nav-number">2.</span> <span class="nav-text">键盘和鼠标passthrough给虚拟机</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
   <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
   <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
 </div>
@@ -380,7 +382,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -407,25 +409,25 @@
     </div>
     <ul class="links-of-blogroll-list">
         <li class="links-of-blogroll-item">
-          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
         </li>
     </ul>
   </div>
@@ -445,7 +447,7 @@
         
 
         
-  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
       <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
   </div>
 
@@ -476,9 +478,17 @@
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
 <script src="/js/schemes/muse.js"></script>
+
+
 <script src="/js/next-boot.js"></script>
+
 
   <script defer src="/lib/three/three.min.js"></script>
     <script defer src="/lib/three/three-waves.min.js"></script>
@@ -498,7 +508,9 @@
 
 
 
-  <script src="/js/local-search.js"></script>
+  
+<script src="/js/local-search.js"></script>
+
 
 
 

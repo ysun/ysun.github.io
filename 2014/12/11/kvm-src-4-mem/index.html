@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 3.8.0">
+<meta name="generator" content="Hexo 6.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -22,18 +22,18 @@
     var CONFIG = {"hostname":"www.owalle.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="代码版本：https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git v3.16.37 在虚拟机的创建与运行中pc_init_pci负责(“KVM源代码分析2:虚拟机的创建与运行”)，内存初始化也是在这里完成的，还是一步步从qemu说起，在vl.c的main函数中有ram_size参数，由qemu入参标识QEMU_">
-<meta name="keywords" content="KVM">
+  <meta name="description" content="代码版本：https:&#x2F;&#x2F;git.kernel.org&#x2F;pub&#x2F;scm&#x2F;linux&#x2F;kernel&#x2F;git&#x2F;stable&#x2F;linux-stable.git v3.16.37 在虚拟机的创建与运行中pc_init_pci负责(“KVM源代码分析2:虚拟机的创建与运行”)，内存初始化也是在这里完成的，还是一步步从qemu说起，在vl.c的main函数中有ram_size参数，由qemu入参标识QEMU_">
 <meta property="og:type" content="article">
 <meta property="og:title" content="KVM源代码分析4:内存虚拟化">
 <meta property="og:url" content="http://www.owalle.com/2014/12/11/kvm-src-4-mem/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="代码版本：https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git v3.16.37 在虚拟机的创建与运行中pc_init_pci负责(“KVM源代码分析2:虚拟机的创建与运行”)，内存初始化也是在这里完成的，还是一步步从qemu说起，在vl.c的main函数中有ram_size参数，由qemu入参标识QEMU_">
-<meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2021-09-27T09:54:43.050Z">
+<meta property="og:description" content="代码版本：https:&#x2F;&#x2F;git.kernel.org&#x2F;pub&#x2F;scm&#x2F;linux&#x2F;kernel&#x2F;git&#x2F;stable&#x2F;linux-stable.git v3.16.37 在虚拟机的创建与运行中pc_init_pci负责(“KVM源代码分析2:虚拟机的创建与运行”)，内存初始化也是在这里完成的，还是一步步从qemu说起，在vl.c的main函数中有ram_size参数，由qemu入参标识QEMU_">
+<meta property="og:locale">
+<meta property="article:published_time" content="2014-12-11T03:05:05.000Z">
+<meta property="article:modified_time" content="2021-09-27T09:54:43.050Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="KVM">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="KVM源代码分析4:内存虚拟化">
-<meta name="twitter:description" content="代码版本：https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git v3.16.37 在虚拟机的创建与运行中pc_init_pci负责(“KVM源代码分析2:虚拟机的创建与运行”)，内存初始化也是在这里完成的，还是一步步从qemu说起，在vl.c的main函数中有ram_size参数，由qemu入参标识QEMU_">
 
 <link rel="canonical" href="http://www.owalle.com/2014/12/11/kvm-src-4-mem/">
 
@@ -163,7 +163,9 @@
     <i class="fa fa-search"></i>
   </span>
   <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
   </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
@@ -199,16 +201,16 @@
     
   
   
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2014/12/11/kvm-src-4-mem/">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Yi颗烂樱桃">
       <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Yi颗烂樱桃">
     </span>
       <header class="post-header">
@@ -237,7 +239,7 @@
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/KVM/" itemprop="url" rel="index"><span itemprop="name">KVM</span></a>
                 </span>
             </span>
@@ -253,7 +255,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>代码版本：<a href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git" target="_blank" rel="noopener">https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git</a> v3.16.37</p>
+        <p>代码版本：<a target="_blank" rel="noopener" href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git">https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git</a> v3.16.37</p>
 <p>在虚拟机的创建与运行中pc_init_pci负责(“KVM源代码分析2:虚拟机的创建与运行”)，内存初始化也是在这里完成的，还是一步步从qemu说起，在vl.c的main函数中有ram_size参数，由qemu入参标识QEMU_OPTION_m设定，顾名思义就是虚拟机内存的大小，通过machine-&gt;init一步步传递给pc_init1函数。在这里分出了above_4g_mem_size和below_4g_mem_size，即高低端内存（也不一定是32bit机器..），然后开始初始化内存，即pc_memory_init，内存通过memory_region_init_ram下面的qemu_ram_alloc分配，使用qemu_ram_alloc_from_ptr。</p>
 <p>插播qemu对内存条的模拟管理，是通过RAMBlock和ram_list管理的，RAMBlock就是每次申请的内存池，ram_list则是RAMBlock的链表，他们结构如下：</p>
 <pre class="lang:c decode:1 hljs cpp">
@@ -305,7 +307,7 @@ void \*qemu_memalign(size_t alignment, size_t size){
 </pre>
 
 <p>以上qemu_vmalloc进行内存申请就结束了。在qemu_ram_alloc_from_ptr函数末尾则是将block添加到链表，realloc整个ramlist，用memset初始化整个ramblock，madvise对内存使用限定。<br>然后一层层的退回到pc_memory_init函数。</p>
-<p>此时pc.ram已经分配完成，ram_addr已经拿到了<a href="http://www.oenhan.com/kernel-program-exec" title="从一次内存泄露看程序在内核中的执行过程" target="_blank" rel="noopener">分配的内存</a>地址，MemoryRegion ram初始化完成。下面则是对已有的ram进行分段，即ram-below-4g和ram-above-4g，也就是高端内存和低端内存。用memory_region_init_alias初始化子MemoryRegion，然后将memory_region_add_subregion添加关联起来，memory_region_add_subregion具体细节“KVM源码分析2”中已经说了，参考对照着看吧，中间很多映射代码过程也只是qemu遗留的软件实现，没看到具体存在的意义，直接看到kvm_set_user_memory_region函数，内核真正需要kvm_vm_ioctl传递过去的参数是什么， struct kvm_userspace_memory_region mem而已，也就是</p>
+<p>此时pc.ram已经分配完成，ram_addr已经拿到了<a target="_blank" rel="noopener" href="http://www.oenhan.com/kernel-program-exec" title="从一次内存泄露看程序在内核中的执行过程">分配的内存</a>地址，MemoryRegion ram初始化完成。下面则是对已有的ram进行分段，即ram-below-4g和ram-above-4g，也就是高端内存和低端内存。用memory_region_init_alias初始化子MemoryRegion，然后将memory_region_add_subregion添加关联起来，memory_region_add_subregion具体细节“KVM源码分析2”中已经说了，参考对照着看吧，中间很多映射代码过程也只是qemu遗留的软件实现，没看到具体存在的意义，直接看到kvm_set_user_memory_region函数，内核真正需要kvm_vm_ioctl传递过去的参数是什么， struct kvm_userspace_memory_region mem而已，也就是</p>
 <pre class="lang:c decode:1 hljs cpp">
 struct kvm_userspace_memory_region {
 __u32 slot;
@@ -367,7 +369,7 @@ if ((change == KVM_MR_CREATE) || (change == KVM_MR_MOVE)) {
             (slot->id == mem->slot))
             continue;
 //下面就是当前已有的slot与new在guest线性区间上有交集
-        if (!((base_gfn + npages <= slot-="">base_gfn) ||
+        if (!((base_gfn + npages <= slot->base_gfn) ||
               (base_gfn >= slot->base_gfn + slot->npages)))
             goto out;
 //out错误码就是EEXIST
@@ -375,7 +377,7 @@ if ((change == KVM_MR_CREATE) || (change == KVM_MR_MOVE)) {
 }
 </=></pre>
 
-<p>如果是新插入内存条，代码则走入kvm_arch_create_memslot函数，里面主要是一个循环，KVM_NR_PAGE_SIZES是分页的级数，此处是3，第一次循环，lpages = gfn_to_index(slot-&gt;base_gfn + npages - 1,slot-&gt;base_gfn, level) + 1，lpages就是一级页表所需要的page数，大致是npages&gt;&gt;0<em>9,然后为slot-&gt;arch.rmap[i]申请了内存空间，此处可以猜想，rmap就是一级页表了，继续看，lpages约为npages&gt;&gt;1</em>9,此处又多为lpage_info申请了同等空间，然后对lpage_info初始化赋值，现在看不到lpage_info的具体作用，看到后再补上。整体上看kvm_arch_create_memslot做了一个3级的软件页表。<br>如果有脏页,并且脏页位图为空,则分配<a href="http://www.oenhan.com/linux-cache-writeback" target="_blank" rel="noopener">脏页位图</a>, kvm_create_dirty_bitmap实际就是”页数/8”.</p>
+<p>如果是新插入内存条，代码则走入kvm_arch_create_memslot函数，里面主要是一个循环，KVM_NR_PAGE_SIZES是分页的级数，此处是3，第一次循环，lpages = gfn_to_index(slot-&gt;base_gfn + npages - 1,slot-&gt;base_gfn, level) + 1，lpages就是一级页表所需要的page数，大致是npages&gt;&gt;0<em>9,然后为slot-&gt;arch.rmap[i]申请了内存空间，此处可以猜想，rmap就是一级页表了，继续看，lpages约为npages&gt;&gt;1</em>9,此处又多为lpage_info申请了同等空间，然后对lpage_info初始化赋值，现在看不到lpage_info的具体作用，看到后再补上。整体上看kvm_arch_create_memslot做了一个3级的软件页表。<br>如果有脏页,并且脏页位图为空,则分配<a target="_blank" rel="noopener" href="http://www.oenhan.com/linux-cache-writeback">脏页位图</a>, kvm_create_dirty_bitmap实际就是”页数/8”.</p>
 <pre class="lang:c decode:1 hljs cpp">
 if ((new.flags & KVM_MEM_LOG_DIRTY_PAGES) && !new.dirty_bitmap) {
         if (kvm_create_dirty_bitmap(&new) < 0)
@@ -384,7 +386,7 @@ if ((new.flags & KVM_MEM_LOG_DIRTY_PAGES) && !new.dirty_bitmap) {
 </pre>
 
 <p>当内存条的改变是KVM_MR_DELETE或者KVM_MR_MOVE,先申请一个slots,把kvm-&gt;memslots暂存到这里,首先通过id_to_memslot获取准备插入的内存条对应到kvm的插槽是slot,无论删除还是移动,将其先标记为KVM_MEMSLOT_INVALID,然后是install_new_memslots,其实就是更新了一下slots-&gt;generation的值。</p>
-<p>内存的添加说完了，看一下<a href="http://www.oenhan.com/kernel-program-exec" target="_blank" rel="noopener">EPT页表</a>的映射，在kvm_arch_vcpu_setup中有kvm_mmu_setup，是mmu的初始化，EPT的初始化是init_kvm_tdp_mmu，所谓的初始化就是填充了vcpu-&gt;arch.mmu结构体，里面有很多回调函数都会用到，最终的是tdp_page_fault。</p>
+<p>内存的添加说完了，看一下<a target="_blank" rel="noopener" href="http://www.oenhan.com/kernel-program-exec">EPT页表</a>的映射，在kvm_arch_vcpu_setup中有kvm_mmu_setup，是mmu的初始化，EPT的初始化是init_kvm_tdp_mmu，所谓的初始化就是填充了vcpu-&gt;arch.mmu结构体，里面有很多回调函数都会用到，最终的是tdp_page_fault。</p>
 <pre class="hljs php">
 context->page_fault = tdp_page_fault;
 context->sync_page = nonpaging_sync_page;
@@ -525,7 +527,7 @@ static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
         role.cr4_pae = 0;
     role.access = access;
     if (!vcpu->arch.mmu.direct_map
-        && vcpu->arch.mmu.root_level <= pt32_root_level)="" {="" quadrant="gaddr">> (PAGE_SHIFT + (PT64_PT_BITS * level));
+        && vcpu->arch.mmu.root_level <= pt32_root_level) { quadrant="gaddr">> (PAGE_SHIFT + (PT64_PT_BITS * level));
         quadrant &= (1 << ((PT32_PT_BITS - PT64_PT_BITS) * level)) - 1;
         role.quadrant = quadrant;
     }
@@ -623,7 +625,7 @@ static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
       <i class="fa fa-chevron-left"></i> KVM源代码分析3:CPU虚拟化
     </a></div>
       <div class="post-nav-item">
-    <a href="/2018/11/26/hexo-next主题/" rel="next" title="hexo+next主题">
+    <a href="/2018/11/26/hexo-next%E4%B8%BB%E9%A2%98/" rel="next" title="hexo+next主题">
       hexo+next主题 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
@@ -689,8 +691,9 @@ static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
   <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
   <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
 </div>
@@ -699,7 +702,7 @@ static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -726,25 +729,25 @@ static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
     </div>
     <ul class="links-of-blogroll-list">
         <li class="links-of-blogroll-item">
-          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
         </li>
     </ul>
   </div>
@@ -764,7 +767,7 @@ static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
         
 
         
-  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
       <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
   </div>
 
@@ -795,9 +798,17 @@ static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
 <script src="/js/schemes/muse.js"></script>
+
+
 <script src="/js/next-boot.js"></script>
+
 
   <script defer src="/lib/three/three.min.js"></script>
     <script defer src="/lib/three/three-waves.min.js"></script>
@@ -817,7 +828,9 @@ static struct kvm_mmu_page *kvm_mmu_get_page(struct kvm_vcpu *vcpu,
 
 
 
-  <script src="/js/local-search.js"></script>
+  
+<script src="/js/local-search.js"></script>
+
 
 
 

@@ -22,20 +22,22 @@
     var CONFIG = {"hostname":"www.owalle.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+  <meta name="description" content="工作在Linux下的小伙伴可以说对VIM是又爱又恨。今天，用半小时时间让同学们对vim只留下爱，不再有恨。 下载和安装neovim">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
-<meta property="og:url" content="http://www.owalle.com/2014/01/01/hello-world/index.html">
+<meta property="og:title" content="打造完美内核开发IDE -- neovim">
+<meta property="og:url" content="http://www.owalle.com/2023/06/14/neovim/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+<meta property="og:description" content="工作在Linux下的小伙伴可以说对VIM是又爱又恨。今天，用半小时时间让同学们对vim只留下爱，不再有恨。 下载和安装neovim">
 <meta property="og:locale">
-<meta property="article:published_time" content="2014-01-01T01:36:25.000Z">
-<meta property="article:modified_time" content="2021-09-27T09:54:43.206Z">
+<meta property="og:image" content="http://www.owalle.com/2023/06/14/neovim/nvim.png">
+<meta property="article:published_time" content="2023-06-14T12:32:30.000Z">
+<meta property="article:modified_time" content="2023-06-14T16:18:43.753Z">
 <meta property="article:author" content="Yi颗烂樱桃">
-<meta property="article:tag" content="KVM Linux Kernel Qemu">
+<meta property="article:tag" content="Linux">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.owalle.com/2023/06/14/neovim/nvim.png">
 
-<link rel="canonical" href="http://www.owalle.com/2014/01/01/hello-world/">
+<link rel="canonical" href="http://www.owalle.com/2023/06/14/neovim/">
 
 
 <script id="page-configurations">
@@ -48,7 +50,7 @@
   };
 </script>
 
-  <title>Hello World | Yi颗烂樱桃</title>
+  <title>打造完美内核开发IDE -- neovim | Yi颗烂樱桃</title>
   
 
 
@@ -202,7 +204,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2014/01/01/hello-world/">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2023/06/14/neovim/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -215,7 +217,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Hello World
+          打造完美内核开发IDE -- neovim
         </h1>
 
         <div class="post-meta">
@@ -225,15 +227,24 @@
               </span>
               <span class="post-meta-item-text">Posted on</span>
 
-              <time title="Created: 2014-01-01 09:36:25" itemprop="dateCreated datePublished" datetime="2014-01-01T09:36:25+08:00">2014-01-01</time>
+              <time title="Created: 2023-06-14 20:32:30" itemprop="dateCreated datePublished" datetime="2023-06-14T20:32:30+08:00">2023-06-14</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-09-27 17:54:43" itemprop="dateModified" datetime="2021-09-27T17:54:43+08:00">2021-09-27</time>
+                <time title="Modified: 2023-06-15 00:18:43" itemprop="dateModified" datetime="2023-06-15T00:18:43+08:00">2023-06-15</time>
               </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+            </span>
 
           
 
@@ -246,32 +257,36 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/deployment.html">Deployment</a></p>
-<h3 id="workflow"><a href="#workflow" class="headerlink" title="workflow"></a>workflow</h3><p>Refence: <a target="_blank" rel="noopener" href="http://flowchart.js.org/">http://flowchart.js.org/</a></p>
-<pre><code class="flow">st=&gt;start: Start:&gt;http://www.google.com[blank]
-e=&gt;end:&gt;http://www.google.com
-op1=&gt;operation: My Operation
-sub1=&gt;subroutine: My Subroutine
-cond=&gt;condition: Yes
-or No?:&gt;http://www.google.com
-io=&gt;inputoutput: catch something...
-para=&gt;parallel: parallel tasks
-
-st-&gt;op1-&gt;cond
-cond(yes)-&gt;io-&gt;e
-cond(no)-&gt;para
-para(path1, bottom)-&gt;sub1(right)-&gt;op1
-para(path2, top)-&gt;op1
-&amp;
-</code></pre>
+        <p>工作在Linux下的小伙伴可以说对VIM是又爱又恨。今天，用半小时时间让同学们对vim只留下爱，不再有恨。</p>
+<h2 id="下载和安装neovim"><a href="#下载和安装neovim" class="headerlink" title="下载和安装neovim"></a>下载和安装neovim</h2><h3 id="下载"><a href="#下载" class="headerlink" title="下载"></a>下载</h3><p>neovim的下载地址： <a target="_blank" rel="noopener" href="https://github.com/neovim/neovim/releases/tag/stable">https://github.com/neovim/neovim/releases/tag/stable</a><br>下载<a target="_blank" rel="noopener" href="https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz">nvim-linux64.tar.gz</a> stable版的预编译包。</p>
+<p>BTW，不要安装系统自带的neovim，版本太老了，会导致后面的配置失败的。</p>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><p>解压缩刚刚下载的压缩包: <code>tar xzvf nvim-linux64.tar.gz</code><br>当然跑到解压缩后的目录中直接运行，但这并不方便。为了让生活更容易，这里提供两种简单方便的安装方法：</p>
+<ol>
+<li>设置环境变量PATH<br>编译文件 <code>~/.bashrc</code>，可以在文件的末尾处添加一行:<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export &lt;path of nvim-linux&gt;:$PATH</span><br></pre></td></tr></table></figure>
+这样的好处是，操作简单。但博主本人并不喜欢这样做，因为回头软件一多，需要维护好多PATH变量的export，同时安装文件也容易到处都是。<br>个人推荐第二种方法。</li>
+<li>安装到系统目录中<br>通常系统中有几个目录默认在变量<code>PATH</code>中了，可以通过<code>echo $PATH</code>看到那些路径可以被默认遍历到。从中挑一个喜欢的，我通常会把安装的软件放在<code>/usr/local/bin</code>中。然后利用rsync工具：<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rsync -avz &lt;path to nvim-linux&gt; /usr/local/     #注意，这里没有bin</span><br></pre></td></tr></table></figure>
+这样所有文件夹结构都会同步到系统的文件夹中。</li>
+</ol>
+<p>不管哪种方式安装好neovim之后，建议重新开一个Terminal，试下nvim是不是工作了。而博主比较激进一点，直接在刚刚安装nvim的系统目录中创建一个软连接:<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ln -s nvim vim</span><br></pre></td></tr></table></figure><br>这么做是为了直接覆盖掉系统中原来安装的vim。如果日常使用git, mutt 之类的依赖于vim的工具，那么现在使用那些工具的时候，也一并将用nvim代替掉vim，快哉！</p>
+<h2 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h2><p>博主使用vim大概有15个年头了，提到vim的配置，也是头皮发紧，真心不敢折腾vim的配置。但，nvim不一样了，单个插件变强了很多，而且，现在又有GPT的加持。<br>总之，来吧保证不虚此行，半小时结束战斗！</p>
+<h3 id="创建配置文件"><a href="#创建配置文件" class="headerlink" title="创建配置文件"></a>创建配置文件</h3><p>由于我们是手动安装nvim应用，所有，同样需要手动为其创建配置文件。幸运的是，可以直接clone博主的配置。（博主也是参考其他大神的配置）<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone  https://github.com/ysun/nvim ~/.config/nvim</span><br></pre></td></tr></table></figure></p>
+<h3 id="启动VIM"><a href="#启动VIM" class="headerlink" title="启动VIM"></a>启动VIM</h3><p>是不是很意外，这就结束了？昂，对于配置这就结束了！运行<code>nvim</code>或者你也创建了软连接的话，运行<code>vim</code>。在首次运行的时候，会自动安装所有配置文件中的插件。</p>
+<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>可以从插件配置文件查看具体使用了那些插件<code>~/.config/nvim/lua/plugins.lua</code>。所有插件都是使用包管理<code>packer</code>安装的。一共大概20几个。<br>这里简单说下快捷键吧。</p>
+<h3 id="nvim-tree"><a href="#nvim-tree" class="headerlink" title="nvim-tree"></a>nvim-tree</h3><p><code>tt</code>可以呼出nvim-tree，显示当前文件夹结构。</p>
+<h3 id="lsp"><a href="#lsp" class="headerlink" title="lsp"></a>lsp</h3><p>使用lsp自动补全。lsp需要一个文件<code>compile_commands.json</code>，手动执行内核代码中的脚本<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scripts/clang-tools/gen_compile_commands.py</span><br></pre></td></tr></table></figure><br>即可生成。<br><strong> lsp 需要安装一个服务 clangd </strong><br>Ubuntu 中这样安装：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt install clangd</span><br></pre></td></tr></table></figure></p>
+<h3 id="nvim-telescope"><a href="#nvim-telescope" class="headerlink" title="nvim-telescope"></a>nvim-telescope</h3><p>我的理解，这个插件是lsp的前端，可以方便的进行跳转<br><code>ctrl+j -&gt; ctrl+s</code>： 跳转到函数的引用<br><code>ctrl+j -&gt; ctrl+g</code>： 跳转到函数的定义</p>
+<h3 id="tabnine-nvim"><a href="#tabnine-nvim" class="headerlink" title="tabnine-nvim"></a>tabnine-nvim</h3><p>这个插件其实是我开始neovim的最开始的动力。他是github copilot的平替。虽然也是付费软件，但免费也可以使用，就暂时官网github copilot了。<br>它会自动预测将要输入的单词，使用<code>tab</code>键自动补全。这里有点小冲突，lsp也会自动补全，但lsp只是自动补全代码,而tabnine-nvim是一个AI工具，它除了可以帮忙补全注释之外，还可以补全注释下面的整段函数。</p>
+<h3 id="Chatgpt-nvim"><a href="#Chatgpt-nvim" class="headerlink" title="Chatgpt.nvim"></a>Chatgpt.nvim</h3><p>无论在插入状态、normal状态、还是visual状态，都可以输入<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">:Chatgpt</span><br></pre></td></tr></table></figure><br>呼出Chatgpt 的功能，包括ChatGPT、ChatGPTActAs、ChatGPTCompleteCode、ChatGPTEditWithInstructions、ChatGPTRun 等命令，各个命令下还有子命令。详细介绍参考官网<code>https://github.com/jackMort/ChatGPT.nvim</code><br>ChatGPT是需要OpenAI的API Key，所以每一条调用都是付费的，大家酌情使用。</p>
+<h3 id="更新插件"><a href="#更新插件" class="headerlink" title="更新插件"></a>更新插件</h3><p>如果对插件的配置有更新，可以两个方法来更新插件：</p>
+<ul>
+<li><p>lua脚本</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">:lua require(&quot;packer&quot;).sync()</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>重建share/nvim<br>安装的插件默认都放在目录<code>~/.local/share/nvim</code>中，如果想重建插件的话，可以简单的全部删除，然后在下次打开vim的时候会自动重建插件。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rm -rf ~/.local/share/nvim</span><br></pre></td></tr></table></figure>
+<p><img src="/2023/06/14/neovim/nvim.png" alt="nvim"></p>
+</li>
+</ul>
 
     </div>
 
@@ -300,17 +315,20 @@ para(path2, top)-&gt;op1
 
 
       <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
 
         
 
 
         
     <div class="post-nav">
-      <div class="post-nav-item"></div>
       <div class="post-nav-item">
-    <a href="/2014/12/11/kvm-src-1/" rel="next" title="KVM源代码分析1:基本工作原理">
-      KVM源代码分析1:基本工作原理 <i class="fa fa-chevron-right"></i>
+    <a href="/2023/02/16/autotools-cmake/" rel="prev" title="Autotools 和 cmake 对比">
+      <i class="fa fa-chevron-left"></i> Autotools 和 cmake 对比
     </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -370,7 +388,7 @@ para(path2, top)-&gt;op1
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Quick-Start"><span class="nav-number">1.</span> <span class="nav-text">Quick Start</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Create-a-new-post"><span class="nav-number">1.1.</span> <span class="nav-text">Create a new post</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-server"><span class="nav-number">1.2.</span> <span class="nav-text">Run server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Generate-static-files"><span class="nav-number">1.3.</span> <span class="nav-text">Generate static files</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Deploy-to-remote-sites"><span class="nav-number">1.4.</span> <span class="nav-text">Deploy to remote sites</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#workflow"><span class="nav-number">1.5.</span> <span class="nav-text">workflow</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BD%E5%92%8C%E5%AE%89%E8%A3%85neovim"><span class="nav-number">1.</span> <span class="nav-text">下载和安装neovim</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BD"><span class="nav-number">1.1.</span> <span class="nav-text">下载</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">1.2.</span> <span class="nav-text">安装</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE"><span class="nav-number">2.</span> <span class="nav-text">配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">2.1.</span> <span class="nav-text">创建配置文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8VIM"><span class="nav-number">2.2.</span> <span class="nav-text">启动VIM</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#nvim-tree"><span class="nav-number">3.1.</span> <span class="nav-text">nvim-tree</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#lsp"><span class="nav-number">3.2.</span> <span class="nav-text">lsp</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#nvim-telescope"><span class="nav-number">3.3.</span> <span class="nav-text">nvim-telescope</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tabnine-nvim"><span class="nav-number">3.4.</span> <span class="nav-text">tabnine-nvim</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Chatgpt-nvim"><span class="nav-number">3.5.</span> <span class="nav-text">Chatgpt.nvim</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E6%8F%92%E4%BB%B6"><span class="nav-number">3.6.</span> <span class="nav-text">更新插件</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -542,7 +560,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       repo        : 'ysun.github.io',
       owner       : 'ysun',
       admin       : ['ysun'],
-      id          : '6ad9794340d6c23169463cbad1b78d40',
+      id          : 'a7f4fddb6e151a75af4c2268f4a043f6',
         language: '',
       distractionFreeMode: true
     });

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 3.8.0">
+<meta name="generator" content="Hexo 6.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -22,18 +22,19 @@
     var CONFIG = {"hostname":"www.owalle.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="为什么这么做？ 系统完成一次重启的时间太久。 越来越频繁的安全相关的紧急的升级，包括Firmware/microcode/OS/VMM/QEMU。 运行中断给“云”服务提供商带来不好的用户体验。">
-<meta name="keywords" content="QEMU,KVM">
+  <meta name="description" content="为什么这么做？ 系统完成一次重启的时间太久。 越来越频繁的安全相关的紧急的升级，包括Firmware&#x2F;microcode&#x2F;OS&#x2F;VMM&#x2F;QEMU。 运行中断给“云”服务提供商带来不好的用户体验。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="利用虚拟机(QEMU)实现宿主机快速重启">
 <meta property="og:url" content="http://www.owalle.com/2019/12/18/fast-restart/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="为什么这么做？ 系统完成一次重启的时间太久。 越来越频繁的安全相关的紧急的升级，包括Firmware/microcode/OS/VMM/QEMU。 运行中断给“云”服务提供商带来不好的用户体验。">
-<meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2021-09-27T09:54:43.330Z">
+<meta property="og:description" content="为什么这么做？ 系统完成一次重启的时间太久。 越来越频繁的安全相关的紧急的升级，包括Firmware&#x2F;microcode&#x2F;OS&#x2F;VMM&#x2F;QEMU。 运行中断给“云”服务提供商带来不好的用户体验。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2019-12-18T13:28:40.000Z">
+<meta property="article:modified_time" content="2021-09-27T09:54:43.330Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="QEMU">
+<meta property="article:tag" content="KVM">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="利用虚拟机(QEMU)实现宿主机快速重启">
-<meta name="twitter:description" content="为什么这么做？ 系统完成一次重启的时间太久。 越来越频繁的安全相关的紧急的升级，包括Firmware/microcode/OS/VMM/QEMU。 运行中断给“云”服务提供商带来不好的用户体验。">
 
 <link rel="canonical" href="http://www.owalle.com/2019/12/18/fast-restart/">
 
@@ -163,7 +164,9 @@
     <i class="fa fa-search"></i>
   </span>
   <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
   </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
@@ -199,16 +202,16 @@
     
   
   
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2019/12/18/fast-restart/">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Yi颗烂樱桃">
       <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Yi颗烂樱桃">
     </span>
       <header class="post-header">
@@ -237,7 +240,7 @@
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/QEMU/" itemprop="url" rel="index"><span itemprop="name">QEMU</span></a>
                 </span>
             </span>
@@ -269,27 +272,25 @@
 <li>退出qemu，并且可以使用kexec软重启系统，同时可以升级内核、QEMU、Microcode 等。</li>
 <li>重新运行QEMU，恢复VM使其继续执行。</li>
 </ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">step1=&gt;operation: 创建虚拟机。</span><br><span class="line">step2=&gt;operation: 保存虚拟机到pmem。</span><br><span class="line">step3=&gt;operation: 退出QEMU、更新kernel、Microcode等升级。</span><br><span class="line">step4=&gt;operation: 重新运行QEMU，恢复VM使其继续执行。</span><br><span class="line"></span><br><span class="line">step1-&gt;step2-&gt;step3-&gt;step4</span><br></pre></td></tr></table></figure>
-<h3 id="内核准备"><a href="#内核准备" class="headerlink" title="内核准备"></a>内核准备</h3><h4 id="编译内核"><a href="#编译内核" class="headerlink" title="编译内核"></a>编译内核</h4><p>大概率需要重新编译一个内核，确保所有的所需kernel config都打开。<br>主要是三类内核Configure： NVDIMM，DAX和PMEM相关的都打开吧。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">CONFIG_X86_PMEM_LEGACY_DEVICE=y</span><br><span class="line">CONFIG_X86_PMEM_LEGACY=m</span><br><span class="line">CONFIG_BLK_DEV_PMEM=m</span><br><span class="line">CONFIG_ARCH_HAS_PMEM_API=y</span><br><span class="line"></span><br><span class="line">CONFIG_DAX_DRIVER=y</span><br><span class="line">CONFIG_DAX=y</span><br><span class="line">CONFIG_DEV_DAX=y</span><br><span class="line">CONFIG_DEV_DAX_PMEM=m</span><br><span class="line">CONFIG_DEV_DAX_KMEM=m</span><br><span class="line">CONFIG_DEV_DAX_PMEM_COMPAT=m</span><br><span class="line">CONFIG_FS_DAX=y</span><br><span class="line">CONFIG_FS_DAX_PMD=y</span><br><span class="line"></span><br><span class="line">CONFIG_LIBNVDIMM=m</span><br><span class="line">CONFIG_NVDIMM_PFN=y</span><br><span class="line">CONFIG_NVDIMM_DAX=y</span><br><span class="line">CONFIG_NVDIMM_KEYS=y</span><br></pre></td></tr></table></figure></p>
-<h4 id="内核参数"><a href="#内核参数" class="headerlink" title="内核参数"></a>内核参数</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">memmap=2G!4G</span><br></pre></td></tr></table></figure>
-<p>含义是，需要在内存中4G的位置开始，预留2G的内存空间。<a href="https://docs.pmem.io/persistent-memory/getting-started-guide/creating-development-environments/linux-environments/linux-memmap" target="_blank" rel="noopener">了解更详细的memmap用法及含义</a>。</p>
-<h3 id="QEMU准备"><a href="#QEMU准备" class="headerlink" title="QEMU准备"></a>QEMU准备</h3><h4 id="下载QEMU"><a href="#下载QEMU" class="headerlink" title="下载QEMU"></a>下载QEMU</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone git://git.qemu.org/qemu.git</span><br></pre></td></tr></table></figure>
-<p>其中包含了几个子模块，会在编译过程中下载。但是如果在墙内的网络环境中，通常这会失败，下面是墙内的步骤：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git clone git://git.qemu.org/qemu.git</span><br><span class="line">cd qemu</span><br><span class="line">git submodule init</span><br><span class="line">git submodule update --recursive</span><br></pre></td></tr></table></figure></p>
-<p>如果在<code>git submodule update</code>的过程中出现某个module下载失败，需要手动下载到相应的目录里，路径通常在错误日志中会提到<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git clone http://git.qemu.org/git/seabios.git/  roms/seabios</span><br><span class="line">git submodule update --recursive</span><br></pre></td></tr></table></figure></p>
-<p>直到这样的状态就可以放心编译QEMU了：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">git submodule status --recursive</span><br><span class="line">65cc4d2748a2c2e6f27f1cf39e07a5dbabd80ebf dtc (v1.4.0)</span><br><span class="line">87eea99e443b389c978cf37efc52788bf03a0ee0 pixman (pixman-0.32.6)</span><br><span class="line">b4c93802a5b2c72f096649c497ec9ff5708e4456 roms/SLOF (qemu-slof-20141202-63-gb4c9380)</span><br><span class="line">4e03af8ec2d497e725566a91fd5c19dd604c18a6 roms/ipxe (v1.0.0-2016-g4e03af8)</span><br><span class="line">3caee1794ac3f742315823d8447d21f33ce019e9 roms/openbios (3caee17)</span><br><span class="line">c559da7c8eec5e45ef1f67978827af6f0b9546f5 roms/openhackware (heads/master)</span><br><span class="line">c87a92639b28ac42bc8f6c67443543b405dc479b roms/qemu-palcode (heads/master)</span><br><span class="line">33fbe13a3e2a01e0ba1087a8feed801a0451db21 roms/seabios (rel-1.8.2)</span><br><span class="line">23d474943dcd55d0550a3d20b3d30e9040a4f15b roms/sgabios (heads/master)</span><br><span class="line">2072e7262965bb48d7fffb1e283101e6ed8b21a8 roms/u-boot (v2014.07-rc1-79-g2072e72)</span><br><span class="line">19ea12c230ded95928ecaef0db47a82231c2e485 roms/vgabios (heads/master)</span><br></pre></td></tr></table></figure></p>
-<h4 id="编译QEMU"><a href="#编译QEMU" class="headerlink" title="编译QEMU"></a>编译QEMU</h4><p>QEMU的编译并没有什么特别的，参数都可以“顾名思义” :)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./configure --target-list=x86_64-softmmu --enable-kvm --enable-libpmem --enable-vnc --enable-gtk --enable-sdl --disable-werror</span><br><span class="line"></span><br><span class="line">make</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">step1=&gt;operation: 创建虚拟机。</span><br><span class="line">step2=&gt;operation: 保存虚拟机到pmem。</span><br><span class="line">step3=&gt;operation: 退出QEMU、更新kernel、Microcode等升级。</span><br><span class="line">step4=&gt;operation: 重新运行QEMU，恢复VM使其继续执行。</span><br><span class="line"></span><br><span class="line">step1-&gt;step2-&gt;step3-&gt;step4</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="内核准备"><a href="#内核准备" class="headerlink" title="内核准备"></a>内核准备</h3><h4 id="编译内核"><a href="#编译内核" class="headerlink" title="编译内核"></a>编译内核</h4><p>大概率需要重新编译一个内核，确保所有的所需kernel config都打开。<br>主要是三类内核Configure： NVDIMM，DAX和PMEM相关的都打开吧。<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">CONFIG_X86_PMEM_LEGACY_DEVICE=y</span><br><span class="line">CONFIG_X86_PMEM_LEGACY=m</span><br><span class="line">CONFIG_BLK_DEV_PMEM=m</span><br><span class="line">CONFIG_ARCH_HAS_PMEM_API=y</span><br><span class="line"></span><br><span class="line">CONFIG_DAX_DRIVER=y</span><br><span class="line">CONFIG_DAX=y</span><br><span class="line">CONFIG_DEV_DAX=y</span><br><span class="line">CONFIG_DEV_DAX_PMEM=m</span><br><span class="line">CONFIG_DEV_DAX_KMEM=m</span><br><span class="line">CONFIG_DEV_DAX_PMEM_COMPAT=m</span><br><span class="line">CONFIG_FS_DAX=y</span><br><span class="line">CONFIG_FS_DAX_PMD=y</span><br><span class="line"></span><br><span class="line">CONFIG_LIBNVDIMM=m</span><br><span class="line">CONFIG_NVDIMM_PFN=y</span><br><span class="line">CONFIG_NVDIMM_DAX=y</span><br><span class="line">CONFIG_NVDIMM_KEYS=y</span><br></pre></td></tr></table></figure></p>
+<h4 id="内核参数"><a href="#内核参数" class="headerlink" title="内核参数"></a>内核参数</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">memmap=2G!4G</span><br></pre></td></tr></table></figure>
+<p>含义是，需要在内存中4G的位置开始，预留2G的内存空间。<a target="_blank" rel="noopener" href="https://docs.pmem.io/persistent-memory/getting-started-guide/creating-development-environments/linux-environments/linux-memmap">了解更详细的memmap用法及含义</a>。</p>
+<h3 id="QEMU准备"><a href="#QEMU准备" class="headerlink" title="QEMU准备"></a>QEMU准备</h3><h4 id="下载QEMU"><a href="#下载QEMU" class="headerlink" title="下载QEMU"></a>下载QEMU</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone git://git.qemu.org/qemu.git</span><br></pre></td></tr></table></figure>
+<p>其中包含了几个子模块，会在编译过程中下载。但是如果在墙内的网络环境中，通常这会失败，下面是墙内的步骤：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git clone git://git.qemu.org/qemu.git</span><br><span class="line">cd qemu</span><br><span class="line">git submodule init</span><br><span class="line">git submodule update --recursive</span><br></pre></td></tr></table></figure><br>如果在<code>git submodule update</code>的过程中出现某个module下载失败，需要手动下载到相应的目录里，路径通常在错误日志中会提到<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git clone http://git.qemu.org/git/seabios.git/  roms/seabios</span><br><span class="line">git submodule update --recursive</span><br></pre></td></tr></table></figure><br>直到这样的状态就可以放心编译QEMU了：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">git submodule status --recursive</span><br><span class="line">65cc4d2748a2c2e6f27f1cf39e07a5dbabd80ebf dtc (v1.4.0)</span><br><span class="line">87eea99e443b389c978cf37efc52788bf03a0ee0 pixman (pixman-0.32.6)</span><br><span class="line">b4c93802a5b2c72f096649c497ec9ff5708e4456 roms/SLOF (qemu-slof-20141202-63-gb4c9380)</span><br><span class="line">4e03af8ec2d497e725566a91fd5c19dd604c18a6 roms/ipxe (v1.0.0-2016-g4e03af8)</span><br><span class="line">3caee1794ac3f742315823d8447d21f33ce019e9 roms/openbios (3caee17)</span><br><span class="line">c559da7c8eec5e45ef1f67978827af6f0b9546f5 roms/openhackware (heads/master)</span><br><span class="line">c87a92639b28ac42bc8f6c67443543b405dc479b roms/qemu-palcode (heads/master)</span><br><span class="line">33fbe13a3e2a01e0ba1087a8feed801a0451db21 roms/seabios (rel-1.8.2)</span><br><span class="line">23d474943dcd55d0550a3d20b3d30e9040a4f15b roms/sgabios (heads/master)</span><br><span class="line">2072e7262965bb48d7fffb1e283101e6ed8b21a8 roms/u-boot (v2014.07-rc1-79-g2072e72)</span><br><span class="line">19ea12c230ded95928ecaef0db47a82231c2e485 roms/vgabios (heads/master)</span><br></pre></td></tr></table></figure></p>
+<h4 id="编译QEMU"><a href="#编译QEMU" class="headerlink" title="编译QEMU"></a>编译QEMU</h4><p>QEMU的编译并没有什么特别的，参数都可以“顾名思义” :)<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./configure --target-list=x86_64-softmmu --enable-kvm --enable-libpmem --enable-vnc --enable-gtk --enable-sdl --disable-werror</span><br><span class="line"></span><br><span class="line">make</span><br></pre></td></tr></table></figure></p>
 <h3 id="具体步骤"><a href="#具体步骤" class="headerlink" title="具体步骤"></a>具体步骤</h3><p>可以通过DAX设备（DAX device）或者DAX文件（DAX file)两种方式来达到同样的效果。</p>
 <h4 id="方法一：DEV-device实现方法"><a href="#方法一：DEV-device实现方法" class="headerlink" title="方法一：DEV device实现方法"></a>方法一：DEV device实现方法</h4><p>使用<code>/dev/dax0.0</code>作为vNVDIMM的后端（backend）</p>
 <ol>
-<li>准备一个DAX设备(dax dev)<br>前提是Kernel已经按照前面的configure配置，并且成功编译安装。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ndctl create-namespace --mode devdax --map mem -e namespace0.0 -f</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
+<li><p>准备一个DAX设备(dax dev)<br>前提是Kernel已经按照前面的configure配置，并且成功编译安装。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ndctl create-namespace --mode devdax --map mem -e namespace0.0 -f</span><br></pre></td></tr></table></figure>
 <p>这样会产生一个 <code>/dev/dax0.0</code></p>
-<ol start="2">
-<li>创建虚拟机<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">        --enable-kvm \</span><br><span class="line">   	-M q35 \</span><br><span class="line">        -m 2G -smp 1 \</span><br><span class="line">        -hda ubuntu-1904.qcow2 \</span><br><span class="line">        -object memory-backend-file,id=dimm0,size=4g,mem-path=/dev/dax0.0,share=on,pmem=on,align=2M \</span><br><span class="line">        -numa node,memdev=dimm0,cpus=0 \</span><br><span class="line">        -monitor stdio \</span><br><span class="line">        -vnc :7 -sdl</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建虚拟机</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">        --enable-kvm \</span><br><span class="line">   	-M q35 \</span><br><span class="line">        -m 2G -smp 1 \</span><br><span class="line">        -hda ubuntu-1904.qcow2 \</span><br><span class="line">        -object memory-backend-file,id=dimm0,size=4g,mem-path=/dev/dax0.0,share=on,pmem=on,align=2M \</span><br><span class="line">        -numa node,memdev=dimm0,cpus=0 \</span><br><span class="line">        -monitor stdio \</span><br><span class="line">        -vnc :7 -sdl</span><br></pre></td></tr></table></figure>
+<p>两点说明：</p>
 </li>
 </ol>
-<p>两点说明：</p>
 <ul>
 <li><p><code>-object memory-backend-file,id=dimm0,size=4g,mem-path=/dev/dax0.0,share=on,pmem=on,align=2M</code>意思是：</p>
 <ul>
@@ -299,53 +300,51 @@
 <li><code>align=2M</code> DAX设备需要2M对齐。</li>
 </ul>
 </li>
-<li><p><code>-numa node,memdev=dimm0,cpus=0</code> 意思是：<br>描述虚拟机的numa结构，这里主要是为了使用上一步创建的vNVDIMM作为虚拟机的内存。<br><a href="https://docs.pmem.io/persistent-memory/getting-started-guide/creating-development-environments/virtualization/qemu" target="_blank" rel="noopener">了解更详细的vNVDIMM用法及含义</a>。</p>
+<li><p><code>-numa node,memdev=dimm0,cpus=0</code> 意思是：<br>描述虚拟机的numa结构，这里主要是为了使用上一步创建的vNVDIMM作为虚拟机的内存。<br><a target="_blank" rel="noopener" href="https://docs.pmem.io/persistent-memory/getting-started-guide/creating-development-environments/virtualization/qemu">了解更详细的vNVDIMM用法及含义</a>。</p>
 </li>
 <li><p><em>特别说明</em> guest的镜像_必须_是 qcow2 格式的！如果vm的镜像是raw格式，需要创建qcow2格式的镜像。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">qemu-img create -b xxxx.img -f qcow2 test.qcow2</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">qemu-img create -b xxxx.img -f qcow2 test.qcow2</span><br></pre></td></tr></table></figure>
+<p>这样虚拟机就创建好了，登录虚拟机（通过vncview :7）做点你想要做的事情。</p>
 </li>
 </ul>
-<p>这样虚拟机就创建好了，登录虚拟机（通过vncview :7）做点你想要做的事情。</p>
 <ol start="2">
 <li><p>保存虚拟机现场<br>在QEMU console中输入HMP命令，并且退出QEMU</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(qemu) migrate_set_capability x-ignore-shared on	//设置QEMU在保存VM的时候，忽略share=on的那些内存。这里指代不保存VM的pmem。</span><br><span class="line">(qemu) stop						//停止虚拟机</span><br><span class="line">(qemu) savevm s0					//保存虚拟机snapshot为s0</span><br><span class="line">(qemu) q						//退出QEMU</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(qemu) migrate_set_capability x-ignore-shared on	//设置QEMU在保存VM的时候，忽略share=on的那些内存。这里指代不保存VM的pmem。</span><br><span class="line">(qemu) stop						//停止虚拟机</span><br><span class="line">(qemu) savevm s0					//保存虚拟机snapshot为s0</span><br><span class="line">(qemu) q						//退出QEMU</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>升级操作系统<br>这个时候，可以对宿主机为所欲为，比如更新QEMU，更新microcode，安装新kernel，kexec软重启。<br>kexec的使用方法:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kernel_image=&quot;/boot/vmlinuz-`uname -r`&quot;   </span><br><span class="line">initrd_image=&quot;/boot/initrd.img-`uname -r`&quot;</span><br><span class="line">sudo kexec -l $kernel_image --reuse-cmdline --initrd=$initrd_image</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kernel_image=&quot;/boot/vmlinuz-`uname -r`&quot;   </span><br><span class="line">initrd_image=&quot;/boot/initrd.img-`uname -r`&quot;</span><br><span class="line">sudo kexec -l $kernel_image --reuse-cmdline --initrd=$initrd_image</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>重启QEMU，恢复虚拟机现场</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">        --enable-kvm \</span><br><span class="line">        -M q35 \</span><br><span class="line">        -m 4G -smp 1 \</span><br><span class="line">        -hda $IMAGE_PATH/ubuntu-1904.qcow2 \</span><br><span class="line">        -object memory-backend-file,id=dimm0,size=4g,mem-path=/dev/dax0.0,share=on,pmem=on,align=2M \</span><br><span class="line">        -numa node,memdev=dimm0,cpus=0 \</span><br><span class="line">        -monitor stdio \</span><br><span class="line">        -vnc :7 -sdl</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">        --enable-kvm \</span><br><span class="line">        -M q35 \</span><br><span class="line">        -m 4G -smp 1 \</span><br><span class="line">        -hda $IMAGE_PATH/ubuntu-1904.qcow2 \</span><br><span class="line">        -object memory-backend-file,id=dimm0,size=4g,mem-path=/dev/dax0.0,share=on,pmem=on,align=2M \</span><br><span class="line">        -numa node,memdev=dimm0,cpus=0 \</span><br><span class="line">        -monitor stdio \</span><br><span class="line">        -vnc :7 -sdl</span><br></pre></td></tr></table></figure>
 <p>在QEMU console中输入HMP命令，重新加载snapshot s0</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">(qemu) stop</span><br><span class="line">(qemu) loadvm s0</span><br><span class="line">(qemu) c</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">(qemu) stop</span><br><span class="line">(qemu) loadvm s0</span><br><span class="line">(qemu) c</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
 <h4 id="方法二：DAX-file实现方法"><a href="#方法二：DAX-file实现方法" class="headerlink" title="方法二：DAX file实现方法"></a>方法二：DAX file实现方法</h4><p>使用DAX file实现时，是用一个支持文件（支持影射为pmem）作为后端。“写”操作的“持续性”是“宿主机”的内核来支持（v4.15之后）。</p>
 <ol>
-<li>创建虚拟机前的准备工作<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ndctl create-namespace --mode fsdax --map mem -e namespace0.0 -f</span><br></pre></td></tr></table></figure>
-</li>
+<li>创建虚拟机前的准备工作<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ndctl create-namespace --mode fsdax --map mem -e namespace0.0 -f</span><br></pre></td></tr></table></figure>
+没有意外的话，会出现`/dev/pmem0’的一个块设备。然后执行:</li>
 </ol>
-<p>没有意外的话，会出现`/dev/pmem0’的一个块设备。然后执行:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkfs.ext4 -b 4096 -E stride=512 -F /dev/pmem0		//格式化pmem设备</span><br><span class="line">mount -t ext4 -o dax /dev/pmem0 /dax			//把pmem设备mount到一个目录，支持DAX</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkfs.ext4 -b 4096 -E stride=512 -F /dev/pmem0		//格式化pmem设备</span><br><span class="line">mount -t ext4 -o dax /dev/pmem0 /dax			//把pmem设备mount到一个目录，支持DAX</span><br></pre></td></tr></table></figure>
 <ol start="2">
-<li>创建虚拟机<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">	--enable-kvm \</span><br><span class="line">	-M q35 \</span><br><span class="line">	-m 4G -smp 1 \</span><br><span class="line">	-hda $IMAGE_PATH/ubuntu-1904.qcow2 \</span><br><span class="line">	-mem-path /dax \</span><br><span class="line">	-device vfio-pci,host=81:00.0,romfile= \</span><br><span class="line">	-monitor stdio \</span><br><span class="line">	-vnc :7 -sdl</span><br></pre></td></tr></table></figure>
-</li>
+<li>创建虚拟机<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">	--enable-kvm \</span><br><span class="line">	-M q35 \</span><br><span class="line">	-m 4G -smp 1 \</span><br><span class="line">	-hda $IMAGE_PATH/ubuntu-1904.qcow2 \</span><br><span class="line">	-mem-path /dax \</span><br><span class="line">	-device vfio-pci,host=81:00.0,romfile= \</span><br><span class="line">	-monitor stdio \</span><br><span class="line">	-vnc :7 -sdl</span><br></pre></td></tr></table></figure></li>
 </ol>
 <ul>
 <li><code>-mem-path /dax</code> ：为虚拟机分配内存，使用一个临时创建的文件路径。这里是指之前mount的pmem0设备</li>
 </ul>
 <ol start="2">
 <li><p>保存虚拟机现场<br>保存虚拟机的方法跟Dev DAX一模一样，在QEMU console中输入HMP命令，并且退出QEMU。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(qemu) migrate_set_capability x-ignore-shared on	//设置QEMU在保存VM的时候，忽略share=on的那些内存。这里指代不保存VM的pmem。</span><br><span class="line">(qemu) stop						//停止虚拟机</span><br><span class="line">(qemu) savevm s0					//保存虚拟机snapshot为s0</span><br><span class="line">(qemu) q						//退出QEMU</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(qemu) migrate_set_capability x-ignore-shared on	//设置QEMU在保存VM的时候，忽略share=on的那些内存。这里指代不保存VM的pmem。</span><br><span class="line">(qemu) stop						//停止虚拟机</span><br><span class="line">(qemu) savevm s0					//保存虚拟机snapshot为s0</span><br><span class="line">(qemu) q						//退出QEMU</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>升级操作系统<br>这个时候，可以对宿主机为所欲为，比如更新QEMU，更新microcode，安装新kernel，kexec软重启。<br>kexec的使用方法:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kernel_image=&quot;/boot/vmlinuz-`uname -r`&quot;   </span><br><span class="line">initrd_image=&quot;/boot/initrd.img-`uname -r`&quot;</span><br><span class="line">sudo kexec -l $kernel_image --reuse-cmdline --initrd=$initrd_image</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kernel_image=&quot;/boot/vmlinuz-`uname -r`&quot;   </span><br><span class="line">initrd_image=&quot;/boot/initrd.img-`uname -r`&quot;</span><br><span class="line">sudo kexec -l $kernel_image --reuse-cmdline --initrd=$initrd_image</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>重启QEMU，恢复虚拟机现场</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">	--enable-kvm \</span><br><span class="line">	-M q35 \</span><br><span class="line">	-m 4G -smp 1 \</span><br><span class="line">	-hda $IMAGE_PATH/ubuntu-1904.qcow2 \</span><br><span class="line">	-mem-path /dax \</span><br><span class="line">	-device vfio-pci,host=81:00.0,romfile= \</span><br><span class="line">	-monitor stdio \</span><br><span class="line">	-vnc :7 -sdl</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">x86_64-softmmu/qemu-system-x86_64 \</span><br><span class="line">	--enable-kvm \</span><br><span class="line">	-M q35 \</span><br><span class="line">	-m 4G -smp 1 \</span><br><span class="line">	-hda $IMAGE_PATH/ubuntu-1904.qcow2 \</span><br><span class="line">	-mem-path /dax \</span><br><span class="line">	-device vfio-pci,host=81:00.0,romfile= \</span><br><span class="line">	-monitor stdio \</span><br><span class="line">	-vnc :7 -sdl</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
 <p>至此，虚拟机又可以接着之前的地方呼啸的跑下去了。效果看下面的视频吧：</p>
-<p><iframe height="360" width="640" src="https://player.youku.com/embed/XNDQ3MTkyMTYzNg==" frameborder="0" 'allowfullscreen'=""></iframe><br><a href="http://v.youku.com/v_show/id_XNDQ3MTkyMTYzNg==.html?spm=a2h3j.8428770.3416059.1" target="_blank" rel="noopener">快速启动演示</a></p>
+<p><iframe height="360" width="640" src="https://player.youku.com/embed/XNDQ3MTkyMTYzNg==" frameborder="0" 'allowfullscreen'></iframe><br><a target="_blank" rel="noopener" href="http://v.youku.com/v_show/id_XNDQ3MTkyMTYzNg==.html?spm=a2h3j.8428770.3416059.1">快速启动演示</a></p>
 
     </div>
 
@@ -451,13 +450,14 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么这么做？"><span class="nav-number">1.</span> <span class="nav-text">为什么这么做？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#目前已有的类似方案"><span class="nav-number">2.</span> <span class="nav-text">目前已有的类似方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#方案的工作流程"><span class="nav-number">3.</span> <span class="nav-text">方案的工作流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#内核准备"><span class="nav-number">3.1.</span> <span class="nav-text">内核准备</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#编译内核"><span class="nav-number">3.1.1.</span> <span class="nav-text">编译内核</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#内核参数"><span class="nav-number">3.1.2.</span> <span class="nav-text">内核参数</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#QEMU准备"><span class="nav-number">3.2.</span> <span class="nav-text">QEMU准备</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#下载QEMU"><span class="nav-number">3.2.1.</span> <span class="nav-text">下载QEMU</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#编译QEMU"><span class="nav-number">3.2.2.</span> <span class="nav-text">编译QEMU</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#具体步骤"><span class="nav-number">3.3.</span> <span class="nav-text">具体步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#方法一：DEV-device实现方法"><span class="nav-number">3.3.1.</span> <span class="nav-text">方法一：DEV device实现方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方法二：DAX-file实现方法"><span class="nav-number">3.3.2.</span> <span class="nav-text">方法二：DAX file实现方法</span></a></li></ol></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%99%E4%B9%88%E5%81%9A%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">为什么这么做？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%AE%E5%89%8D%E5%B7%B2%E6%9C%89%E7%9A%84%E7%B1%BB%E4%BC%BC%E6%96%B9%E6%A1%88"><span class="nav-number">2.</span> <span class="nav-text">目前已有的类似方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B9%E6%A1%88%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text">方案的工作流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E5%87%86%E5%A4%87"><span class="nav-number">3.1.</span> <span class="nav-text">内核准备</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E5%86%85%E6%A0%B8"><span class="nav-number">3.1.1.</span> <span class="nav-text">编译内核</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E5%8F%82%E6%95%B0"><span class="nav-number">3.1.2.</span> <span class="nav-text">内核参数</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#QEMU%E5%87%86%E5%A4%87"><span class="nav-number">3.2.</span> <span class="nav-text">QEMU准备</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BDQEMU"><span class="nav-number">3.2.1.</span> <span class="nav-text">下载QEMU</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%96%E8%AF%91QEMU"><span class="nav-number">3.2.2.</span> <span class="nav-text">编译QEMU</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B7%E4%BD%93%E6%AD%A5%E9%AA%A4"><span class="nav-number">3.3.</span> <span class="nav-text">具体步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%B8%80%EF%BC%9ADEV-device%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95"><span class="nav-number">3.3.1.</span> <span class="nav-text">方法一：DEV device实现方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%BA%8C%EF%BC%9ADAX-file%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95"><span class="nav-number">3.3.2.</span> <span class="nav-text">方法二：DAX file实现方法</span></a></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
   <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
   <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
 </div>
@@ -466,7 +466,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -493,25 +493,25 @@
     </div>
     <ul class="links-of-blogroll-list">
         <li class="links-of-blogroll-item">
-          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
         </li>
     </ul>
   </div>
@@ -531,7 +531,7 @@
         
 
         
-  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
       <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
   </div>
 
@@ -562,9 +562,17 @@
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
 <script src="/js/schemes/muse.js"></script>
+
+
 <script src="/js/next-boot.js"></script>
+
 
   <script defer src="/lib/three/three.min.js"></script>
     <script defer src="/lib/three/three-waves.min.js"></script>
@@ -584,7 +592,9 @@
 
 
 
-  <script src="/js/local-search.js"></script>
+  
+<script src="/js/local-search.js"></script>
+
 
 
 

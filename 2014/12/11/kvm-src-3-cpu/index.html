@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 3.8.0">
+<meta name="generator" content="Hexo 6.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -22,19 +22,19 @@
     var CONFIG = {"hostname":"www.owalle.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="在虚拟机的创建与运行章节里面笼统的介绍了KVM在qemu中的创建和运行，基本的qemu代码流程已经梳理清楚，后续主要写一些硬件虚拟化的原理和代码流程，主要写原理和qemu控制KVM运行的的ioctl接口，后续对内核代码的梳理也从这些接口下手。 QEMU：git://git.qemu.org/qemu.git v2.4.0">
-<meta name="keywords" content="KVM">
+  <meta name="description" content="在虚拟机的创建与运行章节里面笼统的介绍了KVM在qemu中的创建和运行，基本的qemu代码流程已经梳理清楚，后续主要写一些硬件虚拟化的原理和代码流程，主要写原理和qemu控制KVM运行的的ioctl接口，后续对内核代码的梳理也从这些接口下手。 QEMU：git:&#x2F;&#x2F;git.qemu.org&#x2F;qemu.git v2.4.0">
 <meta property="og:type" content="article">
 <meta property="og:title" content="KVM源代码分析3:CPU虚拟化">
 <meta property="og:url" content="http://www.owalle.com/2014/12/11/kvm-src-3-cpu/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
-<meta property="og:description" content="在虚拟机的创建与运行章节里面笼统的介绍了KVM在qemu中的创建和运行，基本的qemu代码流程已经梳理清楚，后续主要写一些硬件虚拟化的原理和代码流程，主要写原理和qemu控制KVM运行的的ioctl接口，后续对内核代码的梳理也从这些接口下手。 QEMU：git://git.qemu.org/qemu.git v2.4.0">
-<meta property="og:locale" content="zh-Hans">
+<meta property="og:description" content="在虚拟机的创建与运行章节里面笼统的介绍了KVM在qemu中的创建和运行，基本的qemu代码流程已经梳理清楚，后续主要写一些硬件虚拟化的原理和代码流程，主要写原理和qemu控制KVM运行的的ioctl接口，后续对内核代码的梳理也从这些接口下手。 QEMU：git:&#x2F;&#x2F;git.qemu.org&#x2F;qemu.git v2.4.0">
+<meta property="og:locale">
 <meta property="og:image" content="http://www.owalle.com/2014/12/11/kvm-src-3-cpu/kvm_vmx_intel-1.jpg">
-<meta property="og:updated_time" content="2021-09-27T09:54:42.978Z">
+<meta property="article:published_time" content="2014-12-11T02:34:48.000Z">
+<meta property="article:modified_time" content="2021-09-27T09:54:42.978Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="KVM">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="KVM源代码分析3:CPU虚拟化">
-<meta name="twitter:description" content="在虚拟机的创建与运行章节里面笼统的介绍了KVM在qemu中的创建和运行，基本的qemu代码流程已经梳理清楚，后续主要写一些硬件虚拟化的原理和代码流程，主要写原理和qemu控制KVM运行的的ioctl接口，后续对内核代码的梳理也从这些接口下手。 QEMU：git://git.qemu.org/qemu.git v2.4.0">
 <meta name="twitter:image" content="http://www.owalle.com/2014/12/11/kvm-src-3-cpu/kvm_vmx_intel-1.jpg">
 
 <link rel="canonical" href="http://www.owalle.com/2014/12/11/kvm-src-3-cpu/">
@@ -165,7 +165,9 @@
     <i class="fa fa-search"></i>
   </span>
   <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
   </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
@@ -201,16 +203,16 @@
     
   
   
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2014/12/11/kvm-src-3-cpu/">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Yi颗烂樱桃">
       <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Yi颗烂樱桃">
     </span>
       <header class="post-header">
@@ -239,7 +241,7 @@
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/KVM/" itemprop="url" rel="index"><span itemprop="name">KVM</span></a>
                 </span>
             </span>
@@ -255,16 +257,16 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>在<a href="http://www.oenhan.com/kvm-src-2-vm-run" title="KVM源代码分析2:虚拟机的创建与运行" target="_blank" rel="noopener">虚拟机的创建与运行</a>章节里面笼统的介绍了KVM在qemu中的创建和运行，基本的qemu代码流程已经梳理清楚，后续主要写一些硬件虚拟化的原理和代码流程，主要写原理和qemu控制KVM运行的的ioctl接口，后续对内核代码的梳理也从这些接口下手。</p>
+        <p>在<a target="_blank" rel="noopener" href="http://www.oenhan.com/kvm-src-2-vm-run" title="KVM源代码分析2:虚拟机的创建与运行">虚拟机的创建与运行</a>章节里面笼统的介绍了KVM在qemu中的创建和运行，基本的qemu代码流程已经梳理清楚，后续主要写一些硬件虚拟化的原理和代码流程，主要写原理和qemu控制KVM运行的的ioctl接口，后续对内核代码的梳理也从这些接口下手。</p>
 <p>QEMU：git://git.qemu.org/qemu.git v2.4.0</p>
-<p>KVM：<a href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git" target="_blank" rel="noopener">https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git</a> v4.2</p>
+<p>KVM：<a target="_blank" rel="noopener" href="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git">https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git</a> v4.2</p>
 <h4 id="1-VT-x-技术"><a href="#1-VT-x-技术" class="headerlink" title="1.VT-x 技术"></a>1.VT-x 技术</h4><p>Intel处理器支持的虚拟化技术即是VT-x，之所以CPU支持硬件虚拟化是因为软件虚拟化的效率太低。</p>
-<p>处理器虚拟化的本质是分时共享，主要体现在状态恢复和资源隔离，实际上每个VM对于VMM看就是一个task么，之前Intel处理器在虚拟化上没有提供默认的硬件支持，传统 x86 处理器有4个特权级，Linux使用了0,3级别，0即内核，3即用户态，（更多参考<a href="http://blog.csdn.net/drshenlei/article/details/4265101" target="_blank" rel="noopener">CPU的运行环、特权级与保护</a>）而在虚拟化架构上，虚拟机监控器的运行级别需要内核态特权级，而CPU特权级被传统OS占用，所以Intel设计了VT-x，提出了VMX模式，即VMX root operation 和 VMX non-root operation，虚拟机监控器运行在VMX root operation，虚拟机运行在VMX non-root operation。每个模式下都有相对应的0~3特权级。</p>
-<p>为什么引入这两种特殊模式，在传统x86的系统中，CPU有不同的特权级，是为了划分不同的权限指令，某些指令只能由系统软件操作，称为特权指令，这些指令只能在最高特权级上才能正确执行，反之则会触发异常，处理器会陷入到最高特权级，由系统软件处理。还有一种需要操作特权资源（如访问<a href="http://www.oenhan.com/rwsem-realtime-task-hung" title="读写信号量与实时进程阻塞挂死问题" target="_blank" rel="noopener">中断寄存器</a>）的指令，称为敏感指令。OS运行在特权级上，屏蔽掉用户态直接执行的特权指令，达到控制所有的硬件资源目的；而在虚拟化环境中，VMM控制所有所有硬件资源，VM中的OS只能占用一部分资源，OS执行的很多特权指令是不能真正对硬件生效的，所以原特权级下有了root模式，OS指令不需要修改就可以正常执行在特权级上，但这个特权级的所有敏感指令都会传递到root模式处理，这样达到了VMM的目的。</p>
-<p>在<a href="http://www.oenhan.com/kvm-src-1" target="_blank" rel="noopener">KVM源代码分析1:基本工作原理</a>章节中也说了kvm分3个模式，对应到VT-x 中即是客户模式对应vmx非root模式，内核模式对应VMX root模式下的0特权级，用户模式对应vmx root模式下的3特权级。</p>
-<p>如下图<br><img src="/2014/12/11/kvm-src-3-cpu/kvm_vmx_intel-1.jpg" alt=""></p>
+<p>处理器虚拟化的本质是分时共享，主要体现在状态恢复和资源隔离，实际上每个VM对于VMM看就是一个task么，之前Intel处理器在虚拟化上没有提供默认的硬件支持，传统 x86 处理器有4个特权级，Linux使用了0,3级别，0即内核，3即用户态，（更多参考<a target="_blank" rel="noopener" href="http://blog.csdn.net/drshenlei/article/details/4265101">CPU的运行环、特权级与保护</a>）而在虚拟化架构上，虚拟机监控器的运行级别需要内核态特权级，而CPU特权级被传统OS占用，所以Intel设计了VT-x，提出了VMX模式，即VMX root operation 和 VMX non-root operation，虚拟机监控器运行在VMX root operation，虚拟机运行在VMX non-root operation。每个模式下都有相对应的0~3特权级。</p>
+<p>为什么引入这两种特殊模式，在传统x86的系统中，CPU有不同的特权级，是为了划分不同的权限指令，某些指令只能由系统软件操作，称为特权指令，这些指令只能在最高特权级上才能正确执行，反之则会触发异常，处理器会陷入到最高特权级，由系统软件处理。还有一种需要操作特权资源（如访问<a target="_blank" rel="noopener" href="http://www.oenhan.com/rwsem-realtime-task-hung" title="读写信号量与实时进程阻塞挂死问题">中断寄存器</a>）的指令，称为敏感指令。OS运行在特权级上，屏蔽掉用户态直接执行的特权指令，达到控制所有的硬件资源目的；而在虚拟化环境中，VMM控制所有所有硬件资源，VM中的OS只能占用一部分资源，OS执行的很多特权指令是不能真正对硬件生效的，所以原特权级下有了root模式，OS指令不需要修改就可以正常执行在特权级上，但这个特权级的所有敏感指令都会传递到root模式处理，这样达到了VMM的目的。</p>
+<p>在<a target="_blank" rel="noopener" href="http://www.oenhan.com/kvm-src-1">KVM源代码分析1:基本工作原理</a>章节中也说了kvm分3个模式，对应到VT-x 中即是客户模式对应vmx非root模式，内核模式对应VMX root模式下的0特权级，用户模式对应vmx root模式下的3特权级。</p>
+<p>如下图<br><img src="/2014/12/11/kvm-src-3-cpu/kvm_vmx_intel-1.jpg" alt></p>
 <p>在非根模式下敏感指令引发的陷入称为VM-Exit，VM-Exit发生后，CPU从非根模式切换到根模式；对应的，VM-Entry则是从根模式到非根模式，通常意味着调用VM进入运行态。VMLAUCH/VMRESUME命令则是用来发起VM-Entry。</p>
-<h4 id="2-VMCS寄存器"><a href="#2-VMCS寄存器" class="headerlink" title="2.VMCS寄存器"></a>2.VMCS寄存器</h4><p>VMCS保存虚拟机的相关CPU状态，每个VCPU都有一个VMCS（内存的），每个物理CPU都有VMCS对应的<a href="http://www.oenhan.com/gdb-principle" title="gdb工作原理和内核实现" target="_blank" rel="noopener">寄存器</a>（物理的），当CPU发生VM-Entry时，CPU则从VCPU指定的内存中读取VMCS加载到物理CPU上执行，当发生VM-Exit时，CPU则将当前的CPU状态保存到VCPU指定的内存中，即VMCS，以备下次VMRESUME。</p>
+<h4 id="2-VMCS寄存器"><a href="#2-VMCS寄存器" class="headerlink" title="2.VMCS寄存器"></a>2.VMCS寄存器</h4><p>VMCS保存虚拟机的相关CPU状态，每个VCPU都有一个VMCS（内存的），每个物理CPU都有VMCS对应的<a target="_blank" rel="noopener" href="http://www.oenhan.com/gdb-principle" title="gdb工作原理和内核实现">寄存器</a>（物理的），当CPU发生VM-Entry时，CPU则从VCPU指定的内存中读取VMCS加载到物理CPU上执行，当发生VM-Exit时，CPU则将当前的CPU状态保存到VCPU指定的内存中，即VMCS，以备下次VMRESUME。</p>
 <p>VMLAUCH指VM的第一次VM-Entry，VMRESUME则是VMLAUCH之后后续的VM-Entry。VMCS下有一些控制域：</p>
 <p><colgroup></colgroup></p>
 <p><col width="51*"></p>
@@ -274,12 +276,12 @@
 <p><col width="51*"> <br>col 1                  | col 2                                                    | col 3<br>———————- | ——————————————————– | —————————————————————–<br> VM-execution controls |  Determines what operations cause VM exits               |  CR0, CR3, CR4, Exceptions, IO Ports, Interrupts, Pin Events, etc<br>Guest-state area       |  Saved on VM exits，Reloaded on VM entry                  |  EIP, ESP, EFLAGS, IDTR, Segment Regs, Exit info, etc<br> Host-state area       |  Loaded on VM exits                                      |  CR3, EIP set to monitor entry point, EFLAGS hardcoded, etc<br> VM-exit controls      |  Determines which state to save, load, how to transition |  Example: MSR save-load list<br> VM-entry controls     |  Determines which state to load, how to transition       |  Including injecting events (interrupts, exceptions) on entry    </p>
 <p>关于具体控制域的细节，还是翻Intel手册吧。</p>
 <h4 id="3-VM-Entry-VM-Exit"><a href="#3-VM-Entry-VM-Exit" class="headerlink" title="3.VM-Entry/VM-Exit"></a>3.VM-Entry/VM-Exit</h4><p>VM-Entry是从根模式切换到非根模式，即VMM切换到guest上，这个状态由VMM发起，发起之前先保存VMM中的关键寄存器内容到VMCS中，然后进入到VM-Entry，VM-Entry附带参数主要有3个：1.guest是否处于64bit模式，2.MSR VM-Entry控制，3.注入事件。1应该只在VMLAUCH有意义，3更多是在VMRESUME，而VMM发起VM-Entry更多是因为3，2主要用来每次更新MSR。</p>
-<p>VM-Exit是CPU从非根模式切换到根模式，从guest切换到VMM的操作，VM-Exit触发的原因就很多了，执行敏感指令，<a href="http://www.oenhan.com/rwsem-realtime-task-hung" title="读写信号量与实时进程阻塞挂死问题" target="_blank" rel="noopener">发生中断</a>，模拟特权资源等。</p>
+<p>VM-Exit是CPU从非根模式切换到根模式，从guest切换到VMM的操作，VM-Exit触发的原因就很多了，执行敏感指令，<a target="_blank" rel="noopener" href="http://www.oenhan.com/rwsem-realtime-task-hung" title="读写信号量与实时进程阻塞挂死问题">发生中断</a>，模拟特权资源等。</p>
 <p>运行在非根模式下的敏感指令一般分为3个方面：</p>
 <p>1.行为没有变化的，也就是说该指令能够正确执行。</p>
 <p>2.行为有变化的，直接产生VM-Exit。</p>
 <p>3.行为有变化的，但是是否产生VM-Exit受到VM-Execution控制域控制。</p>
-<p>主要说一下”受到VM-Execution控制域控制”的敏感指令，这个就是针对性的硬件优化了，一般是1.产生VM-Exit；2.不产生VM-Exit，同时调用优化函数完成功能。典型的有“RDTSC指令”。除了大部分是优化性能的，还有一小部分是直接VM-Exit执行指令结果是异常的，或者说在<a href="http://www.oenhan.com/kvm-src-1" title="KVM源代码分析1:基本工作原理" target="_blank" rel="noopener">虚拟化</a>场景下是不适用的，典型的就是TSC offset了。</p>
+<p>主要说一下”受到VM-Execution控制域控制”的敏感指令，这个就是针对性的硬件优化了，一般是1.产生VM-Exit；2.不产生VM-Exit，同时调用优化函数完成功能。典型的有“RDTSC指令”。除了大部分是优化性能的，还有一小部分是直接VM-Exit执行指令结果是异常的，或者说在<a target="_blank" rel="noopener" href="http://www.oenhan.com/kvm-src-1" title="KVM源代码分析1:基本工作原理">虚拟化</a>场景下是不适用的，典型的就是TSC offset了。</p>
 <p>VM-Exit发生时退出的相关信息，如退出原因、触发中断等，这些内容保存在VM-Exit信息域中。</p>
 <h4 id="4-KVM-CREATE-VM"><a href="#4-KVM-CREATE-VM" class="headerlink" title="4.KVM_CREATE_VM"></a>4.KVM_CREATE_VM</h4><p>创建VM就写这里吧，kvm_dev_ioctl_create_vm函数是主干，在kvm_create_vm中，主要有两个函数，kvm_arch_init_vm和hardware_enable_all，需要注意，但是更先一步的是KVM结构体，下面的struct是精简后的版本。</p>
 <pre class="lang:c decode:1 hljs cpp">
@@ -300,7 +302,7 @@ struct kvm {
 };
 </pre>
 
-<p>kvm_arch_init_vm基本没有特别动作，初始化了KVM-&gt;arch，以及更新了kvmclock函数，这个另外再说。<br>而hardware_enable_all，针对于每个CPU执行“on_each_cpu(hardware_enable_nolock, NULL, 1）”，在hardware_enable_nolock中先把cpus_hardware_enabled置位，进入到kvm_arch_hardware_enable中，有hardware_enable和TSC初始化规则，主要看hardware_enable，crash_enable_local_vmclear清理<a href="http://www.oenhan.com/reiserfs_check_can_fit_pages_for_8tb" title="reiserfs分区空闲8TB写文件提示磁盘空间不足" target="_blank" rel="noopener">位图</a>，判断MSR_IA32_FEATURE_CONTROL寄存器是否满足虚拟环境，不满足则将条件写入到寄存器内，CR4将X86_CR4_VMXE置位，另外还有kvm_cpu_vmxon打开VMX操作模式，外层包了vmm_exclusive的判断，它是kvm_intel.ko的外置参数，默认唯一，可以让用户强制不使用VMM硬件支持。</p>
+<p>kvm_arch_init_vm基本没有特别动作，初始化了KVM-&gt;arch，以及更新了kvmclock函数，这个另外再说。<br>而hardware_enable_all，针对于每个CPU执行“on_each_cpu(hardware_enable_nolock, NULL, 1）”，在hardware_enable_nolock中先把cpus_hardware_enabled置位，进入到kvm_arch_hardware_enable中，有hardware_enable和TSC初始化规则，主要看hardware_enable，crash_enable_local_vmclear清理<a target="_blank" rel="noopener" href="http://www.oenhan.com/reiserfs_check_can_fit_pages_for_8tb" title="reiserfs分区空闲8TB写文件提示磁盘空间不足">位图</a>，判断MSR_IA32_FEATURE_CONTROL寄存器是否满足虚拟环境，不满足则将条件写入到寄存器内，CR4将X86_CR4_VMXE置位，另外还有kvm_cpu_vmxon打开VMX操作模式，外层包了vmm_exclusive的判断，它是kvm_intel.ko的外置参数，默认唯一，可以让用户强制不使用VMM硬件支持。</p>
 <h4 id="5-KVM-CREATE-VCPU"><a href="#5-KVM-CREATE-VCPU" class="headerlink" title="5.KVM_CREATE_VCPU"></a>5.KVM_CREATE_VCPU</h4><p>kvm_vm_ioctl_create_vcpu主要有三部分，kvm_arch_vcpu_create，kvm_arch_vcpu_setup和kvm_arch_vcpu_postcreate，重点自然是kvm_arch_vcpu_create。老样子，在这之前先看一下VCPU的结构体。</p>
 <pre class="lang:c decode:1 hljs cpp">
 struct kvm_vcpu {
@@ -593,13 +595,13 @@ static struct x86_emulate_ops emulate_ops = {
 };
 </pre>
 
-<p>x86_emulate_ops函数看看就好，实际上也很少有人放弃vmx直接软件模拟。后面又有mp_state，给pio_data分配了一个page，kvm_set_tsc_khz设置TSC，kvm_mmu_create则是初始化MMU的函数，里面的函数都是地址转换的重点，在内存虚拟化重点提到。kvm_create_lapic初始化lapic，初始化mce_banks结构，还有pv_time,xcr0,xstat,pmu等，类似x86硬件结构上需要存在的，OS底层需要看到的硬件名称都要有对应的软件结构。<br>回到vmx_create_vcpu，vmx的guest_msrs分配得到一个page，后面是vmcs的分配，vmx-&gt;loaded_vmcs-&gt;vmcs = alloc_vmcs()，alloc_vmcs为当前cpu执行alloc_vmcs_cpu，alloc_vmcs_cpu中alloc_pages_exact_node分配给vmcs，alloc_pages_exact_node调用__alloc_pages实现，原来以为vmcs占用了一个page，但此处从<a href="http://www.oenhan.com/size-512-slab-kmalloc" title="从size-512内存泄露看slab分配" target="_blank" rel="noopener">伙伴系统</a>申请了2^vmcs_config.order页，此处vmcs_config在setup_vmcs_config中初始化，vmcs_conf-&gt;order = get_order(vmcs_config.size)，而vmcs_conf-&gt;size = vmx_msr_high &amp; 0x1fff，又rdmsr(MSR_IA32_VMX_BASIC, vmx_msr_low, vmx_msr_high)，此处size由于与0x1fff与运算，大小必然小于4k，order则为0，然来绕去还是一个page大小。这么做估计是为了兼容vmcs_config中的size计算。<br>下面根据vmm_exclusive进行kvm_cpu_vmxon，进入vmx模式，初始化loaded_vmcs，然后用kvm_cpu_vmxoff退出vmx模式。<br>vmx_vcpu_load加载VCPU的信息，切换到指定cpu，进入到vmx模式，将loaded_vmcs的vmcs和当前cpu的vmcs绑定到一起。vmx_vcpu_setup则是初始化vmcs内容，主要是赋值计算，下面的vmx_vcpu_put则是vmx_vcpu_load的反运算。下面还有一些apic，nested，pml就不说了。<br>vmx_create_vcpu结束就直接回到kvm_vm_ioctl_create_vcpu函数，下面是kvm_arch_vcpu_setup，整个就一条线到kvm_arch_vcpu_load函数，主要有kvm_x86_ops-&gt;vcpu_load(vcpu, cpu)和tsc处理，vcpu_load就是vmx_vcpu_load，刚说了，就是进入vcpu模式下准备工作。<br>kvm_arch_vcpu_setup后面是create_vcpu_fd为proc创建控制fd，让qemu使用。kvm_arch_vcpu_postcreate则是马后炮般，重新vcpu_load，写msr，tsc。<br>如此整个vcpu就创建完成了。</p>
+<p>x86_emulate_ops函数看看就好，实际上也很少有人放弃vmx直接软件模拟。后面又有mp_state，给pio_data分配了一个page，kvm_set_tsc_khz设置TSC，kvm_mmu_create则是初始化MMU的函数，里面的函数都是地址转换的重点，在内存虚拟化重点提到。kvm_create_lapic初始化lapic，初始化mce_banks结构，还有pv_time,xcr0,xstat,pmu等，类似x86硬件结构上需要存在的，OS底层需要看到的硬件名称都要有对应的软件结构。<br>回到vmx_create_vcpu，vmx的guest_msrs分配得到一个page，后面是vmcs的分配，vmx-&gt;loaded_vmcs-&gt;vmcs = alloc_vmcs()，alloc_vmcs为当前cpu执行alloc_vmcs_cpu，alloc_vmcs_cpu中alloc_pages_exact_node分配给vmcs，alloc_pages_exact_node调用__alloc_pages实现，原来以为vmcs占用了一个page，但此处从<a target="_blank" rel="noopener" href="http://www.oenhan.com/size-512-slab-kmalloc" title="从size-512内存泄露看slab分配">伙伴系统</a>申请了2^vmcs_config.order页，此处vmcs_config在setup_vmcs_config中初始化，vmcs_conf-&gt;order = get_order(vmcs_config.size)，而vmcs_conf-&gt;size = vmx_msr_high &amp; 0x1fff，又rdmsr(MSR_IA32_VMX_BASIC, vmx_msr_low, vmx_msr_high)，此处size由于与0x1fff与运算，大小必然小于4k，order则为0，然来绕去还是一个page大小。这么做估计是为了兼容vmcs_config中的size计算。<br>下面根据vmm_exclusive进行kvm_cpu_vmxon，进入vmx模式，初始化loaded_vmcs，然后用kvm_cpu_vmxoff退出vmx模式。<br>vmx_vcpu_load加载VCPU的信息，切换到指定cpu，进入到vmx模式，将loaded_vmcs的vmcs和当前cpu的vmcs绑定到一起。vmx_vcpu_setup则是初始化vmcs内容，主要是赋值计算，下面的vmx_vcpu_put则是vmx_vcpu_load的反运算。下面还有一些apic，nested，pml就不说了。<br>vmx_create_vcpu结束就直接回到kvm_vm_ioctl_create_vcpu函数，下面是kvm_arch_vcpu_setup，整个就一条线到kvm_arch_vcpu_load函数，主要有kvm_x86_ops-&gt;vcpu_load(vcpu, cpu)和tsc处理，vcpu_load就是vmx_vcpu_load，刚说了，就是进入vcpu模式下准备工作。<br>kvm_arch_vcpu_setup后面是create_vcpu_fd为proc创建控制fd，让qemu使用。kvm_arch_vcpu_postcreate则是马后炮般，重新vcpu_load，写msr，tsc。<br>如此整个vcpu就创建完成了。</p>
 <p>6.KVM_RUN</p>
 <p>KVM run涉及内容也不少，先写完内存虚拟化之后再开篇专门写RUN流程。</p>
 <p>下一篇：</p>
-<p><a href="http://www.oenhan.com/kvm-src-4-mem" target="_blank" rel="noopener">KVM源代码分析4:内存虚拟化</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.oenhan.com/kvm-src-4-mem">KVM源代码分析4:内存虚拟化</a></p>
 <p>———-完———-</p>
-<p>——————–下面未编辑的留存————————————-<br>给vmcs分配空间并初始化，在alloc_vmcs_cpu分配一个<a href="http://www.oenhan.com/linux-kernel-khugepaged" title="hugepage内存管理机制" target="_blank" rel="noopener">页大小内存</a>，用来保存vm和vmm信息。</p>
+<p>——————–下面未编辑的留存————————————-<br>给vmcs分配空间并初始化，在alloc_vmcs_cpu分配一个<a target="_blank" rel="noopener" href="http://www.oenhan.com/linux-kernel-khugepaged" title="hugepage内存管理机制">页大小内存</a>，用来保存vm和vmm信息。</p>
 <pre class="lang:c decode:1 hljs php">
     vmx->vmcs = alloc_vmcs();
     if (!vmx->vmcs)
@@ -630,7 +632,7 @@ kvm_x86_ops->prepare_guest_switch(vcpu);
 </pre>
 
 <p>然后加载guest的寄存器等信息，fpu，xcr0,将vcpu模式设置为guest状态，屏蔽中断响应，准备进入guest。但仍进行一次检查，vcpu-&gt;mode和vcpu-&gt;requests等，如果有问题，则恢复host状态。</p>
-<p>kvm_guest_enter做了两件事：account_system_vtime计算虚拟机<a href="http://www.oenhan.com/glibc_pthread_cond_timedwait_disable" title="Glibc更新导致pthread_cond_timedwait失效" target="_blank" rel="noopener">系统时间</a>；rcu_virt_note_context_switch对rcu锁数据进行保护，完成上下文切换。</p>
+<p>kvm_guest_enter做了两件事：account_system_vtime计算虚拟机<a target="_blank" rel="noopener" href="http://www.oenhan.com/glibc_pthread_cond_timedwait_disable" title="Glibc更新导致pthread_cond_timedwait失效">系统时间</a>；rcu_virt_note_context_switch对rcu锁数据进行保护，完成上下文切换。</p>
 <p>准备工作搞定，kvm_x86_ops-&gt;run(vcpu)，开始运行guest，由vmx_vcpu_run实现。</p>
 <pre class="lang:c decode:1 hljs php">
 if (vmx->emulation_required && emulate_invalid_guest_state)
@@ -754,7 +756,7 @@ vmx_recover_nmi_blocking(vmx);
 vmx_complete_interrupts(vmx);
 </pre>
 
-<p>回到vcpu_enter_guest，通过hw_breakpoint_restore恢复<a href="http://www.oenhan.com/jprobe-hw-breakpoint" title="内核调试方法:Jprobe与硬件断点" target="_blank" rel="noopener">硬件断点</a>。</p>
+<p>回到vcpu_enter_guest，通过hw_breakpoint_restore恢复<a target="_blank" rel="noopener" href="http://www.oenhan.com/jprobe-hw-breakpoint" title="内核调试方法:Jprobe与硬件断点">硬件断点</a>。</p>
 <pre class="lang:c decode:1 hljs php">
 if (hw_breakpoint_active())
         hw_breakpoint_restore();
@@ -836,7 +838,7 @@ staticint (*kvm_vmx_exit_handlers[])(struct kvm_vcpu *vcpu) = {
 };
 </pre>
 
-<p>有handle_task_switch进行<a href="http://www.oenhan.com/rwsem-realtime-task-hung" title="读写信号量与实时进程阻塞挂死问题" target="_blank" rel="noopener">任务切换</a>，handle_io处理qemu的外部模拟IO等，具体处理内容后面在写。</p>
+<p>有handle_task_switch进行<a target="_blank" rel="noopener" href="http://www.oenhan.com/rwsem-realtime-task-hung" title="读写信号量与实时进程阻塞挂死问题">任务切换</a>，handle_io处理qemu的外部模拟IO等，具体处理内容后面在写。</p>
 <p>再次退回到__vcpu_run函数，在while (r &gt; 0)中，循环受vcpu_enter_guest返回值控制，只有运行异常的时候才退出循环，否则通过kvm_resched一直运行下去。</p>
 <pre class="lang:c decode:1 hljs php">
 if (need_resched()) {
@@ -953,13 +955,14 @@ if (need_resched()) {
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-VT-x-技术"><span class="nav-number">1.</span> <span class="nav-text">1.VT-x 技术</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-VMCS寄存器"><span class="nav-number">2.</span> <span class="nav-text">2.VMCS寄存器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-VM-Entry-VM-Exit"><span class="nav-number">3.</span> <span class="nav-text">3.VM-Entry/VM-Exit</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-KVM-CREATE-VM"><span class="nav-number">4.</span> <span class="nav-text">4.KVM_CREATE_VM</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-KVM-CREATE-VCPU"><span class="nav-number">5.</span> <span class="nav-text">5.KVM_CREATE_VCPU</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-VT-x-%E6%8A%80%E6%9C%AF"><span class="nav-number">1.</span> <span class="nav-text">1.VT-x 技术</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-VMCS%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">2.</span> <span class="nav-text">2.VMCS寄存器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-VM-Entry-VM-Exit"><span class="nav-number">3.</span> <span class="nav-text">3.VM-Entry&#x2F;VM-Exit</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-KVM-CREATE-VM"><span class="nav-number">4.</span> <span class="nav-text">4.KVM_CREATE_VM</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-KVM-CREATE-VCPU"><span class="nav-number">5.</span> <span class="nav-text">5.KVM_CREATE_VCPU</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
   <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
   <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
 </div>
@@ -968,7 +971,7 @@ if (need_resched()) {
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -995,25 +998,25 @@ if (need_resched()) {
     </div>
     <ul class="links-of-blogroll-list">
         <li class="links-of-blogroll-item">
-          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
         </li>
     </ul>
   </div>
@@ -1033,7 +1036,7 @@ if (need_resched()) {
         
 
         
-  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
       <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
   </div>
 
@@ -1064,9 +1067,17 @@ if (need_resched()) {
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
 <script src="/js/schemes/muse.js"></script>
+
+
 <script src="/js/next-boot.js"></script>
+
 
   <script defer src="/lib/three/three.min.js"></script>
     <script defer src="/lib/three/three-waves.min.js"></script>
@@ -1086,7 +1097,9 @@ if (need_resched()) {
 
 
 
-  <script src="/js/local-search.js"></script>
+  
+<script src="/js/local-search.js"></script>
+
 
 
 

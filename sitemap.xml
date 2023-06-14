@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://www.owalle.com/2023/06/14/neovim/</loc>
+    
+    <lastmod>2023-06-14T16:18:43.753Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://www.owalle.com/2023/02/16/autotools-cmake/</loc>
     
     <lastmod>2023-02-16T02:43:32.324Z</lastmod>
@@ -282,14 +289,14 @@
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2019/07/16/study-x86-fence/</loc>
+    <loc>http://www.owalle.com/2019/05/12/sdm-8-2-memory-ordering/</loc>
     
     <lastmod>2021-09-27T09:54:43.190Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2019/05/12/sdm-8-2-memory-ordering/</loc>
+    <loc>http://www.owalle.com/2019/07/16/study-x86-fence/</loc>
     
     <lastmod>2021-09-27T09:54:43.190Z</lastmod>
     
@@ -352,7 +359,7 @@
   </url>
   
   <url>
-    <loc>http://www.owalle.com/2018/11/26/hexo-next%E4%B8%BB%E9%A2%98/</loc>
+    <loc>http://www.owalle.com/2018/11/26/hexo-next%25E4%25B8%25BB%25E9%25A2%2598/</loc>
     
     <lastmod>2021-09-27T09:54:42.994Z</lastmod>
     

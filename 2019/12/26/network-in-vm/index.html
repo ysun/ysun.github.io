@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 3.8.0">
+<meta name="generator" content="Hexo 6.3.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -23,21 +23,23 @@
   </script>
 
   <meta name="description" content="当我们创建和使用虚拟机时，通常都伴随着虚拟机的联网问题。下面就帮大家梳理下QEMU虚拟机中几种网络的模拟和用法。 概述">
-<meta name="keywords" content="kvm,qemu,network">
 <meta property="og:type" content="article">
 <meta property="og:title" content="QEMU虚拟机网络模拟">
 <meta property="og:url" content="http://www.owalle.com/2019/12/26/network-in-vm/index.html">
 <meta property="og:site_name" content="Yi颗烂樱桃">
 <meta property="og:description" content="当我们创建和使用虚拟机时，通常都伴随着虚拟机的联网问题。下面就帮大家梳理下QEMU虚拟机中几种网络的模拟和用法。 概述">
-<meta property="og:locale" content="zh-Hans">
+<meta property="og:locale">
 <meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat1.png">
 <meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat.png">
 <meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat2.png">
 <meta property="og:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-bridge.png">
-<meta property="og:updated_time" content="2021-09-27T09:54:43.330Z">
+<meta property="article:published_time" content="2019-12-26T05:44:43.000Z">
+<meta property="article:modified_time" content="2021-09-27T09:54:43.330Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="kvm">
+<meta property="article:tag" content="qemu">
+<meta property="article:tag" content="network">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="QEMU虚拟机网络模拟">
-<meta name="twitter:description" content="当我们创建和使用虚拟机时，通常都伴随着虚拟机的联网问题。下面就帮大家梳理下QEMU虚拟机中几种网络的模拟和用法。 概述">
 <meta name="twitter:image" content="http://www.owalle.com/2019/12/26/network-in-vm/network-nat1.png">
 
 <link rel="canonical" href="http://www.owalle.com/2019/12/26/network-in-vm/">
@@ -168,7 +170,9 @@
     <i class="fa fa-search"></i>
   </span>
   <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" placeholder="Searching..." spellcheck="false" type="search" class="search-input">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
   </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
@@ -204,16 +208,16 @@
     
   
   
-  <article itemscope="" itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2019/12/26/network-in-vm/">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
       <meta itemprop="name" content="Yi颗烂樱桃">
       <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Yi颗烂樱桃">
     </span>
       <header class="post-header">
@@ -242,7 +246,7 @@
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/QEMU/" itemprop="url" rel="index"><span itemprop="name">QEMU</span></a>
                 </span>
             </span>
@@ -268,67 +272,64 @@
 </ol>
 <p>对于虚拟机上网，以上四种QEMU网络相关的模拟，这里暂时只关心前两个(3、4实际还没有用到过:p,如有必要日后补充)，User模式以及TAP接口。下面详细介绍下如何使用这两种方式搭建不同类型的网络供虚拟机使用。</p>
 <h2 id="NAT方式"><a href="#NAT方式" class="headerlink" title="NAT方式"></a>NAT方式</h2><p>如图所示，NAT方式与家里上网的方式有点类似，虚拟机在一个子网内(192.168.122.255)，宿主机看做双网卡(虚拟了一个网卡),这也是QEMU默认就支持的。</p>
-<h3 id="QEMU默认的NAT-SLiRP"><a href="#QEMU默认的NAT-SLiRP" class="headerlink" title="QEMU默认的NAT (SLiRP)"></a>QEMU默认的NAT (SLiRP)</h3><p>首先，在我们没有为QEMU指定任何网络参数的情况下，我们很多时候依然可以使用网络，拓扑结构如下图所示：<br><img src="/2019/12/26/network-in-vm/network-nat1.png" alt=""><br>  这是因为通常在编译QEMU的时候，默认会编译模块<code>SLiRP</code>(除非显式的指定<code>--disable-slirp</code>)，这样QEMU在创建虚拟机的时候，即便用户不指定，也会有默认的参数<code>-net=user</code>。user mode的NAT网络优缺点很明显：</p>
+<h3 id="QEMU默认的NAT-SLiRP"><a href="#QEMU默认的NAT-SLiRP" class="headerlink" title="QEMU默认的NAT (SLiRP)"></a>QEMU默认的NAT (SLiRP)</h3><p>首先，在我们没有为QEMU指定任何网络参数的情况下，我们很多时候依然可以使用网络，拓扑结构如下图所示：<br><img src="/2019/12/26/network-in-vm/network-nat1.png" alt><br>  这是因为通常在编译QEMU的时候，默认会编译模块<code>SLiRP</code>(除非显式的指定<code>--disable-slirp</code>)，这样QEMU在创建虚拟机的时候，即便用户不指定，也会有默认的参数<code>-net=user</code>。user mode的NAT网络优缺点很明显：</p>
 <ol>
 <li>设置最为简单，不需要额外的配置就能满足虚拟机最基本的网络需求。</li>
 <li>缺点是这个NAT网络也仅仅是“最基本“的需求。slirp模块有许多网络协议不支持，最常见的ICMP不支持，所以，在虚拟机中是无法使用<code>ping</code>的；另外，performance大概就更不需要奢求太多。</li>
 </ol>
-<h3 id="通过TAP配置NAT"><a href="#通过TAP配置NAT" class="headerlink" title="通过TAP配置NAT"></a>通过TAP配置NAT</h3><p>拓扑结构跟user模式一模一样，见下图：<br><img src="/2019/12/26/network-in-vm/network-nat.png" alt=""></p>
+<h3 id="通过TAP配置NAT"><a href="#通过TAP配置NAT" class="headerlink" title="通过TAP配置NAT"></a>通过TAP配置NAT</h3><p>拓扑结构跟user模式一模一样，见下图：<br><img src="/2019/12/26/network-in-vm/network-nat.png" alt></p>
 <ol>
 <li><p>确保已安装libvirt-clients和libvirt-daemon</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Ubuntu:</span><br><span class="line">apt-get install libvirt-clients		//使用virsh</span><br><span class="line">apt-get install libvirt-daemon libvirt-daemon-system libvirt-daemon-system-systemd		//使用libvirtd</span><br><span class="line">apt-get install qemu-system-common	//使用qemu-bridge-helper</span><br><span class="line">apt-get install bridge-utils		//使用brctl</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Ubuntu:</span><br><span class="line">apt-get install libvirt-clients		//使用virsh</span><br><span class="line">apt-get install libvirt-daemon libvirt-daemon-system libvirt-daemon-system-systemd		//使用libvirtd</span><br><span class="line">apt-get install qemu-system-common	//使用qemu-bridge-helper</span><br><span class="line">apt-get install bridge-utils		//使用brctl</span><br></pre></td></tr></table></figure>
 <p>确保libvirt-daemon服务开启</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">systemctl start libvirtd</span><br><span class="line">systemctl enable libvirtd</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">systemctl start libvirtd</span><br><span class="line">systemctl enable libvirtd</span><br></pre></td></tr></table></figure>
 <p>如果遇到libvird启动失败，尝试一下:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># brctl addbr br0</span><br><span class="line">add bridge failed: Package not installed</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># brctl addbr br0</span><br><span class="line">add bridge failed: Package not installed</span><br></pre></td></tr></table></figure>
 <p>如果出现上述错误，说明需要重新编译内核，同时需要打开 networking &gt; 802.1d Ethernet Bridging</p>
 <p>如果libvirtd启动成功的话会出现一个虚拟桥virbr0和virbr0-nic：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">#ip a</span><br><span class="line"></span><br><span class="line">1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000</span><br><span class="line">    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</span><br><span class="line">    inet 127.0.0.1/8 scope host lo</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">    inet6 ::1/128 scope host</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">2: eno1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc fq_codel state UP group default qlen 1000</span><br><span class="line">    link/ether d4:5d:df:07:c1:07 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 10.239.48.54/24 brd 10.239.48.255 scope global dynamic noprefixroute eno1</span><br><span class="line">       valid_lft 12387sec preferred_lft 12387sec</span><br><span class="line">    inet6 fe80::d65d:dfff:fe07:c107/64 scope link</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">3: virbr0: &lt;NO-CARRIER,BROADCAST,MULTICAST,UP&gt; mtu 1500 qdisc noqueue state DOWN group default qlen 1000</span><br><span class="line">    link/ether 52:54:00:d3:6d:2d brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.122.1/24 brd 192.168.122.255 scope global virbr0</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">4: virbr0-nic: &lt;BROADCAST,MULTICAST&gt; mtu 1500 qdisc fq_codel master virbr0 state DOWN group default qlen 1000</span><br><span class="line">    link/ether 52:54:00:d3:6d:2d brd ff:ff:ff:ff:ff:ff</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">#ip a</span><br><span class="line"></span><br><span class="line">1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000</span><br><span class="line">    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</span><br><span class="line">    inet 127.0.0.1/8 scope host lo</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">    inet6 ::1/128 scope host</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">2: eno1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc fq_codel state UP group default qlen 1000</span><br><span class="line">    link/ether d4:5d:df:07:c1:07 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 10.239.48.54/24 brd 10.239.48.255 scope global dynamic noprefixroute eno1</span><br><span class="line">       valid_lft 12387sec preferred_lft 12387sec</span><br><span class="line">    inet6 fe80::d65d:dfff:fe07:c107/64 scope link</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">3: virbr0: &lt;NO-CARRIER,BROADCAST,MULTICAST,UP&gt; mtu 1500 qdisc noqueue state DOWN group default qlen 1000</span><br><span class="line">    link/ether 52:54:00:d3:6d:2d brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 192.168.122.1/24 brd 192.168.122.255 scope global virbr0</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">4: virbr0-nic: &lt;BROADCAST,MULTICAST&gt; mtu 1500 qdisc fq_codel master virbr0 state DOWN group default qlen 1000</span><br><span class="line">    link/ether 52:54:00:d3:6d:2d brd ff:ff:ff:ff:ff:ff</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>使用virsh配置网络<br>在没有进行任何网络配置之前，应该是这样的：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#virsh net-list --all</span><br><span class="line"></span><br><span class="line"> Name                 State      Autostart     Persistent</span><br><span class="line">----------------------------------------------------------</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#virsh net-list --all</span><br><span class="line"></span><br><span class="line"> Name                 State      Autostart     Persistent</span><br><span class="line">----------------------------------------------------------</span><br></pre></td></tr></table></figure>
 <p>一个比较偷懒的办法是使用现成的配置文件<code>/etc/libvirt/qemu/networks/autostart/default.xml</code>，内容如下:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&lt;network&gt;</span><br><span class="line">  &lt;name&gt;default&lt;/name&gt;</span><br><span class="line">  &lt;uuid&gt;417b7ead-6342-40a4-b29f-02fa2d4df491&lt;/uuid&gt;</span><br><span class="line">  &lt;forward mode=&apos;nat&apos;/&gt;</span><br><span class="line">  &lt;bridge name=&apos;virbr0&apos; stp=&apos;off&apos; delay=&apos;0&apos;/&gt;</span><br><span class="line">  &lt;mac address=&apos;52:54:00:d3:6d:2d&apos;/&gt;</span><br><span class="line">  &lt;ip address=&apos;192.168.122.1&apos; netmask=&apos;255.255.255.0&apos;&gt;</span><br><span class="line">    &lt;dhcp&gt;</span><br><span class="line">      &lt;range start=&apos;192.168.122.2&apos; end=&apos;192.168.122.254&apos;/&gt;</span><br><span class="line">    &lt;/dhcp&gt;</span><br><span class="line">  &lt;/ip&gt;</span><br><span class="line">&lt;/network&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&lt;network&gt;</span><br><span class="line">  &lt;name&gt;default&lt;/name&gt;</span><br><span class="line">  &lt;uuid&gt;417b7ead-6342-40a4-b29f-02fa2d4df491&lt;/uuid&gt;</span><br><span class="line">  &lt;forward mode=&#x27;nat&#x27;/&gt;</span><br><span class="line">  &lt;bridge name=&#x27;virbr0&#x27; stp=&#x27;off&#x27; delay=&#x27;0&#x27;/&gt;</span><br><span class="line">  &lt;mac address=&#x27;52:54:00:d3:6d:2d&#x27;/&gt;</span><br><span class="line">  &lt;ip address=&#x27;192.168.122.1&#x27; netmask=&#x27;255.255.255.0&#x27;&gt;</span><br><span class="line">    &lt;dhcp&gt;</span><br><span class="line">      &lt;range start=&#x27;192.168.122.2&#x27; end=&#x27;192.168.122.254&#x27;/&gt;</span><br><span class="line">    &lt;/dhcp&gt;</span><br><span class="line">  &lt;/ip&gt;</span><br><span class="line">&lt;/network&gt;</span><br></pre></td></tr></table></figure>
+<p>或者显示的给出default.xml</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#virsh net-define default.xml</span><br><span class="line">#virsh net-start default</span><br><span class="line">#virsh net-list --all</span><br><span class="line"></span><br><span class="line"> Name                 State      Autostart     Persistent</span><br><span class="line">----------------------------------------------------------</span><br><span class="line"> default              active     yes           yes</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>如果看到看到上面的结果，那么“虚拟桥”（virt bridge）就配置成功了。<br>注意STP：有些公司的IT部门可能不喜欢STP，所以，一定注意default.xml中的stp=‘off’。<br>或者使用在绑定网卡之前，使用命令行关掉stp</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># brctl stp virbr0 off</span><br><span class="line"># brctl show</span><br><span class="line">bridge name     bridge id               STP enabled     interfaces</span><br><span class="line">virbr0          8000.525400b98f9a       no              virbr0-nic</span><br></pre></td></tr></table></figure>
+<p>实际上虚拟机通过NAT联网的时候，各个网络设备之间的关系如图所示:<br><img src="/2019/12/26/network-in-vm/network-nat2.png" alt></p>
 </li>
-</ol>
-<p>或者显示的给出default.xml<br>  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#virsh net-define default.xml</span><br><span class="line">#virsh net-start default</span><br><span class="line">#virsh net-list --all</span><br><span class="line"></span><br><span class="line"> Name                 State      Autostart     Persistent</span><br><span class="line">----------------------------------------------------------</span><br><span class="line"> default              active     yes           yes</span><br></pre></td></tr></table></figure></p>
-<p>  如果看到看到上面的结果，那么“虚拟桥”（virt bridge）就配置成功了。<br>注意STP：有些公司的IT部门可能不喜欢STP，所以，一定注意default.xml中的stp=‘off’。<br>或者使用在绑定网卡之前，使用命令行关掉stp<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># brctl stp virbr0 off</span><br><span class="line"># brctl show</span><br><span class="line">bridge name     bridge id               STP enabled     interfaces</span><br><span class="line">virbr0          8000.525400b98f9a       no              virbr0-nic</span><br></pre></td></tr></table></figure></p>
-<p>实际上虚拟机通过NAT联网的时候，各个网络设备之间的关系如图所示:<br><img src="/2019/12/26/network-in-vm/network-nat2.png" alt=""></p>
-<ol start="3">
 <li><p>QEMU创建虚拟机</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-x86_64 --enable-kvm -M q35 -m 4G -smp 1 -hda /root/ubuntu1904.qcow -vnc :7 \</span><br><span class="line">	-device virtio-net-pci,netdev=nic0,mac=00:16:3e:0c:12:78 \</span><br><span class="line">	-netdev tap,id=nic0,br=br0,helper=/usr/local/libexec/qemu-bridge-helper,vhost=on</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-x86_64 --enable-kvm -M q35 -m 4G -smp 1 -hda /root/ubuntu1904.qcow -vnc :7 \</span><br><span class="line">	-device virtio-net-pci,netdev=nic0,mac=00:16:3e:0c:12:78 \</span><br><span class="line">	-netdev tap,id=nic0,br=br0,helper=/usr/local/libexec/qemu-bridge-helper,vhost=on</span><br></pre></td></tr></table></figure>
 <p>因为使用了工具qemu-bridge-helper，它需要一个配置文件：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">/usr/local/etc/qemu/bridge.conf:(这个目录默认没有，创建，如果没有这个文件qemu-bridge-helper会提示的)</span><br><span class="line"></span><br><span class="line">#把我们有可能用得到的网桥名字都列在这里。</span><br><span class="line"></span><br><span class="line">allow br0</span><br><span class="line">allow br1</span><br><span class="line">allow virbr0</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">/usr/local/etc/qemu/bridge.conf:(这个目录默认没有，创建，如果没有这个文件qemu-bridge-helper会提示的)</span><br><span class="line"></span><br><span class="line">#把我们有可能用得到的网桥名字都列在这里。</span><br><span class="line"></span><br><span class="line">allow br0</span><br><span class="line">allow br1</span><br><span class="line">allow virbr0</span><br></pre></td></tr></table></figure>
 <p>顺利的话，虚拟机起来之后会DHCP得到一个IP例如<code>192.168.122.177</code>。</p>
 </li>
 </ol>
-<h2 id="Bridge方式"><a href="#Bridge方式" class="headerlink" title="Bridge方式"></a>Bridge方式</h2><p>如图所示，bridge方式是让虚拟机获得跟host一样网段的IP地址，就像是host的一个“网上邻居”一样。既然是使用TAP那么思路跟上面”通过TAP配置NAT”是一样的，配置”网桥“。但区别是这个网桥是需要跟网卡”绑定“的。下面用两种方法做网卡和网桥的”绑定“，但最后的效果是一样的。<br><img src="/2019/12/26/network-in-vm/network-bridge.png" alt=""></p>
+<h2 id="Bridge方式"><a href="#Bridge方式" class="headerlink" title="Bridge方式"></a>Bridge方式</h2><p>如图所示，bridge方式是让虚拟机获得跟host一样网段的IP地址，就像是host的一个“网上邻居”一样。既然是使用TAP那么思路跟上面”通过TAP配置NAT”是一样的，配置”网桥“。但区别是这个网桥是需要跟网卡”绑定“的。下面用两种方法做网卡和网桥的”绑定“，但最后的效果是一样的。<br><img src="/2019/12/26/network-in-vm/network-bridge.png" alt></p>
 <h3 id="通过TAP配置Bridge方法1"><a href="#通过TAP配置Bridge方法1" class="headerlink" title="通过TAP配置Bridge方法1"></a>通过TAP配置Bridge方法1</h3><p>首先使用’ip’工具来配置，注意这种方法是临时的，一旦重启系统，这些配置需要重新做。</p>
 <ol>
 <li><p>创建一个“网桥”(bridge),取名br0</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip link add name br0 type bridge</span><br><span class="line">ip link set br0 up</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip link add name br0 type bridge</span><br><span class="line">ip link set br0 up</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>把物理网卡绑定到网桥上:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ip link set dev enp3s0f1 master br0	//enp3s0f1 是网卡interface的名字</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ip link set dev enp3s0f1 master br0	//enp3s0f1 是网卡interface的名字</span><br></pre></td></tr></table></figure>
 <p>这步之后，可以通过<code>ip a</code>查看，br0 和 enp3s0f1具有相同的mac地址。</p>
 </li>
 <li><p>重启网络服务：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl restart NetworkManager</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl restart NetworkManager</span><br></pre></td></tr></table></figure>
 <p>正常情况下，网络重启之后，br0会拿到IP，而之前的enp3s0f1不会拿到IP了。如果不是，执行下面命令:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ifdown enp3s0f1</span><br><span class="line">ifdown br0</span><br><span class="line">ifup br0</span><br><span class="line">ifup enp3s0f1</span><br><span class="line">systemctl restart NetworkManager</span><br></pre></td></tr></table></figure>
-</li>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ifdown enp3s0f1</span><br><span class="line">ifdown br0</span><br><span class="line">ifup br0</span><br><span class="line">ifup enp3s0f1</span><br><span class="line">systemctl restart NetworkManager</span><br></pre></td></tr></table></figure></li>
 <li><p>QEMU创建虚拟机</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-x86_64 --enable-kvm -M q35 -m 4G -smp 1 -hda /root/ubuntu1904.qcow -vnc :7 \</span><br><span class="line">	-device virtio-net-pci,netdev=nic0,mac=00:16:3e:0c:12:78 \</span><br><span class="line">	-netdev tap,id=nic0,br=br0,helper=/usr/local/libexec/qemu-bridge-helper,vhost=on</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-x86_64 --enable-kvm -M q35 -m 4G -smp 1 -hda /root/ubuntu1904.qcow -vnc :7 \</span><br><span class="line">	-device virtio-net-pci,netdev=nic0,mac=00:16:3e:0c:12:78 \</span><br><span class="line">	-netdev tap,id=nic0,br=br0,helper=/usr/local/libexec/qemu-bridge-helper,vhost=on</span><br></pre></td></tr></table></figure>
 <p>吼吼，创建虚拟机的步骤与NAT时，没有区别，除了注意一下网桥的名字之外。</p>
 </li>
 <li><p>(选做)如果想要删掉“网桥”执行下面的步骤：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ip link set dev enp3s0f1 nomaster</span><br><span class="line">ip link set dev br0 down</span><br><span class="line">ip link del br0</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ip link set dev enp3s0f1 nomaster</span><br><span class="line">ip link set dev br0 down</span><br><span class="line">ip link del br0</span><br></pre></td></tr></table></figure>
+<h3 id="通过TAP配置Bridge方法2"><a href="#通过TAP配置Bridge方法2" class="headerlink" title="通过TAP配置Bridge方法2"></a>通过TAP配置Bridge方法2</h3><p>这里借用工具nmcli来配置，参考了<a target="_blank" rel="noopener" href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-network_bridging_using_the_networkmanager_command_line_tool_nmcli">USING THE NETWORKMANAGER COMMAND LINE TOOL, NMCLI</a></p>
 </li>
-</ol>
-<h3 id="通过TAP配置Bridge方法2"><a href="#通过TAP配置Bridge方法2" class="headerlink" title="通过TAP配置Bridge方法2"></a>通过TAP配置Bridge方法2</h3><p>这里借用工具nmcli来配置，参考了<a href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-network_bridging_using_the_networkmanager_command_line_tool_nmcli" target="_blank" rel="noopener">USING THE NETWORKMANAGER COMMAND LINE TOOL, NMCLI</a></p>
-<ol>
 <li><p>简单来说执行下面的命令：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#nmcli con add type bridge ifname br0</span><br><span class="line">#nmcli con add type ethernet ifname enp3s0f1 master bridge-br0</span><br><span class="line">#nmcli connection down enp3s0f1</span><br><span class="line">#nmcli connection up bridge-br0</span><br><span class="line"></span><br><span class="line">#systemctl restart NetworkManager</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#nmcli con add type bridge ifname br0</span><br><span class="line">#nmcli con add type ethernet ifname enp3s0f1 master bridge-br0</span><br><span class="line">#nmcli connection down enp3s0f1</span><br><span class="line">#nmcli connection up bridge-br0</span><br><span class="line"></span><br><span class="line">#systemctl restart NetworkManager</span><br></pre></td></tr></table></figure>
 <p>这样应该就创建好网桥br1了</p>
 </li>
 <li><p>QEMU创建虚拟机的步骤还是跟之前的一样。<br>这个方法的优点就是系统重启之后，配置还在。</p>
@@ -337,14 +338,14 @@
 <h2 id="pass-through物理网卡"><a href="#pass-through物理网卡" class="headerlink" title="pass-through物理网卡"></a>pass-through物理网卡</h2><p>这种方法的网络拓扑结构跟bridge方式是一样的，不过这次虚拟机成为货真价实的网上邻居，因为它使用的是物理网卡。如果host上恰好有一个多余的网卡，不妨试下这个方法，它拥有理论上跟host一样的网络性能，使用虚拟机的网卡驱动。<br>pass-through物理网卡虽然实现起来相对复杂，但用起来却比较容易：</p>
 <ol>
 <li><p>确保host没有加载对应网卡的驱动<br>不过通常这都不太可能，可以参考<a href="vfio-pci.sh">这个脚本</a></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># ./vfio-pci.sh -h &lt;B:D:F&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># ./vfio-pci.sh -h &lt;B:D:F&gt;</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>QEMU创建虚拟机</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-x86_64 --enable-kvm -M q35 -m 4G -smp 1 -hda /root/ubuntu1904.qcow -vnc :7 \</span><br><span class="line">	-device vfio-pci,host=81:00.0,romfile=</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-x86_64 --enable-kvm -M q35 -m 4G -smp 1 -hda /root/ubuntu1904.qcow -vnc :7 \</span><br><span class="line">	-device vfio-pci,host=81:00.0,romfile= </span><br></pre></td></tr></table></figure>
 <p>相比几种方法，去掉了复杂的网络参数，仅仅加上了一个设备，并且指定其B:D:F是需要被pass-through给虚拟机的网卡对应的B:D:F的即可(例子中为81:00.0)。</p>
 </li>
 </ol>
-<p>参考文献：<br><a href="https://qemu.weilnetz.de/doc/qemu-doc.html#Using-TAP-network-interfaces" target="_blank" rel="noopener">2.9 Network emulation</a><br><a href="https://www.qemu.org/2018/05/31/nic-parameter/" target="_blank" rel="noopener">QEMU’s new -nic command line option</a><br><a href="https://wiki.qemu.org/Documentation/Networking" target="_blank" rel="noopener">Documentation/Networking</a><br><a href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-network_bridging_using_the_networkmanager_command_line_tool_nmcli" target="_blank" rel="noopener">9.2.USING THE NETWORKMANAGER COMMAND LINE TOOL, NMCLI</a></p>
+<p>参考文献：<br><a target="_blank" rel="noopener" href="https://qemu.weilnetz.de/doc/qemu-doc.html#Using-TAP-network-interfaces">2.9 Network emulation</a><br><a target="_blank" rel="noopener" href="https://www.qemu.org/2018/05/31/nic-parameter/">QEMU’s new -nic command line option</a><br><a target="_blank" rel="noopener" href="https://wiki.qemu.org/Documentation/Networking">Documentation/Networking</a><br><a target="_blank" rel="noopener" href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-network_bridging_using_the_networkmanager_command_line_tool_nmcli">9.2.USING THE NETWORKMANAGER COMMAND LINE TOOL, NMCLI</a></p>
 
     </div>
 
@@ -451,13 +452,14 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT方式"><span class="nav-number">2.</span> <span class="nav-text">NAT方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#QEMU默认的NAT-SLiRP"><span class="nav-number">2.1.</span> <span class="nav-text">QEMU默认的NAT (SLiRP)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通过TAP配置NAT"><span class="nav-number">2.2.</span> <span class="nav-text">通过TAP配置NAT</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bridge方式"><span class="nav-number">3.</span> <span class="nav-text">Bridge方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#通过TAP配置Bridge方法1"><span class="nav-number">3.1.</span> <span class="nav-text">通过TAP配置Bridge方法1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通过TAP配置Bridge方法2"><span class="nav-number">3.2.</span> <span class="nav-text">通过TAP配置Bridge方法2</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pass-through物理网卡"><span class="nav-number">4.</span> <span class="nav-text">pass-through物理网卡</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT%E6%96%B9%E5%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">NAT方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#QEMU%E9%BB%98%E8%AE%A4%E7%9A%84NAT-SLiRP"><span class="nav-number">2.1.</span> <span class="nav-text">QEMU默认的NAT (SLiRP)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E8%BF%87TAP%E9%85%8D%E7%BD%AENAT"><span class="nav-number">2.2.</span> <span class="nav-text">通过TAP配置NAT</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bridge%E6%96%B9%E5%BC%8F"><span class="nav-number">3.</span> <span class="nav-text">Bridge方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E8%BF%87TAP%E9%85%8D%E7%BD%AEBridge%E6%96%B9%E6%B3%951"><span class="nav-number">3.1.</span> <span class="nav-text">通过TAP配置Bridge方法1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E8%BF%87TAP%E9%85%8D%E7%BD%AEBridge%E6%96%B9%E6%B3%952"><span class="nav-number">3.2.</span> <span class="nav-text">通过TAP配置Bridge方法2</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pass-through%E7%89%A9%E7%90%86%E7%BD%91%E5%8D%A1"><span class="nav-number">4.</span> <span class="nav-text">pass-through物理网卡</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
       <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃" src="/images/avatar.gif">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
   <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
   <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
 </div>
@@ -466,7 +468,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -493,25 +495,25 @@
     </div>
     <ul class="links-of-blogroll-list">
         <li class="links-of-blogroll-item">
-          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https://www.stolaf.edu/people/rab/os/syscall_index.html" rel="noopener" target="_blank">System call index</a>
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://ref.x86asm.net/coder64.html" title="http://ref.x86asm.net/coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="http://www.ctyme.com/intr/int.htm" title="http://www.ctyme.com/intr/int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://www.felixcloutier.com/x86/" title="https://www.felixcloutier.com/x86/" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
         </li>
         <li class="links-of-blogroll-item">
-          <a href="https://defuse.ca/online-x86-assembler.htm" title="https://defuse.ca/online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
         </li>
     </ul>
   </div>
@@ -531,7 +533,7 @@
         
 
         
-  <div class="beian"><a href="http://www.beian.miit.gov.cn" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
       <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
   </div>
 
@@ -562,9 +564,17 @@
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
 <script src="/js/schemes/muse.js"></script>
+
+
 <script src="/js/next-boot.js"></script>
+
 
   <script defer src="/lib/three/three.min.js"></script>
     <script defer src="/lib/three/three-waves.min.js"></script>
@@ -584,7 +594,9 @@
 
 
 
-  <script src="/js/local-search.js"></script>
+  
+<script src="/js/local-search.js"></script>
+
 
 
 
