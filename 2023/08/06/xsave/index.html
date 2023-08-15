@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.owalle.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="最近研究了下xsaves指令，发现国内中文内容XSAVE(s)相关的太少了。这里简单记一下心得和笔记吧。 总的来说，XSAVE 和 XSAVES 指令的引入是为了支持更复杂的处理器状态，并在多任务环境中实现高效的上下文切换。随着处理器技术的发展，Intel 和 AMD 都引入了许多新的特性和扩展，例如浮点单位、SIMD 扩展（如 MMX、SSE 和 AVX）以及其他功能（如 MPX 和 SGX）。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xsave 寄存器">
+<meta property="og:url" content="http://www.owalle.com/2023/08/06/xsave/index.html">
+<meta property="og:site_name" content="Yi颗烂樱桃">
+<meta property="og:description" content="最近研究了下xsaves指令，发现国内中文内容XSAVE(s)相关的太少了。这里简单记一下心得和笔记吧。 总的来说，XSAVE 和 XSAVES 指令的引入是为了支持更复杂的处理器状态，并在多任务环境中实现高效的上下文切换。随着处理器技术的发展，Intel 和 AMD 都引入了许多新的特性和扩展，例如浮点单位、SIMD 扩展（如 MMX、SSE 和 AVX）以及其他功能（如 MPX 和 SGX）。">
+<meta property="og:locale">
+<meta property="og:image" content="http://www.owalle.com/2023/08/06/xsave/xsave.svg">
+<meta property="og:image" content="http://www.owalle.com/2023/08/06/xsave/bitmap.png">
+<meta property="article:published_time" content="2023-08-06T09:39:17.000Z">
+<meta property="article:modified_time" content="2023-08-15T14:30:17.934Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="KVM Linux Kernel Qemu">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.owalle.com/2023/08/06/xsave/xsave.svg">
+
+<link rel="canonical" href="http://www.owalle.com/2023/08/06/xsave/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>xsave 寄存器 | Yi颗烂樱桃</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yi颗烂樱桃</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">虚拟化中文</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-fw fa-sitemap"></i>Sitemap</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2023/08/06/xsave/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          xsave 寄存器
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-08-06 17:39:17" itemprop="dateCreated datePublished" datetime="2023-08-06T17:39:17+08:00">2023-08-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-08-15 22:30:17" itemprop="dateModified" datetime="2023-08-15T22:30:17+08:00">2023-08-15</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>最近研究了下xsaves指令，发现国内中文内容XSAVE(s)相关的太少了。这里简单记一下心得和笔记吧。</p>
+<p>总的来说，XSAVE 和 XSAVES 指令的引入是为了支持更复杂的处理器状态，并在多任务环境中实现高效的上下文切换。随着处理器技术的发展，Intel 和 AMD 都引入了许多新的特性和扩展，例如浮点单位、SIMD 扩展（如 MMX、SSE 和 AVX）以及其他功能（如 MPX 和 SGX）。这些扩展和特性增加了处理器的状态大小，意味着传统的上下文保存和恢复机制（如使用 FXSAVE 和 FXRSTOR 指令）不再足够。需要一种高效的方式来保存和恢复处理器状态。<br>XSAVE 允许更灵活地保存和恢复处理器状态。它引入了一个新的数据结构，该结构可以容纳各种处理器状态组件。XSAVE 还支持功能掩码(RFBM/XINUSE)，允许操作系统选择要保存和恢复的状态组件。<br>尽管 XSAVE 增强了上下文切换的能力，但随着处理器状态的进一步增加，还需要进一步的优化。XSAVES 和 XSAVEC 被设计为 XSAVE 的扩展，提供了更紧凑和高效的保存格式。 特别是，XSAVES 提供了对 SGX 和 MPX 的支持，并为未来的处理器特性提供了兼容性。<br>与 XSAVE 和 XSAVES 相伴而来的还有其他相关指令，例如 XRSTOR, XRSTORS, XSAVEOPT 等。</p>
+<p>SIMD扩展的寄存器的长度经过多年的发展，不同指令大概这样:<br><img src="/2023/08/06/xsave/xsave.svg" alt></p>
+<ul>
+<li><p>SSE (Streaming SIMD Extensions):<br>1990 年代末，多媒体应用程序（如视频解码、图形渲染等）的需求日益增加。为了满足这些应用程序对性能的需求，Intel 提出了 SIMD (Single Instruction, Multiple Data) 的概念，即用单一指令同时处理多个数据项。<br>SSE 指令集首次出现在 1999 年的 Pentium III 处理器中，随后是SSE2（Pentium 4）, SSE3（Pentium 4）, SSSE3(Core 2 Due), SSE4（Penryn 和 Nehalem）, 持续到2008年。</p>
+</li>
+<li><p>AVX (Advanced Vector Extensions):<br>2000 年代末，随着科学计算和数据分析需求的增加，需要更大的数据向量和更多的并行性。为此，Intel 引入了 AVX 指令集，它提供了 256 位宽的向量寄存器，这比 SSE 的 128 位宽的寄存器长度翻倍了。AVX 指令集首次出现在 2011 年的 Sandy Bridge 架构的处理器中。</p>
+</li>
+<li><p>AVX2 和 AVX-512:<br>随着对更高性能的需求，Intel 又引入了 AVX2 和 AVX-512 扩展。AVX2 增加了新的整数指令和256位宽的整数向量。而 AVX-512 增加了 512 位宽的向量寄存器。<br>AVX2: 2013 年，与 Haswell 架构的处理器一同推出。<br>AVX-512: 2016 年，首次出现在 Xeon 和后续的 Skylake-SP 处理器中。</p>
+</li>
+</ul>
+<p>XSAVE指令扩展了FXSAVE使用的格式，以包括附加寄存器集合。然而，与早期保存指令不同，它并不严格限于固定数据集。相反，它使得在不需要添加下一个XSAVE变体或破坏与现有软件兼容性的情况下引入对新CPU扩展支持成为可能。XSAVE围绕状态组件的概念展开。状态组件表示可以独立保存或恢复的单个数据子集。有两个特殊的状态组件对应于原始FXSAVE指令：x86状态组件和SSE状态组件。</p>
+<p>在现代处理器中，有两种状态组件：用户状态组件和内核状态组件。前者组表示对用户空间程序可访问的常规寄存器，后者涉及不应暴露给常规程序的特权寄存器。</p>
+<p>通过状态组件位图来控制各个状态组件。这个位图由XSAVE用来确定要保存哪些指令集，由XRSTOR用来确定要从这个区域恢复（位设置）还是重置为默认状态（位清除）。启用相应的位会导致将附加数据保存到内存中，从而有效地需要更大的存储区域。<br><img src="/2023/08/06/xsave/bitmap.png" alt></p>
+<p>为了使得保存特定状态组件或在程序中使用相应寄存器成为可能，内核需要在其中一个控制寄存器中启用其跟踪。这些控制寄存器是XCR0用于用户组件，IA32_XSS用于监督者组件。⁷[7]两者都使用与状态组件位图相同的位数。</p>
+<p>XSAVE指令使用的数据格式称为XSAVE区域。XSAVE区域由三部分组成：与FXSAVE指令相同的512字节遗留区域，后跟包含有关XSAVE区域中存在的数据信息的64字节XSAVE头，后跟用于存储附加状态组件的可变大小扩展区域。</p>
+<p>XSAVE头当前包含两个64位字段，其值对应于状态组件位图：XSTATE_BV和XCOMP_BV。⁹[9]XSTATE_BV由XSAVE写入，以指示特定状态组件已写入扩展区域，并由XRSTOR读取，以确定该组件是否要从该区域恢复（位设置）或重置为默认状态（位清除）。</p>
+<h2 id="调用"><a href="#调用" class="headerlink" title="调用"></a>调用</h2><p>在调用 XSAVE 指令集族中的任何指令之前，需要进行一些简单的步骤，简短地列一下。</p>
+<p>首先，需要通过 CPUID 验证指令的支持。<br>其次，需要启用状态跟踪。就是说在 XCR0 中为用户状态组件设置适当的状态组件位，并在 IA32_XSS 中为suppervisor状态组件设置。还需要在控制寄存器 CR4 中设置适当的 XSAVE 位。所有这些操作都由内核完成。<br>第三，需要获得足够大的 XSAVE 区域的缓冲区。程序应使用 CPUID 指令来获得所需的大小。缓冲区需要对齐到 64 字节。通常，首先将缓冲区置零可能很方便，这样可以避免需要小心，例如，XSAVE 使未使用的 XSTATE_BV 字节保持不变。<br>最后，需要将请求的状态组件位图放入寄存器对 EDX:EAX（高 32 位放入 EDX，低 32 位放入 EAX — 这是一个常见的 i386 用于 64 位整数的约定）。完成此操作后，可以调用 XSAVE。<br>之后，需要进行另一系列的 CPUID 调用，以获得偏移量或大小以及处理 XSAVE 区域内容的对齐要求。</p>
+<p>下面的列表展示了一个简单的程序，该程序三次调用 XSAVE，每次都修改了不同的寄存器集。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;assert.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;inttypes.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdint.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">xsave</span> &#123;</span></span><br><span class="line">    <span class="type">uint8_t</span> legacy_area[<span class="number">512</span>];</span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">            <span class="type">uint64_t</span> xstate_bv;</span><br><span class="line">            <span class="type">uint64_t</span> xcomp_bv;</span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="type">uint8_t</span> header_area[<span class="number">64</span>];</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="type">uint8_t</span> extended_area[];</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">uint32_t</span> buf_size = <span class="number">0</span>;</span><br><span class="line">    <span class="type">uint32_t</span> avx_offset = <span class="number">0</span>;</span><br><span class="line">    <span class="type">uint8_t</span> avx_bytes[<span class="number">32</span>];</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">xsave</span>* <span class="title">buf</span>[3];</span></span><br><span class="line">    <span class="type">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="keyword">sizeof</span>(avx_bytes); ++i)</span><br><span class="line">        avx_bytes[i] = i;</span><br><span class="line"></span><br><span class="line">    __asm__ __volatile__ (</span><br><span class="line">        <span class="comment">/* check CPUID support for XSAVE and AVX */</span></span><br><span class="line">        <span class="string">&quot;mov $0x01, %%eax\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;cpuid\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;mov $0x04000000, %%eax\n\t&quot;</span>  <span class="comment">/* bit 26 - XSAVE */</span></span><br><span class="line">        <span class="string">&quot;and %%ecx, %%eax\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;jz .cpuid_end\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;mov $0x10000000, %%eax\n\t&quot;</span>  <span class="comment">/* bit 28 - AVX */</span></span><br><span class="line">        <span class="string">&quot;and %%ecx, %%eax\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;jz .no_avx\n\t&quot;</span></span><br><span class="line">        <span class="comment">/* get AVX offset */</span></span><br><span class="line">        <span class="string">&quot;mov $0x0d, %%eax\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;mov $0x02, %%ecx\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;cpuid\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;mov %%ebx, %1\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;\n&quot;</span></span><br><span class="line">        <span class="string">&quot;.no_avx:\n\t&quot;</span></span><br><span class="line">        <span class="comment">/* get XSAVE area size for current XCR0 */</span></span><br><span class="line">        <span class="string">&quot;mov $0x0d, %%eax\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;xor %%ecx, %%ecx\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;cpuid\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;mov %%ebx, %0\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;\n&quot;</span></span><br><span class="line">        <span class="string">&quot;.cpuid_end:\n\t&quot;</span></span><br><span class="line">        : <span class="string">&quot;=m&quot;</span>(buf_size), <span class="string">&quot;=m&quot;</span>(avx_offset)</span><br><span class="line">        :</span><br><span class="line">        : <span class="string">&quot;%eax&quot;</span>, <span class="string">&quot;%ebx&quot;</span>, <span class="string">&quot;%ecx&quot;</span>, <span class="string">&quot;%edx&quot;</span></span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (buf_size == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;no xsave support\n&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;has avx: %s\n&quot;</span>, avx_offset != <span class="number">0</span> ? <span class="string">&quot;yes&quot;</span> : <span class="string">&quot;no&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;xsave area size: %d bytes\n&quot;</span>, buf_size);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="number">3</span>; ++i) &#123;</span><br><span class="line">        buf[i] = aligned_alloc(<span class="number">64</span>, buf_size);</span><br><span class="line">        assert(buf[i]);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    __asm__ __volatile__ (</span><br><span class="line">        <span class="string">&quot;mov $0x07, %%eax\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;xor %%edx, %%edx\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;xsave (%0)\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;movd %%eax, %%mm0\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;xsave (%1)\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;and %3, %3\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;jz .xsave_end\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;vmovups (%3), %%ymm0\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;xsave (%2)\n\t&quot;</span></span><br><span class="line">        <span class="string">&quot;\n&quot;</span></span><br><span class="line">        <span class="string">&quot;.xsave_end:\n\t&quot;</span></span><br><span class="line">        :</span><br><span class="line">        : <span class="string">&quot;r&quot;</span>(buf[<span class="number">0</span>]), <span class="string">&quot;r&quot;</span>(buf[<span class="number">1</span>]), <span class="string">&quot;r&quot;</span>(buf[<span class="number">2</span>]),</span><br><span class="line">          <span class="string">&quot;c&quot;</span>(avx_offset != <span class="number">0</span> ? avx_bytes : <span class="number">0</span>)</span><br><span class="line">        : <span class="string">&quot;%eax&quot;</span>, <span class="string">&quot;%edx&quot;</span>, <span class="string">&quot;%mm0&quot;</span>, <span class="string">&quot;%ymm0&quot;</span>, <span class="string">&quot;memory&quot;</span></span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;XSTATE_BV (initial): %#018&quot;</span> PRIx64 <span class="string">&quot;\n&quot;</span>,</span><br><span class="line">           buf[<span class="number">0</span>]-&gt;xstate_bv);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;XSTATE_BV (with MMX): %#018&quot;</span> PRIx64 <span class="string">&quot;\n&quot;</span>,</span><br><span class="line">           buf[<span class="number">1</span>]-&gt;xstate_bv);</span><br><span class="line">    <span class="keyword">if</span> (avx_offset != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;XSTATE_BV (with AVX): %#018&quot;</span> PRIx64 <span class="string">&quot;\n&quot;</span>,</span><br><span class="line">               buf[<span class="number">2</span>]-&gt;xstate_bv);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;YMM0 most significant quadword: %#018&quot;</span> PRIx64 <span class="string">&quot;\n&quot;</span>,</span><br><span class="line">               *((<span class="type">uint64_t</span>*)(((<span class="type">char</span>*)buf[<span class="number">2</span>]) + avx_offset)));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="number">3</span>; ++i)</span><br><span class="line">        <span class="built_in">free</span>(buf[i]);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>使用gcc直接编译就可以执行了，在我的测试机上结果这样：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">has avx: <span class="built_in">yes</span></span><br><span class="line">xsave area size: 2688 bytes</span><br><span class="line">XSTATE_BV (initial): 0x0000000000000002</span><br><span class="line">XSTATE_BV (with MMX): 0x0000000000000003</span><br><span class="line">XSTATE_BV (with AVX): 0x0000000000000007</span><br><span class="line">YMM0 most significant quadword: 0x1716151413121110</span><br></pre></td></tr></table></figure></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    Donate
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Yi颗烂樱桃 WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="Yi颗烂樱桃 Alipay">
+        <p>Alipay</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/14/neovim/" rel="prev" title="打造完美内核开发IDE -- neovim">
+      <i class="fa fa-chevron-left"></i> 打造完美内核开发IDE -- neovim
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%83%E7%94%A8"><span class="nav-number">1.</span> <span class="nav-text">调用</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
+  <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">51</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+      <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yi颗烂樱桃</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+  <script defer src="/lib/three/three.min.js"></script>
+    <script defer src="/lib/three/three-waves.min.js"></script>
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="/lib/gitalk/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('/lib/gitalk/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '30a5af43b5ea724ad81b',
+      clientSecret: '3426c0800920f9f75967ecf4b87f453e8012b911',
+      repo        : 'ysun.github.io',
+      owner       : 'ysun',
+      admin       : ['ysun'],
+      id          : 'ba95144e041d515b6c455025d6121ba1',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

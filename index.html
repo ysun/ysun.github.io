@@ -199,6 +199,79 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2023/08/06/xsave/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/08/06/xsave/" class="post-title-link" itemprop="url">xsave 寄存器</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-08-06 17:39:17" itemprop="dateCreated datePublished" datetime="2023-08-06T17:39:17+08:00">2023-08-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-08-15 22:30:17" itemprop="dateModified" datetime="2023-08-15T22:30:17+08:00">2023-08-15</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>最近研究了下xsaves指令，发现国内中文内容XSAVE(s)相关的太少了。这里简单记一下心得和笔记吧。</p>
+<p>总的来说，XSAVE 和 XSAVES 指令的引入是为了支持更复杂的处理器状态，并在多任务环境中实现高效的上下文切换。随着处理器技术的发展，Intel 和 AMD 都引入了许多新的特性和扩展，例如浮点单位、SIMD 扩展（如 MMX、SSE 和 AVX）以及其他功能（如 MPX 和 SGX）。这些扩展和特性增加了处理器的状态大小，意味着传统的上下文保存和恢复机制（如使用 FXSAVE 和 FXRSTOR 指令）不再足够。需要一种高效的方式来保存和恢复处理器状态。<br>XSAVE 允许更灵活地保存和恢复处理器状态。它引入了一个新的数据结构，该结构可以容纳各种处理器状态组件。XSAVE 还支持功能掩码(RFBM/XINUSE)，允许操作系统选择要保存和恢复的状态组件。<br>尽管 XSAVE 增强了上下文切换的能力，但随着处理器状态的进一步增加，还需要进一步的优化。XSAVES 和 XSAVEC 被设计为 XSAVE 的扩展，提供了更紧凑和高效的保存格式。 特别是，XSAVES 提供了对 SGX 和 MPX 的支持，并为未来的处理器特性提供了兼容性。<br>与 XSAVE 和 XSAVES 相伴而来的还有其他相关指令，例如 XRSTOR, XRSTORS, XSAVEOPT 等。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/08/06/xsave/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2023/06/14/neovim/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -881,83 +954,10 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2021/12/09/qemu-pci/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Yi颗烂樱桃">
-      <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yi颗烂樱桃">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/12/09/qemu-pci/" class="post-title-link" itemprop="url">用QEMU来体会PCI/PCIE设备</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2021-12-09 17:13:55" itemprop="dateCreated datePublished" datetime="2021-12-09T17:13:55+08:00">2021-12-09</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-13 10:40:10" itemprop="dateModified" datetime="2021-12-13T10:40:10+08:00">2021-12-13</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>PCI以及PCIE设备非常普遍，其驱动也是内核中非常重要的一部分，受到网友的启发，借助QEMU一次性把PCI/PCIE的拓扑结构给说透(尽量)。<br>为了简单，这里使用virtio-scsi-pci HBA (host bus adapter)作为例子，分别来探究PCI和PCIE两种不同类型的总线。</p>
-<h2 id="PCI"><a href="#PCI" class="headerlink" title="PCI"></a>PCI</h2>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/12/09/qemu-pci/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
   </nav>
 
 
@@ -1025,7 +1025,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">50</span>
+          <span class="site-state-item-count">51</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
