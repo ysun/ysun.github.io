@@ -74,8 +74,7 @@ pandoc -D latex > template.LaTeX
   \linespread{1.2}\selectfont   % 行距
 ```
 
-然后把所有*font的地方改成'Microsoft YaHei'
-
+然后把所有*font的地方改成'Microsoft YaHei'。我的模板[template.latex](my.latex)。
 
 ## 基于docker的使用方法
 以上内容我们还需要在本地Linux上安装环境，如果使用 pandoc 的 docker镜像 将会使这一切都变的更简单。
