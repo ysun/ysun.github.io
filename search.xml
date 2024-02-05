@@ -5402,4 +5402,36 @@ Num     Type           Disp Enb Address    What
 <p>使用gcc直接编译就可以执行了，在我的测试机上结果这样：<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">has avx: <span class="built_in">yes</span></span><br><span class="line">xsave area size: 2688 bytes</span><br><span class="line">XSTATE_BV (initial): 0x0000000000000002</span><br><span class="line">XSTATE_BV (with MMX): 0x0000000000000003</span><br><span class="line">XSTATE_BV (with AVX): 0x0000000000000007</span><br><span class="line">YMM0 most significant quadword: 0x1716151413121110</span><br></pre></td></tr></table></figure></p>
 ]]></content>
   </entry>
+  <entry>
+    <title>Markdown文档转为PDF</title>
+    <url>/2024/02/05/markdown2pdf/</url>
+    <content><![CDATA[<h2 id="安装-pandoc-及依赖"><a href="#安装-pandoc-及依赖" class="headerlink" title="安装 pandoc 及依赖"></a>安装 pandoc 及依赖</h2><p>安装pandoc 和 LaTeX 引擎<br>使用 pandoc 转换文档为 pdf，需要安装在操作系统上安装 latex（默认使用 LaTeX 引擎），否则会出现错误 pdflatex not found. Please select a different –pdf-engine or install pdflatex。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">sudo apt install pandoc texlive-latex-base texlive-extra-utils texlive-latex-extra texlive-lang-chinese</span><br></pre></td></tr></table></figure>
+<p>XeLaTeX 是使用 LaTeX 的排版引擎。对于中文文档，pdflatex 转换会出现字符集不支持的问题，可以使用参数指定 xelatex 引擎来转换中文文档。<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">sudo apt install texlive-xetex</span><br></pre></td></tr></table></figure></p>
+<h2 id="安装字体"><a href="#安装字体" class="headerlink" title="安装字体"></a>安装字体</h2><h3 id="拷贝字体"><a href="#拷贝字体" class="headerlink" title="拷贝字体"></a>拷贝字体</h3><p>将windows的字体拷贝至Ubuntu系统目录/usr/share/fonts下，比如在WSL上</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p /usr/share/fonts/truetype/windowsfont</span><br><span class="line">sudo <span class="built_in">cp</span> -r /mnt/c/Windows/Fonts/* /usr/share/fonts/truetype/windowsfont/</span><br></pre></td></tr></table></figure>
+<h3 id="安装字体-1"><a href="#安装字体-1" class="headerlink" title="安装字体"></a>安装字体</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mkfontscale</span><br><span class="line">mkfontdir</span><br><span class="line">fc-cache -fv</span><br></pre></td></tr></table></figure>
+<p>注意：如果不存在 fc-cache 命令，需要安装 fontconfig:<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">sudo apt install fontconfig。</span><br></pre></td></tr></table></figure></p>
+<h3 id="查询字体是否安装成功"><a href="#查询字体是否安装成功" class="headerlink" title="查询字体是否安装成功"></a>查询字体是否安装成功</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">fc-list :lang=zh</span><br></pre></td></tr></table></figure>
+<h3 id="指定字体生成pdf"><a href="#指定字体生成pdf" class="headerlink" title="指定字体生成pdf"></a>指定字体生成pdf</h3><ul>
+<li>编译pandoc默认的latex引擎是pdflatex，是不支持中文的，因此需要手动设置编译时所用的引擎为xelatex，编译命令改为：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pandoc file_name.md --pdf-engine=xelatex -o file_name.pdf -V mainfont=<span class="string">&#x27;Microsoft YaHei&#x27;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">./pandoc --variable papersize=A4 --variable <span class="string">&quot;geometry=margin=1.2in&quot;</span> --variable mainfont=<span class="string">&#x27;Microsoft YaHei&#x27;</span> --variable sansfont=<span class="string">&#x27;Microsoft YaHei&#x27;</span> --variable monofont=<span class="string">&#x27;Microsoft YaHei&#x27;</span> --pdf-engine=xelatex -s test.md -o test.pdflatex</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>其中 –variable “geometry=margin=1.2in” 为四周统一边距的设置，或者使用 margin-left、margin-right、margin-top、margin-bottom 逐个设置。</p>
+</li>
+<li><p>变量 –variable 可以使用大写的 -V 来替代，例如 -V monofont=’Microsoft YaHei’</p>
+</li>
+</ul>
+<h3 id="导出pandoc转换为时的latex默认模板"><a href="#导出pandoc转换为时的latex默认模板" class="headerlink" title="导出pandoc转换为时的latex默认模板"></a>导出pandoc转换为时的latex默认模板</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pandoc -D latex &gt; template.LaTeX</span><br></pre></td></tr></table></figure>
+<p>在template.latex里添加中文字体支持:<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\usepackage&#123;fontspec&#125;   % 允許設定字體</span><br><span class="line">  \usepackage&#123;xeCJK&#125;    % 分開設置中英文字型</span><br><span class="line">  \setCJKmainfont&#123;SimSun&#125;   % 設定中文字型</span><br><span class="line">  \setmainfont&#123;Helvetical&#125;  % 設定英文字型</span><br><span class="line">  \setromanfont&#123;Helvetical&#125;   % 字型</span><br><span class="line">  \setmonofont&#123;Courier New&#125;</span><br><span class="line">  \linespread&#123;1.2&#125;\selectfont   % 行距</span><br></pre></td></tr></table></figure></p>
+<p>然后把所有*font的地方改成’Microsoft YaHei’</p>
+<h2 id="基于docker的使用方法"><a href="#基于docker的使用方法" class="headerlink" title="基于docker的使用方法"></a>基于docker的使用方法</h2><p>以上内容我们还需要在本地Linux上安装环境，如果使用 pandoc 的 docker镜像 将会使这一切都变的更简单。<br>示例：</p>
+<h3 id="设置运行命令的别名"><a href="#设置运行命令的别名" class="headerlink" title="设置运行命令的别名"></a>设置运行命令的别名</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">alias</span> pandock=<span class="string">&#x27;docker run --rm -v &quot;$(pwd):/data&quot; -u $(id -u):$(id -g) pandoc/latex&#x27;</span></span><br></pre></td></tr></table></figure>
+<h3 id="转换一个-markdown-文档为-word-文件"><a href="#转换一个-markdown-文档为-word-文件" class="headerlink" title="转换一个 markdown 文档为 word 文件"></a>转换一个 markdown 文档为 word 文件</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pandock -s test.md -o test.docx</span><br></pre></td></tr></table></figure>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p><a href="https://miktex.org/download">https://miktex.org/download</a></p>
+<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><p><a href="https://blog.csdn.net/m0_47696151/article/details/124322754">使用pandoc 生成带中文的pdf</a><br><a href="https://github.com/jgm/pandoc/wiki/Pandoc-with-Chinese">Pandoc with Chinese</a><br><a href="https://github.com/jgm/pandoc/wiki/Pandoc-with-Chinese">在 Linux 下安装字体</a><br><a href="https://hub.docker.com/r/pandoc/latex">pandoc/latex docker</a></p>
+]]></content>
+  </entry>
 </search>
