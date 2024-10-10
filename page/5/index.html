@@ -199,6 +199,87 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2018/12/26/qemu-qom/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2018/12/26/qemu-qom/" class="post-title-link" itemprop="url">利用QOM(Qemu Object Model)创建虚拟设备</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2018-12-26 09:42:27" itemprop="dateCreated datePublished" datetime="2018-12-26T09:42:27+08:00">2018-12-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-09-27 17:54:43" itemprop="dateModified" datetime="2021-09-27T17:54:43+08:00">2021-09-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/QEMU/" itemprop="url" rel="index"><span itemprop="name">QEMU</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="什么是QOM"><a href="#什么是QOM" class="headerlink" title="什么是QOM"></a>什么是QOM</h2><p>QOM(Qemu Object Model)是QEMU最新的设备模型，将所有的模拟设备整合成了一种单根结点(系统总线)的树状形式，并具有热插拔功能。后来可能由于Device和Bus之间的复杂关系，又开发了QOM。<br>QOM是QEMU在C的基础上自己实现的一套面向对象机制，负责将device、bus等设备都抽象成为对象。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2018/12/26/qemu-qom/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2018/12/24/qemu-debug/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -919,88 +1000,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2014/12/11/kvm-src-2-vm-run/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Yi颗烂樱桃">
-      <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Yi颗烂樱桃">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2014/12/11/kvm-src-2-vm-run/" class="post-title-link" itemprop="url">KVM源代码分析2:虚拟机的创建与运行</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2014-12-11 09:38:35" itemprop="dateCreated datePublished" datetime="2014-12-11T09:38:35+08:00">2014-12-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-09-27 17:54:43" itemprop="dateModified" datetime="2021-09-27T17:54:43+08:00">2021-09-27</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM/" itemprop="url" rel="index"><span itemprop="name">KVM</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>原文链接：<a target="_blank" rel="noopener" href="http://oenhan.com/kvm-src-2-vm-run">http://oenhan.com/kvm-src-2-vm-run</a></p>
-<p>前段时间挖了一个坑，<a target="_blank" rel="noopener" href="http://www.oenhan.com/kvm-src-1">KVM源代码分析1:基本工作原理</a>，准备写一下kvm的代码机制，结果一直没时间填土，现在还一下旧账，争取能温故而知新。 基本原理里面提到kvm虚拟化由用户态程序Qemu和<a target="_blank" rel="noopener" href="http://www.oenhan.com/size-512-slab-kmalloc" title="从size-512内存泄露看slab分配">内核态驱动</a>kvm配合完成，qemu负责HOST用户态层面进程管理，IO处理等，KVM负责把qemu的部分指令在硬件上直接实现，从<a target="_blank" rel="noopener" href="http://www.oenhan.com/sort-optimal-solution" title="比较排序的最优解">虚拟机</a>的创建和运行上看，qemu的代码占了流程上的主要部分。下面的代码主要主要针对与qemu，KVM部分另外开篇再说。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2014/12/11/kvm-src-2-vm-run/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1072,7 +1071,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">52</span>
+          <span class="site-state-item-count">53</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -1085,7 +1084,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-count">28</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
