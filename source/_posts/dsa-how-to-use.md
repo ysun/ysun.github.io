@@ -266,31 +266,3 @@ if (comp.status == DSA_COMP_SUCCESS) {
      */
 }
 ```
-
-
-Intel DSA 和 Intel IAA 设备的编号取决于每种设备在 CPU SKU 中的数量。在下面的双插槽示例中，每个插槽包含四个 Intel 内存分析加速器（IAA）设备，
-在一个具有双插槽系统的示例中，Linux 驱动程序会为总共八个 Intel DSA 设备（每个处理器四个设备）生成如图 3-6 所示的 sysfs 目录。Intel DSA 和 Intel® IAA 设备都由 IDXD 设备驱动程序进行管理。Intel DSA 和 Intel IAA 设备的编号取决于每种设备在 CPU SKU 中的数量。在下面的双插槽示例中，每个插槽包含四个 Intel 内存分析加速器（IAA）设备，它们被命名为 iax{1,3,5,7,9,11,13,15}。相应地，Intel DSA 设备被命名为 dsa{0,2,4,6,8,10,12,14}。
-
-在PCI总线上，PASID占用了TLP（事务层包）头的一部分，通常使用20个比特位来传输PASID值，这个值一般由IOMMU在配置设备时指定。有关PASID TLP的具体格式，请参见PCI规范6.0中的详细描述。PASID的分配和管理代码位于内核目录的drivers/iommu/iommu-sva.c文件中。
-
-在IOMMU中，支持PASID的模式也被称为可扩展模式（Scalable Mode）。当启用可扩展模式时，会在传统页表前面添加PASID的上下文条目。根据最新的VT-d规范，在可扩展模式的地址转换中，每个设备都有各自的PASID上下文表，最终的PASID表会指向一级和二级页表。
-
-ATS通过特殊类型的TLP包来实现，具体的格式可以在PCI规范6.0第十章的地址转换服务中找到。
-
-PRS同样通过特殊类型的TLP包实现，详细格式可以参见PCI规范6.0第十章中的页请求消息相关内容。
-
-当DSA设备与主机共享地址空间时，只需启用ATC/ATS和PRS功能即可实现。这其中PRS与描述符标志中的“block on fault”位有关。
-
-对于DSA与虚拟机共享内存空间的情况，需要平台启用可扩展模式，同时虚拟机管理程序（VMM）需要在IOMMU中为虚拟机配置PASID。分配给虚拟机的DSA虚拟设备（vDEV）也需要支持ATS、PASID和PRS功能。目前，DSA虚拟设备的支持仍在社区中进行评审。
-
-
-
-
-共享虚拟内存（SVM），在支持SVM的系统中，
-与 SVM 相关的 PCIe 功能和状态（如 ATSCtl、PASIDCtl 和 PRICtl）已经启用，如图 3-4 所示。有关 Intel DSA 如何利用 PASID、PCIe、ATS 和 PRS 功能来支持 SVM 的详细信息，请参考 Intel® DSA 架构规范中的地址转换部分。
-
-
-英特尔公司
-
-
-
