@@ -7,10 +7,11 @@ tags: riscv
 ---
 
 本系列逐步RISC-V的相关知识，范围可能比较广，也可能有时比较专，都是实际用到的使用经验，自己做个笔记也希望能帮助一同学习的朋友们。
-# 一重功力：快速启动RISC-V的方法
+# 一重功力：快速启动RISC-V的方法[1]
 ```bash
 apt install opensbi  u-boot-qemu qemu-system-misc
 
+## risc-v ubuntu image 官网 https://ubuntu.com/download/risc-v
 wget https://cdimage.ubuntu.com/releases/24.04.2/release/ubuntu-24.04.2-preinstalled-server-riscv64.img.xz
 xz -d ubuntu-24.04.2-preinstalled-server-riscv64.img.xz
 
@@ -21,7 +22,7 @@ xz -d ubuntu-24.04.2-preinstalled-server-riscv64.img.xz
         -drive file=ubuntu-24.04.2-preinstalled-server-riscv64.img,format=raw,if=virtio
 ```
 
-# 二重功力：内核+QEMU+busybox开发流程
+# 二重功力：内核+QEMU+busybox开发流程[2]
 ## 依赖包
 ```bash
 apt install autoconf automake autotools-dev curl libmpc-dev libmpfr-dev libgmp-dev \
@@ -58,7 +59,7 @@ git chekcout 1_36_stable # 其他稳定版本都编译不过
 CONFIG_TC=n
 
 make menuconfig
-选中选项 "Settings/Build static binary(no shared libs)"
+勾选选项 "Settings/Build static binary(no shared libs)" [3]
 
 CROSS_COMPILE=riscv64-linux-gnu- make oldconfig
 CROSS_COMPILE=riscv64-linux-gnu- make -j $(nproc)
@@ -116,7 +117,7 @@ cd $WORK_DIR/opensbi
 make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- PLATFORM=generic
 ```
 
-## 编译EDK2
+## 编译EDK2 [4]
 ```bash
 cd $WORK_DIR/tianocore
 export WORKSPACE=`pwd`
@@ -129,6 +130,14 @@ make -C edk2/BaseTools
 make -C edk2/BaseTools/Source/C
 source edk2/edksetup.sh BaseTools
 build -a RISCV64 -b RELEASE -D FW_BASE_ADDRESS=0x80200000 -D EDK2_PAYLOAD_OFFSET -p Platform/Qemu/RiscvVirt/RiscvVirt.dsc -t GCC5
+```
+上面的build参数可以在`edk2-platforms/Conf/target.txt`中配置：
+```bash
+edk2-platforms/Conf/target.txt:
+ACTIVE_PLATFORM       = Platform/Qemu/RiscvVirt/RiscVPlatformPkg.dsc
+TARGET                = DEBUG
+TARGET_ARCH           = RISCV64
+TOOL_CHAIN_TAG        = GCC5
 ```
 
 ## 编译Rootfs (可选后续补充）
@@ -150,5 +159,8 @@ make rootfs-ext2
 ```
 
 ## 参考
-https://risc-v-getting-started-guide.readthedocs.io/en/latest/linux-qemu.html
-https://github.com/riscvarchive/risc-v-getting-started-guide/issues/29
+[1]https://canonical-ubuntu-boards.readthedocs-hosted.com/en/latest/how-to/qemu-riscv/
+[2]https://risc-v-getting-started-guide.readthedocs.io/en/latest/linux-qemu.html
+[3]https://github.com/riscvarchive/risc-v-getting-started-guide/issues/29
+[4]https://github.com/riscv-admin/riscv-uefi-edk2-docs?tab=readme-ov-file
+[5]https://lf-rise.atlassian.net/wiki/spaces/HOME/pages/8589371/EDK2_00_18+-+RISC-V+QEMU+Server+Reference+Platform
