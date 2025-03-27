@@ -87,12 +87,67 @@ apt install clangd
 呼出Chatgpt 的功能，包括ChatGPT、ChatGPTActAs、ChatGPTCompleteCode、ChatGPTEditWithInstructions、ChatGPTRun 等命令，各个命令下还有子命令。详细介绍参考官网`https://github.com/jackMort/ChatGPT.nvim`
 ChatGPT是需要OpenAI的API Key，所以每一条调用都是付费的，大家酌情使用。
 
+p.s. 实际使用时发现需要使用代理，两个方案：
+1. 每次启动vim时，使用tsocks 或者 proxychain 这类软件
+2. 修改项目代码给curl 加上proxy即可：
+```
+https://github.com/jackMort/ChatGPT.nvim/issues/200
+curl:
+-x, --proxy [protocol://]host[:port] Use this proxy
+
+  Api.job = job
+    :new({
+      command = "curl",
+      args = {
+        url,
+        "-H",
+        "Content-Type: application/json",
+        "-H",
+        "Authorization: Bearer " .. Api.OPENAI_API_KEY,
+        "-d",
+        "@" .. TMP_MSG_FILENAME,
+      },
+      on_exit = vim.schedule_wrap(function(response, exit_code)
+        Api.handle_response(response, exit_code, cb)
+      end),
+    })
+```
+
 ### 更新插件
 如果对插件的配置有更新，可以两个方法来更新插件：
 - lua脚本
 ```
 :lua require("packer").sync()
 ```
+
+### Colorscheme
+`/root/.local/share/nvim/site/plugin/packer.lua`中添加如下：
+```
+  ["tokyonight.nvim"] = {
+    config = { 'require("config/tokyonight")' },
+    loaded = true,
+    path = "/root/.local/share/nvim/site/pack/packer/start/tokyonight.nvim",
+    url = "https://github.com/folke/tokyonight.nvim"
+#或者尝试 url = "https://github.com/folke/tokyonight.nvim/tree/stable"
+  },
+```
+
+安装到下面这里，如果main branch不工作，尝试手动git clone tokyonight stable
+到`/root/.local/share/nvim/site/pack/packer/start`
+
+启用tokyonight:
+`/root/.config/nvim/lua/config/tokyonight.lua`:
+```
+vim.cmd("colorscheme tokyonight-night")
+-- There are also colorschemes for the different styles.
+-- colorscheme tokyonight-night
+-- colorscheme tokyonight-storm
+-- colorscheme tokyonight-day
+-- colorscheme tokyonight-moon
+```
+
+p.s 另一个colorscheme参考一下，用法类似：
+https://github.com/navarasu/onedark.nvim
 
 - 重建share/nvim
 安装的插件默认都放在目录`~/.local/share/nvim`中，如果想重建插件的话，可以简单的全部删除，然后在下次打开vim的时候会自动重建插件。
