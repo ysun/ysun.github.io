@@ -67,6 +67,7 @@ CROSS_COMPILE=riscv64-linux-gnu- make install
 ```
 
 ## 创建文件系统rootfs
+### Option 1/N busybox生成rootfs
 ```bash
 # Create root filesystem image
 mkdir rootfs
@@ -82,6 +83,15 @@ sudo umount /mnt/rootfs
 sudo rmdir /mnt/rootfs
 ```
 
+### Option 2/N buldroot生成rootfs
+```bash
+cd $WORK_DIR/
+git clone https://github.com/buildroot/buildroot.git
+cd $WORK_DIR/buildroot
+make qemu_riscv64_virt_defconfig
+make rootfs-ext2
+```
+
 ## 运行QEMU 自编译内核+busybox
 ```bash
 sudo qemu-system-riscv64 -nographic -machine virt \
@@ -94,7 +104,6 @@ sudo qemu-system-riscv64 -nographic -machine virt \
 
 ## REPOS
 ```bash
-git clone https://github.com/riscv-software-src/opensbi.git
 git clone https://github.com/tianocore/edk2.git tianocore/edk2
 git clone https://github.com/tianocore/edk2-platforms.git tianocore/edk2-platforms
 ```
@@ -113,6 +122,7 @@ git am --3way --ignore-space-change --keep-cr 0001-Riscv-support-based-on-Qemu-m
 ## 编译opensbi (已经默认集成到了QEMU，可以不需要这步了)
 这步的产出是一个elf，作为bios, 通过QEMU的`-bios`参数传递。
 ```bash
+git clone https://github.com/riscv-software-src/opensbi.git
 cd $WORK_DIR/opensbi
 make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- PLATFORM=generic
 ```
@@ -138,15 +148,6 @@ ACTIVE_PLATFORM       = Platform/Qemu/RiscvVirt/RiscVPlatformPkg.dsc
 TARGET                = DEBUG
 TARGET_ARCH           = RISCV64
 TOOL_CHAIN_TAG        = GCC5
-```
-
-## 编译Rootfs (可选后续补充）
-```bash
-cd $WORK_DIR/
-git clone https://github.com/buildroot/buildroot.git
-cd $WORK_DIR/buildroot
-make qemu_riscv64_virt_defconfig
-make rootfs-ext2
 ```
 
 ## 运行QEMU
