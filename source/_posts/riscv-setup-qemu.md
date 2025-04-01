@@ -129,18 +129,26 @@ make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- PLATFORM=generic
 
 ## 编译EDK2 [4]
 ```bash
-cd $WORK_DIR/tianocore
+git clone --recurse-submodule git@github.com:tianocore/edk2.git
 export WORKSPACE=`pwd`
-export GCC5_RISCV64_PREFIX=/usr/bin/riscv64-linux-gnu-
-export PACKAGES_PATH=$WORKSPACE/edk2:$WORKSPACE/edk2-platforms
+export GCC5_RISCV64_PREFIX=riscv64-linux-gnu-
+export PACKAGES_PATH=$WORKSPACE/edk2
 export EDK_TOOLS_PATH=$WORKSPACE/edk2/BaseTools
-source edk2/edksetup.sh
+
+#最新的edk2 已经包含了RiscVVirtQemu
+#export PACKAGES_PATH=$WORKSPACE/edk2:$WORKSPACE/edk2-platforms
+git submodule update --init --recursive
+source edk2/edksetup.sh --reconfig
 make -C edk2/BaseTools clean
 make -C edk2/BaseTools
-make -C edk2/BaseTools/Source/C
+
 source edk2/edksetup.sh BaseTools
-build -a RISCV64 -b RELEASE -D FW_BASE_ADDRESS=0x80200000 -D EDK2_PAYLOAD_OFFSET -p Platform/Qemu/RiscvVirt/RiscvVirt.dsc -t GCC5
+build -a RISCV64 --buildtarget RELEASE -p OvmfPkg/RiscVVirt/RiscVVirtQemu.dsc -t GCC5
+ 
+truncate -s 32M Build/RiscVVirtQemu/RELEASE_GCC5/FV/RISCV_VIRT_CODE.fd
+truncate -s 32M Build/RiscVVirtQemu/RELEASE_GCC5/FV/RISCV_VIRT_VARS.fd
 ```
+
 上面的build参数可以在`edk2-platforms/Conf/target.txt`中配置：
 ```bash
 edk2-platforms/Conf/target.txt:
@@ -152,11 +160,17 @@ TOOL_CHAIN_TAG        = GCC5
 
 ## 运行QEMU
 ```bash
-./qemu-system-riscv64 -nographic -machine virt,aclint=on,aia=aplic-imsic \
-    -cpu rv64,sscofpmf=true -smp 8 -m 2G \
-    -kernel tianocore/Build/RiscvVirt/RELEASE_GCC5/FV/RISCVVIRT.fd \
-    -drive if=none,file=ubuntu-24.04.2-preinstalled-server-riscv64.img,format=raw,id=hd0 \
-    -device virtio-blk-device,drive=hd0
+#!/bin/bash
+./qemu/build/qemu-system-riscv64	\
+    -M virt,pflash0=pflash0,pflash1=pflash1,acpi=off \
+    -vga none  -nographic -m 4096 -smp 1 \
+    -serial mon:stdio \
+    -device virtio-rng-pci \
+    -blockdev node-name=pflash0,driver=file,read-only=on,filename=RISCV_VIRT_CODE.fd \
+    -blockdev node-name=pflash1,driver=file,filename=RISCV_VIRT_VARS.fd \
+    -drive file=isar-image-riscv-devel-debian-sid-ports-qemuriscv64.wic,format=raw,if=virtio
+#    -drive if=none,file=ubuntu-24.04.2-preinstalled-server-riscv64.img,format=raw,id=hd0 \
+#    -device virtio-blk-device,drive=hd0
 ```
 
 ## 参考
