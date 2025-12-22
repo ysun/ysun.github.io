@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://www.owalle.com/2021/01/09/create-mini-vm/</loc>
+    <lastmod>2025-12-22</lastmod>
+  </url>
+  <url>
     <loc>http://www.owalle.com/2025/04/04/how-to-use-mutt/</loc>
     <lastmod>2025-04-04</lastmod>
   </url>
@@ -43,10 +47,6 @@
   <url>
     <loc>http://www.owalle.com/2018/12/24/qemu-debug/</loc>
     <lastmod>2022-05-08</lastmod>
-  </url>
-  <url>
-    <loc>http://www.owalle.com/2021/01/09/create-mini-vm/</loc>
-    <lastmod>2022-04-25</lastmod>
   </url>
   <url>
     <loc>http://www.owalle.com/2022/03/31/perf-intel-pt/</loc>
