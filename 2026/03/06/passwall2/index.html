@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.owalle.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":true,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="前述场景：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenWrt PassWall2 配置">
+<meta property="og:url" content="http://www.owalle.com/2026/03/06/passwall2/index.html">
+<meta property="og:site_name" content="Yi颗烂樱桃">
+<meta property="og:description" content="前述场景：">
+<meta property="og:locale">
+<meta property="og:image" content="http://www.owalle.com/2026/03/06/passwall2/rulemgr1.png">
+<meta property="og:image" content="http://www.owalle.com/2026/03/06/passwall2/rulemgr2-reject.png">
+<meta property="og:image" content="http://www.owalle.com/2026/03/06/passwall2/rulemgr3-direct.png">
+<meta property="og:image" content="http://www.owalle.com/2026/03/06/passwall2/rulemgr4-proxy.png">
+<meta property="og:image" content="http://www.owalle.com/2026/03/06/passwall2/otherconfig.png">
+<meta property="og:image" content="http://www.owalle.com/2026/03/06/passwall2/mainnode.png">
+<meta property="og:image" content="http://www.owalle.com/2026/03/06/passwall2/basicdns.png">
+<meta property="og:image" content="http://www.owalle.com/2026/03/06/passwall2/mainnode.png">
+<meta property="article:published_time" content="2026-03-06T09:39:17.000Z">
+<meta property="article:modified_time" content="2026-03-13T06:23:10.807Z">
+<meta property="article:author" content="Yi颗烂樱桃">
+<meta property="article:tag" content="KVM Linux Kernel Qemu">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.owalle.com/2026/03/06/passwall2/rulemgr1.png">
+
+<link rel="canonical" href="http://www.owalle.com/2026/03/06/passwall2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>OpenWrt PassWall2 配置 | Yi颗烂樱桃</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Yi颗烂樱桃</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">虚拟化中文</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-fw fa-sitemap"></i>Sitemap</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://www.owalle.com/2026/03/06/passwall2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+      <meta itemprop="description" content="这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Yi颗烂樱桃">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OpenWrt PassWall2 配置
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2026-03-06 17:39:17" itemprop="dateCreated datePublished" datetime="2026-03-06T17:39:17+08:00">2026-03-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2026-03-13 14:23:10" itemprop="dateModified" datetime="2026-03-13T14:23:10+08:00">2026-03-13</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="前述"><a href="#前述" class="headerlink" title="前述"></a>前述</h2><p>场景：</p>
+<ul>
+<li>需要 IPv6（如 iTV 聚合场景）</li>
+<li>需要可用的代理访问能力</li>
+<li>设备为光猫桥接 + 主路由拨号 + OpenWrt 旁路由</li>
+</ul>
+<p>插件对比后选择 PassWall2，目标是：</p>
+<ul>
+<li>降低/避免 DNS 泄露</li>
+<li>IPv4 + IPv6 双栈共存</li>
+<li>兼顾常规上网与代理需求</li>
+</ul>
+<h2 id="配置步骤"><a href="#配置步骤" class="headerlink" title="配置步骤"></a>配置步骤</h2><h3 id="一、规则管理"><a href="#一、规则管理" class="headerlink" title="一、规则管理"></a>一、规则管理</h3><ol>
+<li><p>删除所有默认规则，添加 3 条规则：Reject、Direct、Proxy<br><img src="/2026/03/06/passwall2/./rulemgr1.png" alt="规则管理-1"></p>
+</li>
+<li><p>Reject 规则域名：<code>geosite:category-ads-all</code><br><img src="/2026/03/06/passwall2/./rulemgr2-reject.png" alt="规则管理-2"></p>
+</li>
+<li><p>Direct 规则：</p>
+<ul>
+<li>域名：<code>xn--ngstr-lra8j.com</code>、<code>geosite:private</code>、<code>geosite:cn</code></li>
+<li>IP：<code>geoip:private</code>、<code>geoip:cn</code><br><img src="/2026/03/06/passwall2/./rulemgr3-direct.png" alt="规则管理-3"></li>
+</ul>
+</li>
+<li><p>Proxy 规则域名：<code>geosite:geolocation-!cn</code><br><img src="/2026/03/06/passwall2/./rulemgr4-proxy.png" alt="规则管理-4"></p>
+</li>
+<li><p>规则顺序必须为：Reject → Direct → Proxy</p>
+</li>
+</ol>
+<p>注释：</p>
+<ul>
+<li>geosite:category-ads-all    去广告</li>
+<li>xn–ngstr-lra8j.com        谷歌商店</li>
+<li>geosite:private        内网地址</li>
+<li>geosite:cn            国内域名</li>
+<li>geoip:private            内网IP</li>
+<li>geoip:cn            国内IP</li>
+<li>geosite:geolocation-!cn    国外域名</li>
+</ul>
+<h3 id="二、高级设置（其他设置）"><a href="#二、高级设置（其他设置）" class="headerlink" title="二、高级设置（其他设置）"></a>二、高级设置（其他设置）</h3><ul>
+<li>不使用 UDP 代理时，UDP 不转发端口可设为“所有”</li>
+<li>TCP 转发端口建议“仅网页”（80/443）</li>
+<li>TCP 代理方式可用 REDIRECT 或 TPROXY</li>
+<li>若节点支持 IPv6 出口，可开启 IPv6 透明代理（TProxy）</li>
+</ul>
+<p>配图：</p>
+<p><img src="/2026/03/06/passwall2/./otherconfig.png" alt="高级设置"></p>
+<h3 id="三、节点配置（Xray-分流）"><a href="#三、节点配置（Xray-分流）" class="headerlink" title="三、节点配置（Xray 分流）"></a>三、节点配置（Xray 分流）</h3><p>新创建一个“分流总节点”：</p>
+<ul>
+<li>Reject → 黑洞（丢弃）</li>
+<li>Direct → 直连（绕过）</li>
+<li>Proxy → 默认（代理）</li>
+<li>默认规则 → 按需选择节点</li>
+<li>域名解析策略 → <code>AsIs</code>（仅匹配域名）</li>
+</ul>
+<p>配图：</p>
+<p><img src="/2026/03/06/passwall2/./mainnode.png" alt="Xray分流"></p>
+<h3 id="四、基本设置"><a href="#四、基本设置" class="headerlink" title="四、基本设置"></a>四、基本设置</h3><h4 id="1-DNS-设置"><a href="#1-DNS-设置" class="headerlink" title="1) DNS 设置"></a>1) DNS 设置</h4><ul>
+<li>远程 DNS 协议：DOH</li>
+<li>远程 DNS 出站：远程（走代理）</li>
+<li>勾选 FakeDNS</li>
+</ul>
+<p>说明：</p>
+<ul>
+<li>远程DNS出站一定要设置为：远程（走代理），不然你走直连大概率是不通的，但是DOH走代理都是会增加延迟</li>
+<li>勾选FakeDNS后，在Proxy规则内的域名，匹配上的会返回一个假IP作为DNS响应（例如198.18.0.0/16），最后将域名请求发送给节点服务器VPS在它的网络环境中进行解析IP</li>
+<li>不在Proxy规则内的域名则会使用设置的CloudFlare远程DNS进行本地DNS解析真实IP，最后将这个真实IP发送给节点服务器VPS，而如果遇到解析出的是被污染的IP，由于开启了嗅探功能，会探测HTTP请求里的域名，所以就算本地解析出的IP是被污染也不影响</li>
+<li>如何判断是走FakeDNS还是走远程DNS，电脑运行CMD窗口，输入 nslookup youtube.com 回车，输入 nslookup ipleak.net 回车</li>
+</ul>
+<p>配图：</p>
+<p><img src="/2026/03/06/passwall2/./basicdns.png" alt="DNS设置"></p>
+<h4 id="2-主要项"><a href="#2-主要项" class="headerlink" title="2) 主要项"></a>2) 主要项</h4><ul>
+<li>节点—Xray 分流选择“分流总节点”</li>
+</ul>
+<p>配图：</p>
+<p><img src="/2026/03/06/passwall2/./mainnode.png" alt="主要项"></p>
+<h4 id="3-主开关"><a href="#3-主开关" class="headerlink" title="3) 主开关"></a>3) 主开关</h4><ul>
+<li>完成以上配置后，打开主开关并保存应用</li>
+</ul>
+<p>original from: <a target="_blank" rel="noopener" href="https://mtom.top/archives/Pass-Wall2%E8%A7%A3%E5%86%B3DNS%E6%B3%84%E9%9C%B2IPv4-IPv6%E5%8F%8C%E6%A0%88%E5%85%B1%E5%AD%98%E9%85%8D%E7%BD%AE%E6%95%99%E7%A8%8B/">Pass Wall2解决DNS泄露IPv4+IPv6双栈共存配置教程</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    Donate
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="Yi颗烂樱桃 WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="Yi颗烂樱桃 Alipay">
+        <p>Alipay</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/04/04/how-to-use-mutt/" rel="prev" title="如何使用Mutt收取office365邮件">
+      <i class="fa fa-chevron-left"></i> 如何使用Mutt收取office365邮件
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">前述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%AD%A5%E9%AA%A4"><span class="nav-number">2.</span> <span class="nav-text">配置步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E8%A7%84%E5%88%99%E7%AE%A1%E7%90%86"><span class="nav-number">2.1.</span> <span class="nav-text">一、规则管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E9%AB%98%E7%BA%A7%E8%AE%BE%E7%BD%AE%EF%BC%88%E5%85%B6%E4%BB%96%E8%AE%BE%E7%BD%AE%EF%BC%89"><span class="nav-number">2.2.</span> <span class="nav-text">二、高级设置（其他设置）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E8%8A%82%E7%82%B9%E9%85%8D%E7%BD%AE%EF%BC%88Xray-%E5%88%86%E6%B5%81%EF%BC%89"><span class="nav-number">2.3.</span> <span class="nav-text">三、节点配置（Xray 分流）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E5%9F%BA%E6%9C%AC%E8%AE%BE%E7%BD%AE"><span class="nav-number">2.4.</span> <span class="nav-text">四、基本设置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-DNS-%E8%AE%BE%E7%BD%AE"><span class="nav-number">2.4.1.</span> <span class="nav-text">1) DNS 设置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E4%B8%BB%E8%A6%81%E9%A1%B9"><span class="nav-number">2.4.2.</span> <span class="nav-text">2) 主要项</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E4%B8%BB%E5%BC%80%E5%85%B3"><span class="nav-number">2.4.3.</span> <span class="nav-text">3) 主开关</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Yi颗烂樱桃"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Yi颗烂樱桃</p>
+  <div class="site-description" itemprop="description">这是一颗烂樱桃的技术博客，一个微不足道的魔都程序员，或者是自以为的程序员</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">56</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://www.stolaf.edu/people/rab/os/syscall_index.html" title="https:&#x2F;&#x2F;www.stolaf.edu&#x2F;people&#x2F;rab&#x2F;os&#x2F;syscall_index.html" rel="noopener" target="_blank">System call index</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://ref.x86asm.net/coder64.html" title="http:&#x2F;&#x2F;ref.x86asm.net&#x2F;coder64.html" rel="noopener" target="_blank">X86 Opcode and Instruction</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://x86asm.net/articles/x86-64-tour-of-intel-manuals/index.html" title="http:&#x2F;&#x2F;x86asm.net&#x2F;articles&#x2F;x86-64-tour-of-intel-manuals&#x2F;index.html" rel="noopener" target="_blank">x86-64 Tour of Intel Manuals</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.ctyme.com/intr/int.htm" title="http:&#x2F;&#x2F;www.ctyme.com&#x2F;intr&#x2F;int.htm" rel="noopener" target="_blank">Ralf Brown's Interrupt List</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.felixcloutier.com/x86/" title="https:&#x2F;&#x2F;www.felixcloutier.com&#x2F;x86&#x2F;" rel="noopener" target="_blank">x86 and amd64 instruction reference</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://docs.oracle.com/cd/E19620-01/805-4693/index.html" title="https:&#x2F;&#x2F;docs.oracle.com&#x2F;cd&#x2F;E19620-01&#x2F;805-4693&#x2F;index.html" rel="noopener" target="_blank">x86 Assembly Language Reference Manual(oracle)</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://defuse.ca/online-x86-assembler.htm" title="https:&#x2F;&#x2F;defuse.ca&#x2F;online-x86-assembler.htm" rel="noopener" target="_blank">Online Assembler and Disassembler(Machine code)</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="http://beian.miit.gov.cn/" rel="noopener" target="_blank">沪ICP备13030765号-8 </a>
+      <img src="/images/icon_gongan.png" style="display: inline-block;"><a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202012942" rel="noopener" target="_blank">31011202012942 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yi颗烂樱桃</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+  <script defer src="/lib/three/three.min.js"></script>
+    <script defer src="/lib/three/three-waves.min.js"></script>
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<link rel="stylesheet" href="/lib/gitalk/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('/lib/gitalk/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '30a5af43b5ea724ad81b',
+      clientSecret: '3426c0800920f9f75967ecf4b87f453e8012b911',
+      repo        : 'ysun.github.io',
+      owner       : 'ysun',
+      admin       : ['ysun'],
+      id          : '694e95eea9d6657c6c7f56e9a1a87320',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
