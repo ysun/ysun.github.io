@@ -1,5 +1,5 @@
 ---
-title: 创建mini虚拟机镜像
+title: 创建mini虚拟机镜像(updated to ubuntu 24.04)
 donate: true
 date: 2021-01-09 07:48:48
 categories: OS
@@ -13,7 +13,7 @@ tags: 最小系统 QEMU KVM
 创建一个名为rootfs-debootstrap.img 大小为20G的空文件
 `dd if=/dev/zero of=rootfs-debootstrap.img bs=1M count=20480`
 
-## 下载Ubuntu 20.04 文件系统 ##
+## 下载Ubuntu 20.04 / 24.04 文件系统 ##
 
 安装debootstrap工具
 apt-get install -y debootstrap arch-install-scripts
@@ -45,7 +45,7 @@ losetup -f
 ```
 
 ```
-losetup -P /dev/loop12 /home/works/kvm/ubuntu20.04_rootfs.img
+losetup -P /dev/loop12 /home/works/kvm/rootfs-debootstrap.img
 ```
 为镜像中的分区创建对应的分区loop device
 参数`-P`很重要,是直接创建带有分区信息的Loop设备。如果顺利，可以到创建了三个loop设备文件例如：
@@ -71,15 +71,18 @@ mkdir -p /mnt/boot/efi && mount /dev/loop12p1 /mnt/boot/efi
 ll /mnt/boot/efi/                                                                        
 ```
 
-下载文件系统Ubuntu 20.04 (focal)
+下载文件系统Ubuntu 20.04 (focal) / 24.04 (noble)
 ```
-debootstrap --arch amd64 focal /mnt http://archive.ubuntu.com/ubuntu
+20.04: debootstrap --arch amd64 focal /mnt http://archive.ubuntu.com/ubuntu
+24.04: debootstrap --arch amd64 noble /mnt http://archive.ubuntu.com/ubuntu
 ```
 视网络情况，我大概用了30分钟，因为科学上网可能比较慢，大概只下载了几十兆的东西
 
 debootstrap 下载的文件系统是没有源的，给手动添加源
 ```
-release="focal"
+二选一：
+20.04: release="focal"
+24.04: release="noble"
 
 printf "deb http://archive.ubuntu.com/ubuntu/ ${release} main restricted universe\ndeb http://security.ubuntu.com/ubuntu/ ${release}-security main restricted universe\ndeb http://archive.ubuntu.com/ubuntu/ ${release}-updates main restricted universe\n" > /mnt/etc/apt/sources.list
 ```
@@ -164,7 +167,7 @@ kpartx -dv /dev/loop12
 虚拟机总是过一段时间就发现，容量不够了，如何扩容？
 * 扩大"硬盘"
 ```
-qemu-img resize ubuntu22.04.img +5G
+qemu-img resize rootfs-debootstrap.img +5G
 ```
 * 重建分区表
 ```
@@ -187,7 +190,7 @@ Number  Start (sector)    End (sector)  Size       Code  Name
 上面的信息里找到这行“First usable sector is 34, last usable sector is 31457246”
 最后那个数字就是分区最大sector，记住这个数字。
 ```
-sgdisk -d 3 -n 3:0:$newsize -t 3:8300 ubuntu22.04.img -p
+sgdisk -d 3 -n 3:0:$newsize -t 3:8300 rootfs-debootstrap.img -p
 resize2fs ${devnode}p3 13G
 ```
 `-d`: 删除之前第3个分区，如果按照上面步骤安装，3就是/根分区。
@@ -196,7 +199,7 @@ resize2fs ${devnode}p3 13G
 也可以参考下面这句：
 ```
 newsize=`sgsgdisk  -p rootfs.img  |grep 'last usable sector is'|grep -o -E '[^ ]*$'`
-sgdisk -d 3 -n 3:0:$newsize -t 3:8300 ubuntu22.04.img -p
+sgdisk -d 3 -n 3:0:$newsize -t 3:8300 rootfs-debootstrap.img -p
 ```
 
 * 最后需要在虚拟机里面再执行一次:
